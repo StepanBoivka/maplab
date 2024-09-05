@@ -35,8 +35,8 @@
             list-style: none;
             padding: 0;
             margin: 0;
-            max-height: 200px; /* Максимальна висота списку */
-            overflow-y: auto; /* Додаємо скрол, якщо багато файлів */
+            max-height: 200px;
+            overflow-y: auto;
             display: none; /* Сховати список за замовчуванням */
         }
         #fileList li {
@@ -66,19 +66,6 @@
         #geolocationButton:hover {
             background: #218838;
             border-color: #1e7e34;
-        }
-        .color-box {
-            width: 12px;
-            height: 12px;
-            display: inline-block;
-            margin-right: 5px;
-        }
-        .layer-name {
-            color: black;
-            font-size: 12px;
-        }
-        .leaflet-control-search {
-            top: 50px !important; /* Змістити поле пошуку вниз */
         }
     </style>
     <title>Карта земельних ділянок</title>
@@ -305,7 +292,7 @@
             var fileSearch = document.getElementById('fileSearch');
             
             if (!fileList.contains(event.target) && !fileSearch.contains(event.target)) {
-                fileList.style.display = 'none';
+                fileList.style.display = 'none'; // Сховати список при натисканні поза межами
             }
         });
 
