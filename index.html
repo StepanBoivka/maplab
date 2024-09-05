@@ -23,12 +23,31 @@
             flex-direction: column;
             width: 200px;
         }
-        #fileSelect {
+        #fileSearch {
             padding: 5px;
             border: 1px solid #ccc;
             border-radius: 5px;
             margin-bottom: 5px;
             font-size: 12px;
+            width: 100%;
+        }
+        #fileList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px; /* Максимальна висота списку */
+            overflow-y: auto; /* Додаємо скрол, якщо багато файлів */
+        }
+        #fileList li {
+            padding: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 3px;
+            cursor: pointer;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        #fileList li:hover {
+            background-color: #e9e9e9;
         }
         #geolocationButton {
             position: absolute;
@@ -74,9 +93,8 @@
 <body>
     <div id="map"></div>
     <div id="controls">
-        <select id="fileSelect">
-            <option>Виберіть файл</option>
-        </select>
+        <input type="text" id="fileSearch" placeholder="Пошук файлу" />
+        <ul id="fileList"></ul>
     </div>
     <div id="geolocationButton">📍</div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -229,59 +247,20 @@
 
             tenantList.sort((a, b) => b.area - a.area);
 
-            tenantList.forEach(item => {
-                overlays[item.tenant] = item.layer;
-                var colorBox = '<span class="color-box" style="background-color:' + getColor(item.tenant) + '"></span>';
-                layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
+            tenantList.forEach(({ tenant, layer, area }) => {
+                var colorBox = '<span class="color-box" style="background-color:' + getColor(tenant) + '"></span>';
+                var layerName = '<span class="layer-name">' + tenant + ' (' + area + ' га)</span>';
+                layersControl.addOverlay(layer, colorBox + layerName);
             });
         }
 
         function addFreeLayer() {
-            if (freeLayer.getLayers().length > 0) {
-                overlays["вільні від оренди"] = freeLayer;
-                var colorBox = '<span class="color-box" style="background-color:#ffffff"></span>';
-                layersControl.addOverlay(freeLayer, colorBox + '<span class="layer-name">вільні від оренди (' + freeArea.toFixed(2) + ' га)</span>');
-            }
+            var colorBox = '<span class="color-box" style="background-color: #ffffff"></span>';
+            var layerName = '<span class="layer-name">Не в оренді (' + freeArea.toFixed(2) + ' га)</span>';
+            layersControl.addOverlay(freeLayer, colorBox + layerName);
         }
 
-        function loadFileList() {
-            fetch('data/file_list.json')
-                .then(response => response.json())
-                .then(data => {
-                    var select = document.getElementById('fileSelect');
-                    select.innerHTML = '<option>Виберіть раду</option>';
-                    data.files.forEach(file => {
-                        var option = document.createElement('option');
-                        option.value = file;
-                        option.textContent = file;
-                        select.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error loading file list:', error));
-        }
-
-        document.getElementById('fileSelect').addEventListener('change', function () {
-            var selectedFile = this.value;
-            if (selectedFile !== 'Виберіть раду') {
-                addGeoJsonLayer('data/' + selectedFile, selectedFile);
-            }
-        });
-
-        document.getElementById('geolocationButton').addEventListener('click', function () {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    var lat = position.coords.latitude;
-                    var lng = position.coords.longitude;
-                    var marker = L.marker([lat, lng]).addTo(map);
-                    map.setView([lat, lng], 15);
-                }, function () {
-                    alert('Не вдалося отримати вашу геолокацію.');
-                });
-            } else {
-                alert('Ваш браузер не підтримує геолокацію.');
-            }
-        });
-
+        // Додаємо функцію пошуку
         function addSearchControl(layer) {
             if (searchControl) {
                 map.removeControl(searchControl);
@@ -289,15 +268,58 @@
             searchControl = new L.Control.Search({
                 layer: layer,
                 propertyName: 'Кадастровий номер',
-                zoom: 15,
-                initial: false,
-                textPlaceholder: 'пошук' // Заміна тексту підказки
+                marker: false,
+                zoom: 16,
+                textPlaceholder: 'Пошук по кадастровому номеру...'
+            });
+            searchControl.on('search:locationfound', function (e) {
+                e.layer.openPopup();
             });
             map.addControl(searchControl);
         }
 
+        document.getElementById('geolocationButton').addEventListener('click', function () {
+            map.locate({ setView: true, maxZoom: 16 });
+        });
+
+        // Пошук файлів і завантаження шару
+        function loadFileList() {
+            fetch('data/file_list.json')
+                .then(response => response.json())
+                .then(data => {
+                    var fileList = document.getElementById('fileList');
+                    fileList.innerHTML = ''; // Очищення списку
+                    data.files.forEach(file => {
+                        var listItem = document.createElement('li');
+                        listItem.textContent = file;
+                        listItem.classList.add('file-item');
+                        listItem.addEventListener('click', function () {
+                            addGeoJsonLayer('data/' + file, file);
+                        });
+                        fileList.appendChild(listItem);
+                    });
+                })
+                .catch(error => console.error('Error loading file list:', error));
+        }
+
+        // Функція для фільтрації списку файлів
+        function filterFileList() {
+            var searchInput = document.getElementById('fileSearch').value.toLowerCase();
+            var fileItems = document.querySelectorAll('#fileList li');
+            fileItems.forEach(function (item) {
+                if (item.textContent.toLowerCase().indexOf(searchInput) > -1) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Додаємо обробку події для пошуку файлів
+        document.getElementById('fileSearch').addEventListener('input', filterFileList);
+
+        // Викликаємо завантаження списку файлів
         loadFileList();
-        updateLayersControl();
     </script>
 </body>
 </html>
