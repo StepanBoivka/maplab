@@ -238,10 +238,13 @@
                 var colorBox = document.createElement('div');
                 colorBox.className = 'color-box';
                 colorBox.style.backgroundColor = getColor(tenant);
+                colorBox.style.width = '20px';
+                colorBox.style.height = '20px';
+                colorBox.style.border = '1px solid #000';
+                colorBox.style.marginRight = '5px';
 
                 var layerName = document.createElement('span');
-                layerName.className = 'layer-name';
-                layerName.textContent = tenant + " (" + area + " га)";
+                layerName.textContent = tenant + " (Площа: " + area + " га)";
 
                 var item = document.createElement('div');
                 item.className = 'leaflet-control-layers-selector';
@@ -283,7 +286,6 @@
         }
 
         document.getElementById('fileSearch').addEventListener('input', function() {
-            document.getElementById('fileList').style.display = 'block'; // Показати список перед фільтрацією
             filterFileList();
         });
 
