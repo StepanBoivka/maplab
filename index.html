@@ -30,6 +30,27 @@
             margin-bottom: 5px;
             font-size: 12px;
         }
+        #cadasterInput {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            width: 100%;
+            font-size: 12px;
+        }
+        #showMarkersButton {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            width: 100%;
+        }
+        #showMarkersButton:hover {
+            background-color: #0056b3;
+        }
         #geolocationButton {
             position: absolute;
             bottom: 10px;
@@ -46,9 +67,6 @@
         #geolocationButton:hover {
             background: #218838;
             border-color: #1e7e34;
-        }
-        #cadInput {
-            margin-top: 10px;
         }
         .color-box {
             width: 12px;
@@ -80,10 +98,8 @@
         <select id="fileSelect">
             <option>Виберіть файл</option>
         </select>
-        <div id="cadInput">
-            <textarea id="cadNumbers" rows="4" placeholder="Введіть кадастрові номери, по одному на рядок"></textarea>
-            <button id="showMarkersButton">Показати</button>
-        </div>
+        <input type="text" id="cadasterInput" placeholder="Введіть кадастрові номери через кому">
+        <button id="showMarkersButton">Показати</button>
     </div>
     <div id="geolocationButton">📍</div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -236,70 +252,59 @@
             tenantList.sort((a, b) => b.area - a.area);
 
             tenantList.forEach(item => {
-                overlays[item.tenant] = item.layer;
-                var colorBox = '<span class="color-box" style="background-color:' + getColor(item.tenant) + '"></span>';
-                layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
+                var tenantLayer = item.layer;
+                overlays[item.tenant] = tenantLayer;
+                tenantLayer.addTo(map);
             });
+
+            map.addLayer(freeLayer);
         }
 
         function addFreeLayer() {
             if (freeArea > 0) {
+                freeLayer.addTo(map);
                 overlays["Вільні ділянки"] = freeLayer;
-                layersControl.addOverlay(freeLayer, '<span class="color-box" style="background-color:#ffffff"></span><span class="layer-name">Вільні ділянки (' + freeArea.toFixed(2) + ' га)</span>');
+                layersControl.addOverlay(freeLayer, "Вільні ділянки");
             }
         }
 
-        function addSearchControl(layer) {
+        function addSearchControl(geoJsonLayer) {
             if (searchControl) {
                 map.removeControl(searchControl);
             }
             searchControl = new L.Control.Search({
-                layer: layer,
+                layer: geoJsonLayer,
                 propertyName: 'Кадастровий номер',
-                zoom: 12
+                zoom: 15,
+                textPlaceholder: 'Пошук'
             }).addTo(map);
         }
 
-        function showMarkers(cadNumbers) {
-            console.log('Кадастрові номери:', cadNumbers); // Логування введених кадастрових номерів
+        // Приклад використання
+        // Додайте URL для ваших GeoJSON файлів
+        addGeoJsonLayer('https://example.com/your-data.geojson', 'Ваші дані');
 
-            // Очистити попередні маркери
-            map.eachLayer(layer => {
-                if (layer instanceof L.Marker) {
-                    map.removeLayer(layer);
-                }
+        // Обробник для кнопки "Показати"
+        document.getElementById('showMarkersButton').addEventListener('click', function () {
+            const input = document.getElementById('cadasterInput').value;
+            const cadasterNumbers = input.split(',').map(number => number.trim());
+            addMarkers(cadasterNumbers);
+        });
+
+        // Функція для додавання маркерів на карту
+        function addMarkers(cadasterNumbers) {
+            clearOverlays(); // Очистити старі полігони
+
+            cadasterNumbers.forEach(number => {
+                if (!number.trim()) return;
+
+                // Тут замініть на ваш API виклик для отримання координат
+                const lat = 48.3794 + Math.random() * 2 - 1; // Змішання координат
+                const lng = 31.1656 + Math.random() * 2 - 1; // Змішання координат
+                L.marker([lat, lng]).addTo(map)
+                    .bindPopup(`Кадастровий номер: ${number}`);
             });
-
-            cadNumbers.forEach(num => {
-                var latLng = [48 + Math.random() * 2 - 1, 31 + Math.random() * 2 - 1]; // Фіктивні координати
-                L.marker(latLng)
-                    .addTo(map)
-                    .bindPopup("Кадастровий номер: " + num);
-            });
-
-            if (cadNumbers.length > 0) {
-                map.setView([48, 31], 6); // Встановлюємо початковий масштаб карти
-            }
         }
-
-        document.getElementById('showMarkersButton').addEventListener('click', () => {
-            var cadNumbersText = document.getElementById('cadNumbers').value.trim();
-            var cadNumbers = cadNumbersText.split('\n').map(num => num.trim()).filter(num => num !== '');
-            showMarkers(cadNumbers);
-        });
-
-        document.getElementById('geolocationButton').addEventListener('click', () => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
-                    var lat = position.coords.latitude;
-                    var lng = position.coords.longitude;
-                    map.setView([lat, lng], 14);
-                    L.marker([lat, lng]).addTo(map).bindPopup('Ваша поточна локація');
-                });
-            } else {
-                alert("Ваш браузер не підтримує геолокацію.");
-            }
-        });
     </script>
 </body>
 </html>
