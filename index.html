@@ -242,8 +242,8 @@
             var tenantList = Object.keys(tenantLayers).map(tenant => {
                 return {
                     tenant: tenant,
-                    layer: tenantLayers[tenant],
-                    area: tenantAreas[tenant] ? tenantAreas[tenant].toFixed(2) : 0
+                    area: tenantAreas[tenant] || 0,
+                    layer: tenantLayers[tenant]
                 };
             });
 
