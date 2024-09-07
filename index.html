@@ -29,7 +29,6 @@
             border-radius: 5px;
             margin-bottom: 5px;
             font-size: 12px;
-            width: 100%;
         }
         #geolocationButton {
             position: absolute;
@@ -48,6 +47,28 @@
             background: #218838;
             border-color: #1e7e34;
         }
+        #cadastreInput {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 12px;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        #showMarkersButton {
+            padding: 5px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            text-align: center;
+        }
+        #showMarkersButton:hover {
+            background: #0056b3;
+            border-color: #004085;
+        }
         .color-box {
             width: 12px;
             height: 12px;
@@ -63,21 +84,29 @@
         }
     </style>
     <title>Карта земельних ділянок</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMBXL0TQLR"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-CMBXL0TQLR');
+    </script>
 </head>
 <body>
     <div id="map"></div>
     <div id="controls">
         <select id="fileSelect">
-            <option value="">Виберіть файл</option>
-            <!-- Динамічно заповнюються опції через JavaScript -->
+            <option>Виберіть файл</option>
         </select>
+        <input type="text" id="cadastreInput" placeholder="Введіть кадастрові номери через кому">
+        <div id="showMarkersButton">Показати маркери</div>
     </div>
     <div id="geolocationButton">📍</div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
     <script>
-        // Ініціалізація карти
         var map = L.map('map', {
             zoomControl: false
         }).setView([48.3794, 31.1656], 6);
@@ -240,66 +269,78 @@
         }
 
         function loadFileList() {
-            const fileSelect = document.getElementById('fileSelect');
-            const files = [
-                { name: 'Файл 1', url: 'path/to/file1.geojson' },
-                { name: 'Файл 2', url: 'path/to/file2.geojson' }
-            ];
-
-            files.forEach(file => {
-                const option = document.createElement('option');
-                option.value = file.url;
-                option.textContent = file.name;
-                fileSelect.appendChild(option);
-            });
-
-            fileSelect.addEventListener('change', function() {
-                const selectedUrl = fileSelect.value;
-                if (selectedUrl) {
-                    addGeoJsonLayer(selectedUrl, 'Вибраний файл');
-                }
-            });
+            fetch('data/file_list.json')
+                .then(response => response.json())
+                .then(data => {
+                    var select = document.getElementById('fileSelect');
+                    select.innerHTML = '<option>Виберіть раду</option>';
+                    data.files.forEach(file => {
+                        var option = document.createElement('option');
+                        option.value = file;
+                        option.textContent = file;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading file list:', error));
         }
 
-        function addSearchControl(layerGroup) {
+        document.getElementById('fileSelect').addEventListener('change', function () {
+            var selectedFile = this.value;
+            if (selectedFile !== 'Виберіть раду') {
+                addGeoJsonLayer('data/' + selectedFile, selectedFile);
+            }
+        });
+
+        document.getElementById('geolocationButton').addEventListener('click', function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    var marker = L.marker([lat, lng]).addTo(map);
+                    map.setView([lat, lng], 15);
+                }, function () {
+                    alert('Не вдалося отримати вашу геолокацію.');
+                });
+            } else {
+                alert('Ваш браузер не підтримує геолокацію.');
+            }
+        });
+
+        function addSearchControl(layer) {
             if (searchControl) {
                 map.removeControl(searchControl);
             }
             searchControl = new L.Control.Search({
-                layer: layerGroup,
-                propertyName: 'name', // Зміни тут, якщо властивість для пошуку інша
-                marker: false,
-                moveToLocation: function(latlng, title, map) {
-                    map.setView(latlng, 15);
-                }
-            }).addTo(map);
+                layer: layer,
+                propertyName: 'Кадастровий номер',
+                zoom: 15,
+                initial: false,
+                textPlaceholder: 'пошук' // Заміна тексту підказки
+            });
+            map.addControl(searchControl);
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            loadFileList();
-
-            L.control.zoom({
-                position: 'topright'
-            }).addTo(map);
-
-            L.control.scale({
-                position: 'bottomright'
-            }).addTo(map);
-
-            document.getElementById('geolocationButton').addEventListener('click', function() {
-                map.locate({ setView: true, maxZoom: 16 });
+        function addMarkersByCadastreNumbers(cadastreNumbers) {
+            var markers = L.layerGroup().addTo(map);
+            cadastreNumbers.forEach(cadastre => {
+                // Тут потрібно реалізувати логіку для отримання координат по кадастровому номеру.
+                // Це може бути зроблено через запит до вашого сервера або API.
+                // Зараз я просто додам маркер на випадкових координатах.
+                var lat = 48.3794 + Math.random() * 5; // Приклад координат
+                var lng = 31.1656 + Math.random() * 5; // Приклад координат
+                L.marker([lat, lng]).addTo(markers);
             });
+            map.fitBounds(markers.getBounds());
+        }
 
-            map.on('locationfound', function(e) {
-                L.marker(e.latlng).addTo(map)
-                    .bindPopup("Ви тут!")
-                    .openPopup();
-            });
-
-            map.on('locationerror', function() {
-                alert("Не вдалося визначити ваше місцезнаходження.");
-            });
+        document.getElementById('showMarkersButton').addEventListener('click', function () {
+            var cadastreInput = document.getElementById('cadastreInput').value;
+            var cadastreNumbers = cadastreInput.split(',').map(num => num.trim());
+            addMarkersByCadastreNumbers(cadastreNumbers);
         });
+
+        loadFileList();
+        updateLayersControl();
     </script>
 </body>
 </html>
