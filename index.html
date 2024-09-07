@@ -72,6 +72,23 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             display: none;
         }
+        #cadNumbersPopup textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+        #cadNumbersPopup button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #cadNumbersPopup button:hover {
+            background-color: #0056b3;
+        }
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -239,7 +256,7 @@
                 return {
                     tenant: tenant,
                     layer: tenantLayers[tenant],
-                    area: tenantAreas[tenant] ? tenantAreas[tenant].toFixed(2) : 0
+                    area: tenantAreas[tenant] || 0
                 };
             });
 
