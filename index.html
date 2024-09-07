@@ -70,7 +70,6 @@
             z-index: 1000;
             border-radius: 5px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: none;
         }
         #cadNumbersPopup textarea {
             width: 100%;
@@ -91,14 +90,6 @@
         }
     </style>
     <title>Карта земельних ділянок</title>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMBXL0TQLR"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-CMBXL0TQLR');
-    </script>
 </head>
 <body>
     <div id="map"></div>
@@ -296,11 +287,13 @@
         function showMarkers(cadNumbers) {
             // Припустимо, що у вас є endpoint або функція для отримання даних по кадастрових номерах
             // Змінити цю частину, щоб відображати маркери відповідно до кадастрових номерів
-            // Наприклад, fetch("api/cad-numbers?numbers=" + cadNumbers)
             cadNumbers.forEach(num => {
                 // Тут повинні бути дані для кожного кадастрового номера
                 // Тримайте в обліку маркери для кожного з них
                 console.log("Показати маркер для кадастрового номера: " + num);
+                // Для тестування додаємо фіктивні маркери
+                var latLng = [48 + Math.random(), 31 + Math.random()]; // Фіктивні координати
+                L.marker(latLng).addTo(map).bindPopup("Кадастровий номер: " + num);
             });
         }
 
