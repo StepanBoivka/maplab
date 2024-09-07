@@ -58,11 +58,25 @@
             font-size: 12px;
         }
         .leaflet-control-search {
-            top: 50px !important; /* Змістити поле пошуку вниз */
+            top: 50px !important;
+        }
+        #popupContainer {
+            position: absolute;
+            top: 100px;
+            right: 10px;
+            background-color: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        #cadNumbersInput {
+            width: 100%;
+            height: 60px;
         }
     </style>
     <title>Карта земельних ділянок</title>
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMBXL0TQLR"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -79,6 +93,13 @@
         </select>
     </div>
     <div id="geolocationButton">📍</div>
+    
+    <!-- Додано новий блок для вводу кадастрових номерів -->
+    <div id="popupContainer">
+        <textarea id="cadNumbersInput" rows="4" placeholder="Вставте кадастрові номери тут"></textarea>
+        <button id="showMarkersButton">Показати</button>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
@@ -108,7 +129,6 @@
         var freeLayer = L.layerGroup();
         var freeArea = 0;
 
-        // Заздалегідь визначені кольори
         var predefinedColors = [
             "#E44754", "#1B9688", "#ff9947", "#FAC1FA", "#9BBFF8",
             "#95F1FA", "#C6F8BD", "#F7FAB2", "#FFD7A6", "#FDABAB"
@@ -168,11 +188,11 @@
                     map.removeLayer(overlays[layerName]);
                 }
             }
-            overlays = {}; // Очистити об'єкт з шарами
+            overlays = {};
         }
 
         function addGeoJsonLayer(url, layerName) {
-            clearOverlays(); // Очистити старі полігони
+            clearOverlays();
 
             fetch(url)
                 .then(response => response.json())
@@ -199,7 +219,7 @@
                 map.removeControl(layersControl);
             }
             layersControl = L.control.layers(baseMaps, overlays, {
-                collapsed: true // Меню згорнуте за замовчуванням
+                collapsed: true
             }).addTo(map);
             addTenantLayers();
             addFreeLayer();
@@ -237,67 +257,57 @@
         }
 
         function addFreeLayer() {
-            if (freeLayer.getLayers().length > 0) {
-                overlays["вільні від оренди"] = freeLayer;
-                var colorBox = '<span class="color-box" style="background-color:#ffffff"></span>';
-                layersControl.addOverlay(freeLayer, colorBox + '<span class="layer-name">вільні від оренди (' + freeArea.toFixed(2) + ' га)</span>');
-            }
+            overlays['Вільні ділянки'] = freeLayer;
+            layersControl.addOverlay(freeLayer, '<span class="color-box" style="background-color:#ffffff"></span><span class="layer-name">Вільні ділянки (' + freeArea.toFixed(2) + ' га)</span>');
         }
-
-        function loadFileList() {
-            fetch('data/file_list.json')
-                .then(response => response.json())
-                .then(data => {
-                    var select = document.getElementById('fileSelect');
-                    select.innerHTML = '<option>Виберіть раду</option>';
-                    data.files.forEach(file => {
-                        var option = document.createElement('option');
-                        option.value = file;
-                        option.textContent = file;
-                        select.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error loading file list:', error));
-        }
-
-        document.getElementById('fileSelect').addEventListener('change', function () {
-            var selectedFile = this.value;
-            if (selectedFile !== 'Виберіть раду') {
-                addGeoJsonLayer('data/' + selectedFile, selectedFile);
-            }
-        });
-
-        document.getElementById('geolocationButton').addEventListener('click', function () {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    var lat = position.coords.latitude;
-                    var lng = position.coords.longitude;
-                    var marker = L.marker([lat, lng]).addTo(map);
-                    map.setView([lat, lng], 15);
-                }, function () {
-                    alert('Не вдалося отримати вашу геолокацію.');
-                });
-            } else {
-                alert('Ваш браузер не підтримує геолокацію.');
-            }
-        });
 
         function addSearchControl(layer) {
             if (searchControl) {
                 map.removeControl(searchControl);
             }
+
             searchControl = new L.Control.Search({
                 layer: layer,
                 propertyName: 'Кадастровий номер',
-                zoom: 15,
-                initial: false,
-                textPlaceholder: 'пошук' // Заміна тексту підказки
-            });
-            map.addControl(searchControl);
+                zoom: 18,
+                initial: false
+            }).addTo(map);
         }
 
-        loadFileList();
-        updateLayersControl();
+        // Функція для обробки кадастрових номерів та побудови маркерів
+        document.getElementById('showMarkersButton').addEventListener('click', function() {
+            var cadNumbers = document.getElementById('cadNumbersInput').value.split('\n');
+            var matchedLayers = [];
+
+            cadNumbers.forEach(function(cadNumber) {
+                map.eachLayer(function(layer) {
+                    if (layer.feature && layer.feature.properties && layer.feature.properties["Кадастровий номер"] === cadNumber.trim()) {
+                        var latLng = layer.getBounds().getCenter();
+                        var marker = L.marker(latLng).addTo(map);
+                        matchedLayers.push(marker);
+                    }
+                });
+            });
+
+            if (matchedLayers.length > 0) {
+                var group = new L.featureGroup(matchedLayers);
+                map.fitBounds(group.getBounds());
+            } else {
+                alert('Жодної ділянки не знайдено за введеними кадастровими номерами.');
+            }
+        });
+
+        document.getElementById('geolocationButton').addEventListener('click', function() {
+            map.locate({ setView: true, maxZoom: 16 });
+        });
+
+        map.on('locationfound', function(e) {
+            L.marker(e.latlng).addTo(map).bindPopup("Ви тут").openPopup();
+        });
+
+        map.on('locationerror', function() {
+            alert("Неможливо визначити ваше місцезнаходження");
+        });
     </script>
 </body>
 </html>
