@@ -93,8 +93,8 @@
         </select>
     </div>
     <div id="geolocationButton">📍</div>
-    
-    <!-- Додано новий блок для вводу кадастрових номерів -->
+
+    <!-- Блок для введення кадастрових номерів -->
     <div id="popupContainer">
         <textarea id="cadNumbersInput" rows="4" placeholder="Вставте кадастрові номери тут"></textarea>
         <button id="showMarkersButton">Показати</button>
@@ -247,10 +247,7 @@
                 };
             });
 
-            tenantList.sort((a, b) => b.area - a.area);
-
             tenantList.forEach(item => {
-                overlays[item.tenant] = item.layer;
                 var colorBox = '<span class="color-box" style="background-color:' + getColor(item.tenant) + '"></span>';
                 layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
             });
