@@ -133,7 +133,6 @@
         var freeLayer = L.layerGroup();
         var freeArea = 0;
 
-        // Заздалегідь визначені кольори
         var predefinedColors = [
             "#E44754", "#1B9688", "#ff9947", "#FAC1FA", "#9BBFF8",
             "#95F1FA", "#C6F8BD", "#F7FAB2", "#FFD7A6", "#FDABAB"
@@ -193,7 +192,7 @@
                     map.removeLayer(overlays[layerName]);
                 }
             }
-            overlays = {}; // Очистити об'єкт з шарами
+            overlays = {};
         }
 
         function addGeoJsonLayer(url, layerName) {
@@ -224,117 +223,123 @@
                 map.removeControl(layersControl);
             }
             layersControl = L.control.layers(baseMaps, overlays, {
-                collapsed: true // Меню згорнуте за замовчуванням
+                collapsed: true
             }).addTo(map);
             addTenantLayers();
-            addFreeLayer();
         }
 
         function addTenantLayers() {
-            var tenantLayers = {};
-            Object.values(overlays).forEach(layerGroup => {
-                layerGroup.eachLayer(layer => {
-                    var tenant = layer.feature.properties["Орендар"];
-                    if (tenant) {
-                        if (!tenantLayers[tenant]) {
-                            tenantLayers[tenant] = L.layerGroup();
-                        }
-                        tenantLayers[tenant].addLayer(layer);
-                    }
-                });
-            });
-
-            var tenantList = Object.keys(tenantLayers).map(tenant => ({
-                tenant: tenant,
-                layer: tenantLayers[tenant],
-                area: tenantAreas[tenant] || 0
-            }));
-
-            tenantList.sort((a, b) => b.area - a.area);
-
-            tenantList.forEach(item => {
-                overlays[item.tenant] = item.layer;
-                var colorBox = '<span class="color-box" style="background-color:' + getColor(item.tenant) + '"></span>';
-                layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
-            });
-        }
-
-        function addFreeLayer() {
-            if (freeLayer.getLayers().length > 0) {
-                overlays["вільні від оренди"] = freeLayer;
-                var colorBox = '<span class="color-box" style="background-color:#ffffff"></span>';
-                layersControl.addOverlay(freeLayer, colorBox + '<span class="layer-name">вільні від оренди (' + freeArea.toFixed(2) + ' га)</span>');
-            }
-        }
-
-        function loadFileList() {
-            fetch('data/file_list.json')
-                .then(response => response.json())
-                .then(data => {
-                    var files = data.files;
-                    var autocompleteList = document.getElementById('autocompleteList');
-                    autocompleteList.innerHTML = '';
-
-                    files.forEach(file => {
-                        var div = document.createElement('div');
-                        div.textContent = file;
-                        div.dataset.value = file;
-                        div.addEventListener('click', function () {
-                            document.getElementById('searchInput').value = this.textContent;
-                            autocompleteList.style.display = 'none';
-                            addGeoJsonLayer('data/' + this.dataset.value, this.dataset.value);
+            for (var tenant in tenantAreas) {
+                if (tenantAreas.hasOwnProperty(tenant)) {
+                    if (tenantAreas[tenant] > 0) {
+                        var layer = L.geoJSON(null, {
+                            style: function () {
+                                return {
+                                    color: getColor(tenant),
+                                    weight: 0.5,
+                                    opacity: 1,
+                                    fillOpacity: 0.4
+                                };
+                            },
+                            onEachFeature: onEachFeature
                         });
-                        autocompleteList.appendChild(div);
-                    });
-                })
-                .catch(error => console.error('Error loading file list:', error));
+                        for (var layerName in overlays) {
+                            if (overlays.hasOwnProperty(layerName)) {
+                                var geojsonLayer = overlays[layerName];
+                                geojsonLayer.eachLayer(function (layer) {
+                                    var feature = layer.feature;
+                                    if (feature.properties && feature.properties["Орендар"] === tenant) {
+                                        layer.addLayer(layer);
+                                    }
+                                });
+                            }
+                        }
+                        overlays[tenant] = layer;
+                        layer.addTo(map);
+                    }
+                }
+            }
         }
 
-        function filterFiles() {
-            var input = document.getElementById('searchInput').value.toLowerCase();
-            var autocompleteList = document.getElementById('autocompleteList');
-            var options = autocompleteList.getElementsByTagName('div');
-
-            for (var i = 0; i < options.length; i++) {
-                var text = options[i].textContent.toLowerCase();
-                options[i].style.display = text.includes(input) ? '' : 'none';
-            }
-            autocompleteList.style.display = input ? 'block' : 'none';
-        }
-
-        document.getElementById('searchInput').addEventListener('input', filterFiles);
-
-        document.getElementById('geolocationButton').addEventListener('click', function () {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    var lat = position.coords.latitude;
-                    var lng = position.coords.longitude;
-                    var marker = L.marker([lat, lng]).addTo(map);
-                    map.setView([lat, lng], 15);
-                }, function () {
-                    alert('Не вдалося отримати вашу геолокацію.');
-                });
-            } else {
-                alert('Ваш браузер не підтримує геолокацію.');
-            }
-        });
-
-        function addSearchControl(layer) {
+        function addSearchControl(geoJsonLayer) {
             if (searchControl) {
                 map.removeControl(searchControl);
             }
             searchControl = new L.Control.Search({
-                layer: layer,
+                layer: geoJsonLayer,
                 propertyName: 'Кадастровий номер',
-                zoom: 15,
-                initial: false,
-                textPlaceholder: 'пошук' // Заміна тексту підказки
-            });
-            map.addControl(searchControl);
+                zoom: 16,
+                marker: false,
+                moveToLocation: function (latlng, title, map) {
+                    map.setView(latlng, 16);
+                }
+            }).addTo(map);
         }
 
+        function filterFiles() {
+            var searchValue = document.getElementById('searchInput').value.toLowerCase();
+            var autocompleteList = document.getElementById('autocompleteList');
+            autocompleteList.innerHTML = '';
+            var filteredFiles = [];
+            for (var i = 0; i < fileList.length; i++) {
+                if (fileList[i].toLowerCase().includes(searchValue)) {
+                    filteredFiles.push(fileList[i]);
+                }
+            }
+            if (filteredFiles.length > 0) {
+                autocompleteList.style.display = 'block';
+                for (var j = 0; j < filteredFiles.length; j++) {
+                    var item = document.createElement('div');
+                    item.textContent = filteredFiles[j];
+                    item.onclick = function () {
+                        document.getElementById('searchInput').value = this.textContent;
+                        autocompleteList.style.display = 'none';
+                        addGeoJsonLayer('/path/to/geojson/' + this.textContent, this.textContent);
+                    };
+                    autocompleteList.appendChild(item);
+                }
+            } else {
+                autocompleteList.style.display = 'none';
+            }
+        }
+
+        var fileList = []; // Має бути заповнено шляхами до файлів GeoJSON
+
+        function loadFileList() {
+            // Завантаження списку файлів (імплементувати за потреби)
+            fileList = [
+                'file1.geojson',
+                'file2.geojson',
+                'file3.geojson'
+                // Додайте інші файли
+            ];
+        }
+
+        document.getElementById('searchInput').addEventListener('input', filterFiles);
+        document.getElementById('searchInput').addEventListener('focus', function () {
+            document.getElementById('autocompleteList').style.display = 'block';
+        });
+        document.getElementById('searchInput').addEventListener('blur', function () {
+            setTimeout(function () {
+                document.getElementById('autocompleteList').style.display = 'none';
+            }, 200);
+        });
+
+        document.getElementById('geolocationButton').addEventListener('click', function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var latlng = [position.coords.latitude, position.coords.longitude];
+                    map.setView(latlng, 16);
+                    L.marker(latlng).addTo(map);
+                }, function () {
+                    alert('Не вдалося отримати ваше місцезнаходження.');
+                });
+            } else {
+                alert('Геолокація не підтримується цим браузером.');
+            }
+        });
+
         loadFileList();
-        updateLayersControl();
     </script>
 </body>
 </html>
