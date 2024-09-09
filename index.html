@@ -99,7 +99,13 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=YOUR_GA_MEASUREMENT_ID"></script>
     <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'YOUR_GA_MEASUREMENT_ID');
+
         var map = L.map('map').setView([48.3794, 31.1656], 6);
 
         var googleLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
@@ -256,13 +262,33 @@
             searchControl = new L.Control.Search({
                 layer: geoJsonLayer,
                 propertyName: 'Кадастровий номер',
-                zoom: 16,
+                zoom: 12,
                 marker: false,
-                moveToLocation: function (latlng, title, map) {
-                    map.setView(latlng, 16);
-                }
-            }).addTo(map);
+                initial: false
+            });
+            searchControl.addTo(map);
         }
+
+        document.getElementById('geolocationButton').addEventListener('click', function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    map.setView([lat, lng], 13);
+                    L.marker([lat, lng]).addTo(map).bindPopup('Ваша поточна локація').openPopup();
+                }, function (error) {
+                    alert('Не вдалося отримати ваше місцезнаходження.');
+                });
+            } else {
+                alert('Ваш браузер не підтримує геолокацію.');
+            }
+        });
+
+        var fileList = [
+            'file1.geojson',
+            'file2.geojson',
+            'file3.geojson'
+        ];
 
         function filterFiles() {
             var searchValue = document.getElementById('searchInput').value.toLowerCase();
@@ -280,9 +306,16 @@
                     var item = document.createElement('div');
                     item.textContent = filteredFiles[j];
                     item.onclick = function () {
-                        document.getElementById('searchInput').value = this.textContent;
+                        var selectedFile = this.textContent;
+                        document.getElementById('searchInput').value = selectedFile;
                         autocompleteList.style.display = 'none';
-                        addGeoJsonLayer('/path/to/geojson/' + this.textContent, this.textContent);
+                        addGeoJsonLayer('/path/to/geojson/' + selectedFile, selectedFile);
+
+                        // Відправка події в Google Analytics
+                        gtag('event', 'file_selection', {
+                            'event_category': 'Search',
+                            'event_label': selectedFile
+                        });
                     };
                     autocompleteList.appendChild(item);
                 }
@@ -291,43 +324,8 @@
             }
         }
 
-        var fileList = []; // Має бути заповнено шляхами до файлів GeoJSON
-
-        function loadFileList() {
-            // Завантаження списку файлів (імплементувати за потреби)
-            fileList = [
-                'file1.geojson',
-                'file2.geojson',
-                'file3.geojson'
-                // Додайте інші файли
-            ];
-        }
-
         document.getElementById('searchInput').addEventListener('input', filterFiles);
-        document.getElementById('searchInput').addEventListener('focus', function () {
-            document.getElementById('autocompleteList').style.display = 'block';
-        });
-        document.getElementById('searchInput').addEventListener('blur', function () {
-            setTimeout(function () {
-                document.getElementById('autocompleteList').style.display = 'none';
-            }, 200);
-        });
-
-        document.getElementById('geolocationButton').addEventListener('click', function () {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    var latlng = [position.coords.latitude, position.coords.longitude];
-                    map.setView(latlng, 16);
-                    L.marker(latlng).addTo(map);
-                }, function () {
-                    alert('Не вдалося отримати ваше місцезнаходження.');
-                });
-            } else {
-                alert('Геолокація не підтримується цим браузером.');
-            }
-        });
-
-        loadFileList();
+        updateLayersControl();
     </script>
 </body>
 </html>
