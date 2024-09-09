@@ -47,28 +47,6 @@
             background: #218838;
             border-color: #1e7e34;
         }
-        #cadastreInput {
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 12px;
-            width: 100%;
-            margin-bottom: 5px;
-        }
-        #showMarkersButton {
-            padding: 5px;
-            border: 1px solid #007bff;
-            border-radius: 5px;
-            background: #007bff;
-            color: white;
-            font-size: 12px;
-            cursor: pointer;
-            text-align: center;
-        }
-        #showMarkersButton:hover {
-            background: #0056b3;
-            border-color: #004085;
-        }
         .color-box {
             width: 12px;
             height: 12px;
@@ -99,8 +77,6 @@
         <select id="fileSelect">
             <option>Виберіть файл</option>
         </select>
-        <input type="text" id="cadastreInput" placeholder="Введіть кадастрові номери через кому">
-        <div id="showMarkersButton">Показати маркери</div>
     </div>
     <div id="geolocationButton">📍</div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -268,44 +244,6 @@
             }
         }
 
-        function loadFileList() {
-            fetch('data/file_list.json')
-                .then(response => response.json())
-                .then(data => {
-                    var select = document.getElementById('fileSelect');
-                    select.innerHTML = '<option>Виберіть раду</option>';
-                    data.files.forEach(file => {
-                        var option = document.createElement('option');
-                        option.value = file;
-                        option.textContent = file;
-                        select.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error loading file list:', error));
-        }
-
-        document.getElementById('fileSelect').addEventListener('change', function () {
-            var selectedFile = this.value;
-            if (selectedFile !== 'Виберіть раду') {
-                addGeoJsonLayer('data/' + selectedFile, selectedFile);
-            }
-        });
-
-        document.getElementById('geolocationButton').addEventListener('click', function () {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    var lat = position.coords.latitude;
-                    var lng = position.coords.longitude;
-                    var marker = L.marker([lat, lng]).addTo(map);
-                    map.setView([lat, lng], 15);
-                }, function () {
-                    alert('Не вдалося отримати вашу геолокацію.');
-                });
-            } else {
-                alert('Ваш браузер не підтримує геолокацію.');
-            }
-        });
-
         function addSearchControl(layer) {
             if (searchControl) {
                 map.removeControl(searchControl);
@@ -313,34 +251,58 @@
             searchControl = new L.Control.Search({
                 layer: layer,
                 propertyName: 'Кадастровий номер',
-                zoom: 15,
+                marker: false,
                 initial: false,
-                textPlaceholder: 'пошук' // Заміна тексту підказки
+                moveToLocation: function (latlng, title, map) {
+                    map.setView(latlng, 17); // Зум до обраного полігону
+                }
             });
             map.addControl(searchControl);
         }
 
-        function addMarkersByCadastreNumbers(cadastreNumbers) {
-            var markers = L.layerGroup().addTo(map);
-            cadastreNumbers.forEach(cadastre => {
-                // Тут потрібно реалізувати логіку для отримання координат по кадастровому номеру.
-                // Це може бути зроблено через запит до вашого сервера або API.
-                // Зараз я просто додам маркер на випадкових координатах.
-                var lat = 48.3794 + Math.random() * 5; // Приклад координат
-                var lng = 31.1656 + Math.random() * 5; // Приклад координат
-                L.marker([lat, lng]).addTo(markers);
-            });
-            map.fitBounds(markers.getBounds());
-        }
-
-        document.getElementById('showMarkersButton').addEventListener('click', function () {
-            var cadastreInput = document.getElementById('cadastreInput').value;
-            var cadastreNumbers = cadastreInput.split(',').map(num => num.trim());
-            addMarkersByCadastreNumbers(cadastreNumbers);
+        // Геолокація
+        document.getElementById("geolocationButton").addEventListener("click", function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    map.setView([lat, lng], 17);
+                    L.marker([lat, lng]).addTo(map)
+                        .bindPopup("Ви тут").openPopup();
+                }, function (error) {
+                    console.error("Геолокація не вдалася: " + error.message);
+                });
+            } else {
+                console.error("Ваш браузер не підтримує геолокацію.");
+            }
         });
 
-        loadFileList();
-        updateLayersControl();
+        // Вибір файлу
+        document.getElementById('fileSelect').addEventListener('change', function () {
+            var selectedFile = this.value;
+            if (selectedFile !== 'Виберіть файл') {
+                var url = './json/' + selectedFile;
+                var layerName = selectedFile.replace('.json', ''); // Назва шару без .json
+                addGeoJsonLayer(url, layerName);
+
+                // Відправляємо подію до Google Analytics
+                gtag('event', 'file_select', {
+                    'event_category': 'File Selection',
+                    'event_label': selectedFile.replace('.json', ''), // Назва обраного файлу
+                    'value': 1
+                });
+            }
+        });
+
+        // Додавання файлів до списку
+        var jsonFiles = ['file1.json', 'file2.json', 'file3.json']; // Приклад файлів
+        var fileSelect = document.getElementById('fileSelect');
+        jsonFiles.forEach(function (file) {
+            var option = document.createElement('option');
+            option.value = file;
+            option.textContent = file;
+            fileSelect.appendChild(option);
+        });
     </script>
 </body>
 </html>
