@@ -23,19 +23,36 @@
             flex-direction: column;
             width: 200px;
         }
-        #fileSearch {
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 5px;
-            font-size: 12px;
+        #searchContainer {
+            position: relative;
         }
-        #fileSelect {
+        #searchInput {
             padding: 5px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            margin-bottom: 5px;
             font-size: 12px;
+            width: 100%;
+        }
+        #autocompleteList {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            z-index: 1000;
+            display: none;
+        }
+        #autocompleteList div {
+            padding: 5px;
+            cursor: pointer;
+        }
+        #autocompleteList div:hover {
+            background-color: #f1f1f1;
         }
         #geolocationButton {
             position: absolute;
@@ -81,10 +98,10 @@
 <body>
     <div id="map"></div>
     <div id="controls">
-        <input type="text" id="fileSearch" placeholder="Пошук ради..." onkeyup="filterFiles()">
-        <select id="fileSelect">
-            <option>Виберіть раду</option>
-        </select>
+        <div id="searchContainer">
+            <input type="text" id="searchInput" placeholder="Пошук файлів...">
+            <div id="autocompleteList"></div>
+        </div>
     </div>
     <div id="geolocationButton">📍</div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -227,13 +244,11 @@
                 });
             });
 
-            var tenantList = Object.keys(tenantLayers).map(tenant => {
-                return {
-                    tenant: tenant,
-                    layer: tenantLayers[tenant],
-                    area: tenantAreas[tenant] ? tenantAreas[tenant].toFixed(2) : 0
-                };
-            });
+            var tenantList = Object.keys(tenantLayers).map(tenant => ({
+                tenant: tenant,
+                layer: tenantLayers[tenant],
+                area: tenantAreas[tenant] || 0
+            }));
 
             tenantList.sort((a, b) => b.area - a.area);
 
@@ -256,40 +271,38 @@
             fetch('data/file_list.json')
                 .then(response => response.json())
                 .then(data => {
-                    var select = document.getElementById('fileSelect');
-                    var search = document.getElementById('fileSearch');
-                    select.innerHTML = '<option>Виберіть раду</option>';
-                    data.files.forEach(file => {
-                        var option = document.createElement('option');
-                        option.value = file;
-                        option.textContent = file;
-                        select.appendChild(option);
+                    var files = data.files;
+                    var autocompleteList = document.getElementById('autocompleteList');
+                    autocompleteList.innerHTML = '';
+
+                    files.forEach(file => {
+                        var div = document.createElement('div');
+                        div.textContent = file;
+                        div.dataset.value = file;
+                        div.addEventListener('click', function () {
+                            document.getElementById('searchInput').value = this.textContent;
+                            autocompleteList.style.display = 'none';
+                            addGeoJsonLayer('data/' + this.dataset.value, this.dataset.value);
+                        });
+                        autocompleteList.appendChild(div);
                     });
                 })
                 .catch(error => console.error('Error loading file list:', error));
         }
 
         function filterFiles() {
-            var input = document.getElementById('fileSearch').value.toLowerCase();
-            var select = document.getElementById('fileSelect');
-            var options = select.getElementsByTagName('option');
-            
+            var input = document.getElementById('searchInput').value.toLowerCase();
+            var autocompleteList = document.getElementById('autocompleteList');
+            var options = autocompleteList.getElementsByTagName('div');
+
             for (var i = 0; i < options.length; i++) {
                 var text = options[i].textContent.toLowerCase();
                 options[i].style.display = text.includes(input) ? '' : 'none';
             }
+            autocompleteList.style.display = input ? 'block' : 'none';
         }
 
-        document.getElementById('fileSelect').addEventListener('change', function () {
-            var selectedFile = this.value;
-            if (selectedFile !== 'виберіть раду') {
-                gtag('event', 'select_content', {
-                    'content_type': 'file',
-                    'item_id': selectedFile
-                });
-                addGeoJsonLayer('data/' + selectedFile, selectedFile);
-            }
-        });
+        document.getElementById('searchInput').addEventListener('input', filterFiles);
 
         document.getElementById('geolocationButton').addEventListener('click', function () {
             if (navigator.geolocation) {
