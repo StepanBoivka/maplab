@@ -244,6 +244,48 @@
             }
         }
 
+        function loadFileList() {
+            fetch('data/file_list.json')
+                .then(response => response.json())
+                .then(data => {
+                    var select = document.getElementById('fileSelect');
+                    select.innerHTML = '<option>Виберіть раду</option>';
+                    data.files.forEach(file => {
+                        var option = document.createElement('option');
+                        option.value = file;
+                        option.textContent = file;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading file list:', error));
+        }
+
+        document.getElementById('fileSelect').addEventListener('change', function () {
+            var selectedFile = this.value;
+            if (selectedFile !== 'Виберіть файл') {
+                gtag('event', 'select_content', {
+                    'content_type': 'file',
+                    'item_id': selectedFile
+                });
+                addGeoJsonLayer('data/' + selectedFile, selectedFile);
+            }
+        });
+
+        document.getElementById('geolocationButton').addEventListener('click', function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    var marker = L.marker([lat, lng]).addTo(map);
+                    map.setView([lat, lng], 15);
+                }, function () {
+                    alert('Не вдалося отримати вашу геолокацію.');
+                });
+            } else {
+                alert('Ваш браузер не підтримує геолокацію.');
+            }
+        });
+
         function addSearchControl(layer) {
             if (searchControl) {
                 map.removeControl(searchControl);
@@ -251,58 +293,15 @@
             searchControl = new L.Control.Search({
                 layer: layer,
                 propertyName: 'Кадастровий номер',
-                marker: false,
+                zoom: 15,
                 initial: false,
-                moveToLocation: function (latlng, title, map) {
-                    map.setView(latlng, 17); // Зум до обраного полігону
-                }
+                textPlaceholder: 'пошук' // Заміна тексту підказки
             });
             map.addControl(searchControl);
         }
 
-        // Геолокація
-        document.getElementById("geolocationButton").addEventListener("click", function () {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    var lat = position.coords.latitude;
-                    var lng = position.coords.longitude;
-                    map.setView([lat, lng], 17);
-                    L.marker([lat, lng]).addTo(map)
-                        .bindPopup("Ви тут").openPopup();
-                }, function (error) {
-                    console.error("Геолокація не вдалася: " + error.message);
-                });
-            } else {
-                console.error("Ваш браузер не підтримує геолокацію.");
-            }
-        });
-
-        // Вибір файлу
-        document.getElementById('fileSelect').addEventListener('change', function () {
-            var selectedFile = this.value;
-            if (selectedFile !== 'Виберіть файл') {
-                var url = './json/' + selectedFile;
-                var layerName = selectedFile.replace('.json', ''); // Назва шару без .json
-                addGeoJsonLayer(url, layerName);
-
-                // Відправляємо подію до Google Analytics
-                gtag('event', 'file_select', {
-                    'event_category': 'File Selection',
-                    'event_label': selectedFile.replace('.json', ''), // Назва обраного файлу
-                    'value': 1
-                });
-            }
-        });
-
-        // Додавання файлів до списку
-        var jsonFiles = ['file1.json', 'file2.json', 'file3.json']; // Приклад файлів
-        var fileSelect = document.getElementById('fileSelect');
-        jsonFiles.forEach(function (file) {
-            var option = document.createElement('option');
-            option.value = file;
-            option.textContent = file;
-            fileSelect.appendChild(option);
-        });
+        loadFileList();
+        updateLayersControl();
     </script>
 </body>
 </html>
