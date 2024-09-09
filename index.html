@@ -23,6 +23,13 @@
             flex-direction: column;
             width: 200px;
         }
+        #fileSearch {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
         #fileSelect {
             padding: 5px;
             border: 1px solid #ccc;
@@ -74,6 +81,7 @@
 <body>
     <div id="map"></div>
     <div id="controls">
+        <input type="text" id="fileSearch" placeholder="Пошук файлів..." onkeyup="filterFiles()">
         <select id="fileSelect">
             <option>Виберіть файл</option>
         </select>
@@ -249,7 +257,8 @@
                 .then(response => response.json())
                 .then(data => {
                     var select = document.getElementById('fileSelect');
-                    select.innerHTML = '<option>Виберіть раду</option>';
+                    var search = document.getElementById('fileSearch');
+                    select.innerHTML = '<option>Виберіть файл</option>';
                     data.files.forEach(file => {
                         var option = document.createElement('option');
                         option.value = file;
@@ -258,6 +267,17 @@
                     });
                 })
                 .catch(error => console.error('Error loading file list:', error));
+        }
+
+        function filterFiles() {
+            var input = document.getElementById('fileSearch').value.toLowerCase();
+            var select = document.getElementById('fileSelect');
+            var options = select.getElementsByTagName('option');
+            
+            for (var i = 0; i < options.length; i++) {
+                var text = options[i].textContent.toLowerCase();
+                options[i].style.display = text.includes(input) ? '' : 'none';
+            }
         }
 
         document.getElementById('fileSelect').addEventListener('change', function () {
