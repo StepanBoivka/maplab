@@ -83,7 +83,7 @@
     <div id="controls">
         <input type="text" id="fileSearch" placeholder="Пошук ради..." onkeyup="filterFiles()">
         <select id="fileSelect">
-            <option>Виберіть файл</option>
+            <option>Виберіть раду</option>
         </select>
     </div>
     <div id="geolocationButton">📍</div>
@@ -258,7 +258,7 @@
                 .then(data => {
                     var select = document.getElementById('fileSelect');
                     var search = document.getElementById('fileSearch');
-                    select.innerHTML = '<option>Виберіть файл</option>';
+                    select.innerHTML = '<option>Виберіть раду</option>';
                     data.files.forEach(file => {
                         var option = document.createElement('option');
                         option.value = file;
@@ -282,7 +282,7 @@
 
         document.getElementById('fileSelect').addEventListener('change', function () {
             var selectedFile = this.value;
-            if (selectedFile !== 'Виберіть файл') {
+            if (selectedFile !== 'виберіть раду') {
                 gtag('event', 'select_content', {
                     'content_type': 'file',
                     'item_id': selectedFile
