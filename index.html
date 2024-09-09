@@ -71,22 +71,8 @@
             background: #218838;
             border-color: #1e7e34;
         }
-        .color-box {
-            width: 12px;
-            height: 12px;
-            display: inline-block;
-            margin-right: 5px;
-        }
-        .layer-name {
-            color: black;
-            font-size: 12px;
-        }
-        .leaflet-control-search {
-            top: 50px !important; /* Змістити поле пошуку вниз */
-        }
     </style>
     <title>Карта земельних ділянок</title>
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMBXL0TQLR"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -133,7 +119,6 @@
         var freeLayer = L.layerGroup();
         var freeArea = 0;
 
-        // Заздалегідь визначені кольори
         var predefinedColors = [
             "#E44754", "#1B9688", "#ff9947", "#FAC1FA", "#9BBFF8",
             "#95F1FA", "#C6F8BD", "#F7FAB2", "#FFD7A6", "#FDABAB"
@@ -257,7 +242,7 @@
                 }).addTo(map);
 
                 layer.addData({ "type": "FeatureCollection", "features": [] });
-                tenantLayers[entry.tenant].eachLayer(l => layer.addData(l.feature));
+                entry.layer.eachLayer(l => layer.addData(l.feature));
 
                 overlays[entry.tenant] = layer;
             });
