@@ -71,8 +71,22 @@
             background: #218838;
             border-color: #1e7e34;
         }
+        .color-box {
+            width: 12px;
+            height: 12px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .layer-name {
+            color: black;
+            font-size: 12px;
+        }
+        .leaflet-control-search {
+            top: 50px !important; /* Змістити поле пошуку вниз */
+        }
     </style>
     <title>Карта земельних ділянок</title>
+    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMBXL0TQLR"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -119,6 +133,7 @@
         var freeLayer = L.layerGroup();
         var freeArea = 0;
 
+        // Заздалегідь визначені кольори
         var predefinedColors = [
             "#E44754", "#1B9688", "#ff9947", "#FAC1FA", "#9BBFF8",
             "#95F1FA", "#C6F8BD", "#F7FAB2", "#FFD7A6", "#FDABAB"
@@ -233,98 +248,93 @@
                 tenant: tenant,
                 layer: tenantLayers[tenant],
                 area: tenantAreas[tenant] || 0
-            })).sort((a, b) => a.tenant.localeCompare(b.tenant));
+            }));
 
-            tenantList.forEach(entry => {
-                var color = getColor(entry.tenant);
-                var layer = L.geoJSON(null, {
-                    style: function() { return { color: color, weight: 2, opacity: 1, fillOpacity: 0.4 }; }
-                }).addTo(map);
+            tenantList.sort((a, b) => b.area - a.area);
 
-                layer.addData({ "type": "FeatureCollection", "features": [] });
-                entry.layer.eachLayer(l => layer.addData(l.feature));
-
-                overlays[entry.tenant] = layer;
+            tenantList.forEach(item => {
+                overlays[item.tenant] = item.layer;
+                var colorBox = '<span class="color-box" style="background-color:' + getColor(item.tenant) + '"></span>';
+                layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
             });
         }
 
         function addFreeLayer() {
-            if (freeArea > 0) {
-                var freeLayerGroup = L.layerGroup().addTo(map);
-                freeLayer.eachLayer(layer => {
-                    freeLayerGroup.addLayer(layer);
-                });
-                overlays["Вільні ділянки"] = freeLayerGroup;
+            if (freeLayer.getLayers().length > 0) {
+                overlays["вільні від оренди"] = freeLayer;
+                var colorBox = '<span class="color-box" style="background-color:#ffffff"></span>';
+                layersControl.addOverlay(freeLayer, colorBox + '<span class="layer-name">вільні від оренди (' + freeArea.toFixed(2) + ' га)</span>');
             }
-        }
-
-        function addSearchControl(layerGroup) {
-            if (searchControl) {
-                map.removeControl(searchControl);
-            }
-            searchControl = new L.Control.Search({
-                layer: layerGroup,
-                propertyName: 'Кадастровий номер',
-                zoom: 14,
-                marker: false
-            }).addTo(map);
         }
 
         function loadFileList() {
-            fetch('path_to_your_file_list.json') // Замініть на шлях до вашого списку файлів
+            fetch('data/file_list.json')
                 .then(response => response.json())
                 .then(data => {
-                    var fileList = data.files;
+                    var files = data.files;
                     var autocompleteList = document.getElementById('autocompleteList');
                     autocompleteList.innerHTML = '';
 
-                    fileList.forEach(file => {
-                        var fileName = file.name.replace('.json', ''); // Видалення розширення .json
+                    files.forEach(file => {
                         var div = document.createElement('div');
-                        div.textContent = fileName;
-                        div.addEventListener('click', function() {
-                            addGeoJsonLayer(file.url, fileName);
-                            document.getElementById('searchInput').value = fileName;
+                        div.textContent = file;
+                        div.dataset.value = file;
+                        div.addEventListener('click', function () {
+                            document.getElementById('searchInput').value = this.textContent;
                             autocompleteList.style.display = 'none';
+                            addGeoJsonLayer('data/' + this.dataset.value, this.dataset.value);
                         });
                         autocompleteList.appendChild(div);
-                    });
-
-                    document.getElementById('searchInput').addEventListener('input', function() {
-                        var searchValue = this.value.toLowerCase();
-                        var items = autocompleteList.getElementsByTagName('div');
-                        Array.from(items).forEach(item => {
-                            var text = item.textContent.toLowerCase();
-                            item.style.display = text.includes(searchValue) ? 'block' : 'none';
-                        });
-                        autocompleteList.style.display = searchValue ? 'block' : 'none';
-                    });
-
-                    document.addEventListener('click', function(e) {
-                        if (!document.getElementById('searchContainer').contains(e.target)) {
-                            autocompleteList.style.display = 'none';
-                        }
                     });
                 })
                 .catch(error => console.error('Error loading file list:', error));
         }
 
-        loadFileList();
+        function filterFiles() {
+            var input = document.getElementById('searchInput').value.toLowerCase();
+            var autocompleteList = document.getElementById('autocompleteList');
+            var options = autocompleteList.getElementsByTagName('div');
 
-        document.getElementById('geolocationButton').addEventListener('click', function() {
+            for (var i = 0; i < options.length; i++) {
+                var text = options[i].textContent.toLowerCase();
+                options[i].style.display = text.includes(input) ? '' : 'none';
+            }
+            autocompleteList.style.display = input ? 'block' : 'none';
+        }
+
+        document.getElementById('searchInput').addEventListener('input', filterFiles);
+
+        document.getElementById('geolocationButton').addEventListener('click', function () {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
+                navigator.geolocation.getCurrentPosition(function (position) {
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
-                    map.setView([lat, lng], 14);
-                    L.marker([lat, lng]).addTo(map)
-                        .bindPopup('Ваша поточна локація')
-                        .openPopup();
+                    var marker = L.marker([lat, lng]).addTo(map);
+                    map.setView([lat, lng], 15);
+                }, function () {
+                    alert('Не вдалося отримати вашу геолокацію.');
                 });
             } else {
-                alert('Geolocation не підтримується вашим браузером.');
+                alert('Ваш браузер не підтримує геолокацію.');
             }
         });
+
+        function addSearchControl(layer) {
+            if (searchControl) {
+                map.removeControl(searchControl);
+            }
+            searchControl = new L.Control.Search({
+                layer: layer,
+                propertyName: 'Кадастровий номер',
+                zoom: 15,
+                initial: false,
+                textPlaceholder: 'пошук' // Заміна тексту підказки
+            });
+            map.addControl(searchControl);
+        }
+
+        loadFileList();
+        updateLayersControl();
     </script>
 </body>
 </html>
