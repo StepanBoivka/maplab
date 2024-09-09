@@ -99,7 +99,7 @@
     <div id="map"></div>
     <div id="controls">
         <div id="searchContainer">
-            <input type="text" id="searchInput" placeholder="Пошук ради...">
+            <input type="text" id="searchInput" placeholder="Пошук файлів...">
             <div id="autocompleteList"></div>
         </div>
     </div>
@@ -250,10 +250,10 @@
                 area: tenantAreas[tenant] || 0
             }));
 
-            tenantList.sort((a, b) => b.area - a.area);
-
-            tenantList.forEach(item => {
-                overlays[item.tenant] = item.layer;
+            tenantList.sort((a, b) => b.area - a.area).forEach(item => {
+                var colorBox = `<span class="color-box" style="background-color: ${getColor(item.tenant)};"></span>`;
+                var label = `${colorBox} ${item.tenant} (${(item.area / 10000).toFixed(2)} га)`;
+                overlays[label] = item.layer;
                 L.control.layers({}, overlays, {
                     collapsed: false,
                     position: 'topleft'
@@ -263,7 +263,8 @@
 
         function addFreeLayer() {
             if (freeLayer.getLayers().length > 0) {
-                overlays["Вільні ділянки"] = freeLayer;
+                var freeLabel = `<span class="color-box" style="background-color: ${getColor(null)};"></span> Вільні ділянки (${(freeArea / 10000).toFixed(2)} га)`;
+                overlays[freeLabel] = freeLayer;
                 L.control.layers({}, overlays, {
                     collapsed: false,
                     position: 'topleft'
@@ -328,7 +329,7 @@
                 if (event.target.tagName === 'DIV') {
                     input.value = event.target.textContent;
                     autocompleteList.style.display = 'none';
-                    addGeoJsonLayer('data/' + event.target.dataset.value, event.target.dataset.value);
+                    addGeoJsonLayer('data/' + event.target.dataset.value, event.target.textContent);
 
                     // Відправити подію до Google Analytics
                     gtag('event', 'file_selection', {
