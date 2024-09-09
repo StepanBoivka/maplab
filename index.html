@@ -246,113 +246,95 @@
 
             var tenantList = Object.keys(tenantLayers).map(tenant => ({
                 tenant: tenant,
-                layer: tenantLayers[tenant],
-                area: tenantAreas[tenant] || 0
+                layer: tenantLayers[tenant]
             }));
 
-            tenantList.sort((a, b) => b.area - a.area).forEach(item => {
-                var colorBox = `<span class="color-box" style="background-color: ${getColor(item.tenant)};"></span>`;
-                var label = `${colorBox} ${item.tenant} (${(item.area / 10000).toFixed(2)} га)`;
-                overlays[label] = item.layer;
-                L.control.layers({}, overlays, {
-                    collapsed: false,
-                    position: 'topleft'
-                }).addTo(map);
+            tenantList.forEach(item => {
+                var layerName = item.tenant + " (Орендар)";
+                overlays[layerName] = item.layer;
             });
+
+            updateLayersControl();
         }
 
         function addFreeLayer() {
             if (freeLayer.getLayers().length > 0) {
-                var freeLabel = `<span class="color-box" style="background-color: ${getColor(null)};"></span> Вільні ділянки (${(freeArea / 10000).toFixed(2)} га)`;
-                overlays[freeLabel] = freeLayer;
-                L.control.layers({}, overlays, {
-                    collapsed: false,
-                    position: 'topleft'
-                }).addTo(map);
+                overlays["Вільні ділянки"] = freeLayer;
+                updateLayersControl();
             }
         }
 
-        function addSearchControl(layer) {
+        function addSearchControl(geoJsonLayer) {
             if (searchControl) {
                 map.removeControl(searchControl);
             }
             searchControl = new L.Control.Search({
-                layer: layer,
-                initial: false,
-                zoom: 14,
-                marker: false
-            }).addTo(map);
+                layer: geoJsonLayer,
+                propertyName: 'Кадастровий номер',
+                marker: false,
+                moveToLocation: function(latlng, title, map) {
+                    map.setView(latlng, 18);
+                }
+            });
+            map.addControl(searchControl);
         }
 
-        function loadGeoJsonFiles() {
-            // Функція для завантаження GeoJSON файлів та оновлення карти
-            fetch('data/geojson_files.json')
-                .then(response => response.json())
-                .then(data => {
-                    var list = document.getElementById('autocompleteList');
-                    list.innerHTML = ''; // Очистити список перед додаванням нових елементів
-                    data.forEach(file => {
-                        var div = document.createElement('div');
-                        div.textContent = file.name;
-                        div.dataset.value = file.url;
-                        list.appendChild(div);
+        document.getElementById('searchInput').addEventListener('input', function() {
+            var query = this.value.toLowerCase();
+            var list = document.getElementById('autocompleteList');
+            list.innerHTML = '';
+
+            if (query.length > 0) {
+                fetch('path_to_your_files_list') // Заміни на шлях до файлів
+                    .then(response => response.json())
+                    .then(files => {
+                        files.forEach(file => {
+                            if (file.name.toLowerCase().includes(query)) {
+                                var div = document.createElement('div');
+                                div.textContent = file.name;
+                                div.dataset.url = file.url;
+                                div.addEventListener('click', function() {
+                                    gtag('event', 'file_selected', { 'event_category': 'File', 'event_label': this.textContent });
+                                    addGeoJsonLayer(this.dataset.url, this.textContent);
+                                    document.getElementById('autocompleteList').style.display = 'none';
+                                });
+                                list.appendChild(div);
+                            }
+                        });
+                        if (list.childNodes.length > 0) {
+                            list.style.display = 'block';
+                        } else {
+                            list.style.display = 'none';
+                        }
                     });
-                })
-                .catch(error => console.error('Error loading GeoJSON files:', error));
-        }
+            } else {
+                list.style.display = 'none';
+            }
+        });
 
-        function setupAutocomplete() {
-            var input = document.getElementById('searchInput');
-            var autocompleteList = document.getElementById('autocompleteList');
-
-            input.addEventListener('input', function () {
-                var filter = input.value.toLowerCase();
-                var items = autocompleteList.getElementsByTagName('div');
-
-                Array.from(items).forEach(function (item) {
-                    var text = item.textContent.toLowerCase();
-                    if (text.includes(filter)) {
-                        item.style.display = '';
-                    } else {
-                        item.style.display = 'none';
-                    }
+        document.getElementById('geolocationButton').addEventListener('click', function() {
+            gtag('event', 'geolocation_request', { 'event_category': 'Action', 'event_label': 'Geolocation Button Clicked' });
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var latlng = [position.coords.latitude, position.coords.longitude];
+                    map.setView(latlng, 13);
+                    L.marker(latlng).addTo(map)
+                        .bindPopup('Ваша поточна локація')
+                        .openPopup();
                 });
-
-                if (filter) {
-                    autocompleteList.style.display = 'block';
-                } else {
-                    autocompleteList.style.display = 'none';
-                }
-            });
-
-            autocompleteList.addEventListener('click', function (event) {
-                if (event.target.tagName === 'DIV') {
-                    input.value = event.target.textContent;
-                    autocompleteList.style.display = 'none';
-                    addGeoJsonLayer('data/' + event.target.dataset.value, event.target.textContent);
-
-                    // Відправити подію до Google Analytics
-                    gtag('event', 'file_selection', {
-                        'event_category': 'File',
-                        'event_label': event.target.dataset.value
-                    });
-                }
-            });
-        }
-
-        document.getElementById('geolocationButton').addEventListener('click', function () {
-            map.locate({ setView: true, maxZoom: 16 });
+            } else {
+                alert('Геолокація не підтримується вашим браузером.');
+            }
         });
 
-        map.on('locationfound', function (e) {
-            L.marker(e.latlng).addTo(map)
-                .bindPopup("Ви тут!")
-                .openPopup();
-        });
-
-        loadGeoJsonFiles();
-        setupAutocomplete();
-        updateLayersControl();
+        // Ініціалізуємо зображення для маркера
+        L.marker([0, 0], {
+            icon: L.divIcon({
+                className: 'custom-icon',
+                html: '<i class="fa fa-map-marker"></i>',
+                iconSize: [25, 41]
+            })
+        }).addTo(map);
     </script>
 </body>
 </html>
