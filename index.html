@@ -86,20 +86,12 @@
         }
     </style>
     <title>Карта земельних ділянок</title>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMBXL0TQLR"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-CMBXL0TQLR');
-    </script>
 </head>
 <body>
     <div id="map"></div>
     <div id="controls">
         <div id="searchContainer">
-            <input type="text" id="searchInput" placeholder="Пошук ради...">
+            <input type="text" id="searchInput" placeholder="Пошук...">
             <div id="autocompleteList"></div>
         </div>
     </div>
@@ -108,9 +100,7 @@
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
     <script>
-        var map = L.map('map', {
-            zoomControl: false
-        }).setView([48.3794, 31.1656], 6);
+        var map = L.map('map').setView([48.3794, 31.1656], 6);
 
         var googleLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
             maxZoom: 20,
@@ -140,9 +130,7 @@
         var colorIndex = 0;
 
         function getColor(tenant) {
-            if (tenant === null || tenant === "" || tenant === undefined) {
-                return "#ffffff";
-            }
+            if (!tenant) return "#ffffff";
             if (!tenantColors[tenant]) {
                 tenantColors[tenant] = predefinedColors[colorIndex % predefinedColors.length];
                 colorIndex++;
@@ -164,7 +152,7 @@
                 var tenant = feature.properties["Орендар"];
                 var area = parseFloat(feature.properties["Площа розрахована"]);
                 if (!isNaN(area)) {
-                    if (tenant === null || tenant === "" || tenant === undefined) {
+                    if (!tenant) {
                         freeLayer.addLayer(layer);
                         freeArea += area;
                     } else {
