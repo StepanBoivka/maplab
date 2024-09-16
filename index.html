@@ -195,6 +195,7 @@
             layersControl = L.control.layers(baseMaps, overlays, {
                 collapsed: true // Меню згорнуте за замовчуванням
             }).addTo(map);
+            console.log("Layers control updated."); // Лог для перевірки
             addTenantLayers();
             addFreeLayer();
         }
@@ -217,15 +218,19 @@
                 return {
                     tenant: tenant,
                     layer: tenantLayers[tenant],
-                    area: tenantAreas[tenant] ? tenantAreas[tenant].toFixed(2) : 0
+                    area: tenantAreas[tenant] ? tenantAreas[tenant].toFixed(2) : "0.00"
                 };
-            });
+            }).sort((a, b) => b.area - a.area);
 
-            tenantList.sort((a, b) => b.area - a.area);
+            tenantList.forEach(tenant => {
+                var color = getColor(tenant.tenant);
+                var tenantLayer = L.geoJSON(null, {
+                    style: function () { return { color: color }; }
+                });
 
-            tenantList.forEach(item => {
-                overlays[item.tenant] = item.layer;
-                item.layer.addTo(map);
+                tenantLayer.addData(tenant.layer.toGeoJSON());
+                overlays[tenant.tenant] = tenantLayer;
+                tenantLayer.addTo(map);
             });
         }
 
