@@ -47,6 +47,19 @@
             background: #218838;
             border-color: #1e7e34;
         }
+        .color-box {
+            width: 12px;
+            height: 12px;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .layer-name {
+            color: black;
+            font-size: 12px;
+        }
+        .leaflet-control-search {
+            top: 50px !important; /* Змістити поле пошуку вниз */
+        }
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -84,16 +97,14 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
 
-        // Додаємо новий тайловий шар
-        var satelliteLayer = L.tileLayer('data/tiles/sat/{z}/{x}/{y}.png', {
-            maxZoom: 18,
-            attribution: '© <a href="https://www.example.com">Ваші дані</a>'
+        var satTileLayer = L.tileLayer('data/tiles/sat/{z}/{x}/{y}.png', {
+            maxZoom: 18
         });
 
         var baseMaps = {
             "Google Maps": googleLayer,
             "OpenStreetMap": openStreetMapLayer,
-            "Супутникові знімки": satelliteLayer // Додаємо новий шар
+            "Satellite": satTileLayer
         };
 
         var overlays = {};
@@ -195,7 +206,6 @@
             layersControl = L.control.layers(baseMaps, overlays, {
                 collapsed: true // Меню згорнуте за замовчуванням
             }).addTo(map);
-            console.log("Layers control updated."); // Лог для перевірки
             addTenantLayers();
             addFreeLayer();
         }
@@ -218,73 +228,70 @@
                 return {
                     tenant: tenant,
                     layer: tenantLayers[tenant],
-                    area: tenantAreas[tenant] ? tenantAreas[tenant].toFixed(2) : "0.00"
+                    area: tenantAreas[tenant] ? tenantAreas[tenant].toFixed(2) : 0
                 };
-            }).sort((a, b) => b.area - a.area);
+            });
 
-            tenantList.forEach(tenant => {
-                var color = getColor(tenant.tenant);
-                var tenantLayer = L.geoJSON(null, {
-                    style: function () { return { color: color }; }
-                });
+            tenantList.sort((a, b) => b.area - a.area);
 
-                tenantLayer.addData(tenant.layer.toGeoJSON());
-                overlays[tenant.tenant] = tenantLayer;
-                tenantLayer.addTo(map);
+            tenantList.forEach(item => {
+                overlays[item.tenant] = item.layer;
+                var colorBox = '<span class="color-box" style="background-color:' + getColor(item.tenant) + '"></span>';
+                layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
             });
         }
 
         function addFreeLayer() {
             if (freeLayer.getLayers().length > 0) {
-                overlays["Вільні ділянки"] = freeLayer;
-                freeLayer.addTo(map);
+                overlays["Без орендаря"] = freeLayer;
+                var colorBox = '<span class="color-box" style="background-color:' + getColor(null) + '"></span>';
+                layersControl.addOverlay(freeLayer, colorBox + '<span class="layer-name">Без орендаря (' + freeArea.toFixed(2) + ' га)</span>');
             }
         }
 
-        function addSearchControl(layer) {
+        function addSearchControl(layerGroup) {
             if (searchControl) {
                 map.removeControl(searchControl);
             }
             searchControl = new L.Control.Search({
-                layer: layer,
-                propertyName: 'Кадастровий номер',
-                zoom: 16,
+                layer: layerGroup,
+                propertyName: 'name',
                 marker: false,
-                textPlaceholder: 'Пошук по кадастровому номеру...'
-            }).addTo(map);
+                textPlaceholder: 'Пошук...',
+                zoom: 15
+            });
+            map.addControl(searchControl);
         }
 
-        function handleFileSelect(event) {
+        function onFileChange(event) {
             var file = event.target.files[0];
             if (file) {
-                var fileName = file.name;
-                var layerName = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
-                var filePath = URL.createObjectURL(file);
-                addGeoJsonLayer(filePath, layerName);
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    addGeoJsonLayer(e.target.result, file.name);
+                };
+                reader.readAsDataURL(file);
             }
         }
 
-        document.getElementById('fileSelect').addEventListener('change', handleFileSelect);
+        document.getElementById('fileSelect').addEventListener('change', onFileChange);
 
-        document.getElementById('geolocationButton').addEventListener('click', function() {
+        var geolocationButton = document.getElementById('geolocationButton');
+        geolocationButton.addEventListener('click', function() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
                     var lat = position.coords.latitude;
-                    var lng = position.coords.longitude;
-                    map.setView([lat, lng], 16);
-                    L.marker([lat, lng]).addTo(map)
-                        .bindPopup('Ваша поточна локація')
+                    var lon = position.coords.longitude;
+                    map.setView([lat, lon], 13);
+                    L.marker([lat, lon]).addTo(map)
+                        .bindPopup('Ваша локація')
                         .openPopup();
-                }, function() {
-                    alert('Не вдалося отримати ваше місцезнаходження.');
                 });
             } else {
-                alert('Геолокація не підтримується вашим браузером.');
+                alert("Ваш браузер не підтримує геолокацію.");
             }
         });
 
-        // Ініціалізація карти з базовим шаром
-        googleLayer.addTo(map);
         updateLayersControl();
     </script>
 </body>
