@@ -97,14 +97,9 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
 
-        var satTileLayer = L.tileLayer('data/tiles/sat/{z}/{x}/{y}.png', {
-            maxZoom: 18
-        });
-
         var baseMaps = {
             "Google Maps": googleLayer,
-            "OpenStreetMap": openStreetMapLayer,
-            "Satellite": satTileLayer
+            "OpenStreetMap": openStreetMapLayer
         };
 
         var overlays = {};
@@ -243,55 +238,69 @@
 
         function addFreeLayer() {
             if (freeLayer.getLayers().length > 0) {
-                overlays["Без орендаря"] = freeLayer;
-                var colorBox = '<span class="color-box" style="background-color:' + getColor(null) + '"></span>';
-                layersControl.addOverlay(freeLayer, colorBox + '<span class="layer-name">Без орендаря (' + freeArea.toFixed(2) + ' га)</span>');
+                overlays["вільні від оренди"] = freeLayer;
+                var colorBox = '<span class="color-box" style="background-color:#ffffff"></span>';
+                layersControl.addOverlay(freeLayer, colorBox + '<span class="layer-name">вільні від оренди (' + freeArea.toFixed(2) + ' га)</span>');
             }
         }
 
-        function addSearchControl(layerGroup) {
+        function loadFileList() {
+            fetch('data/file_list.json')
+                .then(response => response.json())
+                .then(data => {
+                    var select = document.getElementById('fileSelect');
+                    select.innerHTML = '<option>Виберіть раду</option>';
+                    data.files.forEach(file => {
+                        var option = document.createElement('option');
+                        option.value = file;
+                        option.textContent = file;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading file list:', error));
+        }
+
+        document.getElementById('fileSelect').addEventListener('change', function () {
+            var selectedFile = this.value;
+            if (selectedFile !== 'Виберіть файл') {
+                gtag('event', 'select_content', {
+                    'content_type': 'file',
+                    'item_id': selectedFile
+                });
+                addGeoJsonLayer('data/' + selectedFile, selectedFile);
+            }
+        });
+
+        document.getElementById('geolocationButton').addEventListener('click', function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    var marker = L.marker([lat, lng]).addTo(map);
+                    map.setView([lat, lng], 15);
+                }, function () {
+                    alert('Не вдалося отримати вашу геолокацію.');
+                });
+            } else {
+                alert('Ваш браузер не підтримує геолокацію.');
+            }
+        });
+
+        function addSearchControl(layer) {
             if (searchControl) {
                 map.removeControl(searchControl);
             }
             searchControl = new L.Control.Search({
-                layer: layerGroup,
-                propertyName: 'name',
-                marker: false,
-                textPlaceholder: 'Пошук...',
-                zoom: 15
+                layer: layer,
+                propertyName: 'Кадастровий номер',
+                zoom: 15,
+                initial: false,
+                textPlaceholder: 'пошук' // Заміна тексту підказки
             });
             map.addControl(searchControl);
         }
 
-        function onFileChange(event) {
-            var file = event.target.files[0];
-            if (file) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    addGeoJsonLayer(e.target.result, file.name);
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        document.getElementById('fileSelect').addEventListener('change', onFileChange);
-
-        var geolocationButton = document.getElementById('geolocationButton');
-        geolocationButton.addEventListener('click', function() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var lat = position.coords.latitude;
-                    var lon = position.coords.longitude;
-                    map.setView([lat, lon], 13);
-                    L.marker([lat, lon]).addTo(map)
-                        .bindPopup('Ваша локація')
-                        .openPopup();
-                });
-            } else {
-                alert("Ваш браузер не підтримує геолокацію.");
-            }
-        });
-
+        loadFileList();
         updateLayersControl();
     </script>
 </body>
