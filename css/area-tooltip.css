@@ -1,8 +1,8 @@
 .area-tooltip {
     background-color: transparent; /* Прозорий фон */
     color: yellow; /* Жовтий текст */
-    font-weight: bold; /* Жирний текст (опціонально) */
-    border: none; /* Прибираємо рамку */
-    font-size: 14px; /* Розмір шрифту (опціонально) */
+    font-weight: bold; /* Жирний текст */
+    border: 2px solid yellow; /* Товщина 2px, суцільна жовта лінія */
+    font-size: 14px; /* Розмір шрифту */
+    padding: 2px; /* Відступи для відстані між текстом та лінією */
 }
-
