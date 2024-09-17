@@ -211,13 +211,25 @@ function styleFieldFeature(feature) {
     };
 }
 //поля обрбітку
+// Додаємо шар "Поля обробітку"
+var fieldLayer; // Створюємо змінну для зберігання шару
+
+function styleFieldFeature(feature) {
+    return {
+        color: 'yellow', // Межа полігону жовтого кольору
+        weight: 1,       // Товщина межі
+        opacity: 1,
+        fillOpacity: 0   // Прозорий полігон
+    };
+}
+
 function addFieldLayer() {
     fetch('data/field.geojson')
         .then(response => response.json())
         .then(data => {
-            var fieldLayer = L.geoJSON(data, {
+            fieldLayer = L.geoJSON(data, {
                 style: styleFieldFeature
-            }).addTo(map); // Додаємо шар на карту
+            }).addTo(map); // Додаємо шар на карту постійно
 
             // Додаємо до меню шарів
             overlays["Поля обробітку"] = fieldLayer;
@@ -227,8 +239,19 @@ function addFieldLayer() {
         .catch(error => console.error('Error loading Field GeoJSON data:', error));
 }
 
+// Модифікуємо функцію очищення шарів так, щоб не видаляти шар "Поля обробітку"
+function clearOverlays() {
+    for (var layerName in overlays) {
+        if (overlays.hasOwnProperty(layerName) && layerName !== "Поля обробітку") { // Не очищуємо "Поля обробітку"
+            map.removeLayer(overlays[layerName]);
+        }
+    }
+    overlays = { "Поля обробітку": fieldLayer }; // Зберігаємо цей шар
+}
+
 // Викликаємо функцію додавання шару при завантаженні карти
 addFieldLayer();
+
 //кінець полів обробітку
 
 
