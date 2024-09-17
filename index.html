@@ -98,7 +98,7 @@
             maxZoom: 19,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
-		var rasterLayer = L.tileLayer('data/tiles/sat/{z}/{x}/{y}.png', {
+		var rasterLayer = L.tileLayer(`${dataPath}/tiles/sat/{z}/{x}/{y}.png`, {
             maxZoom: 20,
             attribution: 'Актуальні растри'
         });
@@ -179,7 +179,14 @@
             }
             overlays = {}; // Очистити об'єкт з шарами
         }
+//-------------------------------------------------------------
+// Отримуємо останню частину URL (папка з даними)
+let pathParts = window.location.pathname.split('/');
+let subFolder = pathParts[pathParts.length - 1];
 
+// Якщо URL містить підпапку, завантажуй дані з неї, інакше — з 'data/'
+let dataPath = subFolder ? `data/${subFolder}` : 'data';	    
+//-------------------------------------------------------------	    
         function addGeoJsonLayer(url, layerName) {
             clearOverlays(); // Очистити старі полігони
 
@@ -235,7 +242,7 @@ function updateLabelsVisibility() {
 }
 
 function addFieldLayer() {
-    fetch('data/field.geojson')
+    fetch(`${dataPath}/field.geojson`)
         .then(response => response.json())
         .then(data => {
             fieldLayer = L.geoJSON(data, {
@@ -338,7 +345,7 @@ map.on('zoomend', function() {
         }
 
         function loadFileList() {
-            fetch('data/file_list.json')
+            fetch(`${dataPath}/field.geojson`)
                 .then(response => response.json())
                 .then(data => {
                     var select = document.getElementById('fileSelect');
