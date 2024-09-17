@@ -2,7 +2,7 @@
     background-color: transparent; /* Прозорий фон */
     color: yellow; /* Жовтий текст */
     font-weight: bold; /* Жирний текст */
-    border: 5px solid yellow; /* Товщина 2px, суцільна жовта лінія */
+    border: 0px solid yellow; /* Товщина 2px, суцільна жовта лінія */
     font-size: 14px; /* Розмір шрифту */
     padding: 2px; /* Відступи для відстані між текстом та лінією */
 }
