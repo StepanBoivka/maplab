@@ -201,6 +201,37 @@
         var layersControl;
         var searchControl;
 
+	    // Додаємо шар "Поля обробітку"
+function styleFieldFeature(feature) {
+    return {
+        color: 'yellow', // Межа полігону жовтого кольору
+        weight: 1,       // Товщина межі
+        opacity: 1,
+        fillOpacity: 0   // Прозорий полігон
+    };
+}
+//поля обрбітку
+function addFieldLayer() {
+    fetch('data/field.geojson')
+        .then(response => response.json())
+        .then(data => {
+            var fieldLayer = L.geoJSON(data, {
+                style: styleFieldFeature
+            }).addTo(map); // Додаємо шар на карту
+
+            // Додаємо до меню шарів
+            overlays["Поля обробітку"] = fieldLayer;
+            var colorBox = '<span class="color-box" style="background-color:transparent; border: 2px solid yellow"></span>';
+            layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Поля обробітку</span>');
+        })
+        .catch(error => console.error('Error loading Field GeoJSON data:', error));
+}
+
+// Викликаємо функцію додавання шару при завантаженні карти
+addFieldLayer();
+//кінець полів обробітку
+
+
         function updateLayersControl() {
             if (layersControl) {
                 map.removeControl(layersControl);
