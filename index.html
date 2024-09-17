@@ -85,6 +85,15 @@
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
     <script>
+
+	    //-------------------------------------------------------------
+// Отримуємо останню частину URL (папка з даними)
+let pathParts = window.location.pathname.split('/');
+let subFolder = pathParts[pathParts.length - 1];
+
+// Якщо URL містить підпапку, завантажуй дані з неї, інакше — з 'data/'
+let dataPath = subFolder ? `data/${subFolder}` : 'data';	    
+//-------------------------------------------------------------	    
         var map = L.map('map', {
             zoomControl: false
         }).setView([48.3794, 31.1656], 6);
@@ -179,14 +188,7 @@
             }
             overlays = {}; // Очистити об'єкт з шарами
         }
-//-------------------------------------------------------------
-// Отримуємо останню частину URL (папка з даними)
-let pathParts = window.location.pathname.split('/');
-let subFolder = pathParts[pathParts.length - 1];
 
-// Якщо URL містить підпапку, завантажуй дані з неї, інакше — з 'data/'
-let dataPath = subFolder ? `data/${subFolder}` : 'data';	    
-//-------------------------------------------------------------	    
         function addGeoJsonLayer(url, layerName) {
             clearOverlays(); // Очистити старі полігони
 
