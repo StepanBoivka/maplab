@@ -99,8 +99,14 @@
 
         var baseMaps = {
             "Google Maps": googleLayer,
-            "OpenStreetMap": openStreetMapLayer
+            "OpenStreetMap": openStreetMapLayer,
+			"Актуальні растри": rasterLayer // Додаємо новий шар
         };
+		var rasterLayer = L.tileLayer('data/tiles/sat/{z}/{x}/{y}.png', {
+            maxZoom: 20,
+            attribution: '© Актуальні растри'
+        });
+
 
         var overlays = {};
         var tenantColors = {};
