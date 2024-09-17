@@ -204,6 +204,11 @@
 	    // Додаємо шар "Поля обробітку"
 // Додаємо шар "Поля обробітку"
 var fieldLayer; // Створюємо змінну для зберігання шару
+var currentZoom = map.getZoom(); // Отримуємо поточний зум карти
+
+// Визначаємо мінімальний і максимальний рівень зуму для відображення написів
+var minZoomForLabels = 13; // Мінімальний зум, на якому видно написи
+var maxZoomForLabels = 18; // Максимальний зум, на якому видно написи
 
 function styleFieldFeature(feature) {
     return {
@@ -212,6 +217,19 @@ function styleFieldFeature(feature) {
         opacity: 1,
         fillOpacity: 0   // Прозорий полігон
     };
+}
+
+function updateLabelsVisibility() {
+    currentZoom = map.getZoom(); // Оновлюємо поточний рівень зуму
+    fieldLayer.eachLayer(function (layer) {
+        if (currentZoom >= minZoomForLabels && currentZoom <= maxZoomForLabels) {
+            // Показуємо підказки тільки на визначеному діапазоні зуму
+            layer.getTooltip().setOpacity(1);
+        } else {
+            // Ховаємо підказки
+            layer.getTooltip().setOpacity(0);
+        }
+    });
 }
 
 function addFieldLayer() {
@@ -223,15 +241,19 @@ function addFieldLayer() {
                 onEachFeature: function (feature, layer) {
                     if (feature.properties && feature.properties.area) {
                         var area = feature.properties.area; 
-                        // Додаємо підказку з площею
-                        layer.bindTooltip("Площа: " + area + " га", {
-                            permanent: true,   // Постійна підказка (вона завжди на карті)
+                        // Додаємо підказку лише з числом площі
+                        layer.bindTooltip(area.toString(), {
+                            permanent: true,   // Постійна підказка
                             direction: 'center', // Позиціонування в центрі полігону
-                            className: 'area-tooltip' // Додатковий клас для стилізації (необов'язково)
+                            className: 'area-tooltip', // Додатковий клас для стилізації
+                            opacity: 0 // Спочатку підказки приховані
                         });
                     }
                 }
-            }).addTo(map); // Додаємо шар на карту постійно
+            }).addTo(map);
+
+            // Оновлюємо видимість підказок відповідно до поточного рівня зуму
+            updateLabelsVisibility();
 
             // Додаємо до меню шарів
             overlays["Поля обробітку"] = fieldLayer;
@@ -253,6 +275,11 @@ function clearOverlays() {
 
 // Викликаємо функцію додавання шару при завантаженні карти
 addFieldLayer();
+
+// Додаємо подію для оновлення видимості підказок при зміні зуму
+map.on('zoomend', function() {
+    updateLabelsVisibility();
+});
 
 	    
 	    //кінець полів обробітку
