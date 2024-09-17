@@ -1,1 +1,8 @@
+.area-tooltip {
+    background-color: transparent; /* Прозорий фон */
+    color: yellow; /* Жовтий текст */
+    font-weight: bold; /* Жирний текст (опціонально) */
+    border: none; /* Прибираємо рамку */
+    font-size: 14px; /* Розмір шрифту (опціонально) */
+}
 
