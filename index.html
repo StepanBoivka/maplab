@@ -182,7 +182,14 @@
 
         function addGeoJsonLayer(url, layerName) {
             clearOverlays(); // Очистити старі полігони
+//те що запропонувів ші з гуідами--------------------------------------------------
+		// Отримуємо останню частину URL (папка з даними)
+let pathParts = window.location.pathname.split('/');
+let subFolder = pathParts[pathParts.length - 1];
 
+// Якщо URL містить підпапку, завантажуй дані з неї, інакше — з 'data/'
+let dataPath = subFolder ? `data/${subFolder}` : 'data';
+		//-------------------------------------------------------------------
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
@@ -235,7 +242,7 @@ function updateLabelsVisibility() {
 }
 
 function addFieldLayer() {
-    fetch('data/field.geojson')
+    fetch(`${dataPath}/field.geojson`')
         .then(response => response.json())
         .then(data => {
             fieldLayer = L.geoJSON(data, {
@@ -338,7 +345,7 @@ map.on('zoomend', function() {
         }
 
         function loadFileList() {
-            fetch('data/file_list.json')
+            fetch(`${dataPath}/field.geojson`')
                 .then(response => response.json())
                 .then(data => {
                     var select = document.getElementById('fileSelect');
