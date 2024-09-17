@@ -107,7 +107,7 @@
         var baseMaps = {
             "Google Maps": googleLayer,
             "OpenStreetMap": openStreetMapLayer,
-            "Актуальні растри": rasterLayer // Додаємо новий шар
+            "Актуальні растри": rasterLayer
         };
 
         var overlays = {};
@@ -172,15 +172,15 @@
 
         function clearOverlays() {
             for (var layerName in overlays) {
-                if (overlays.hasOwnProperty(layerName) && layerName !== "Поля обробітку") { // Не очищуємо "Поля обробітку"
+                if (overlays.hasOwnProperty(layerName) && layerName !== "Поля обробітку") {
                     map.removeLayer(overlays[layerName]);
                 }
             }
-            overlays = { "Поля обробітку": fieldLayer }; // Зберігаємо цей шар
+            overlays = { "Поля обробітку": fieldLayer };
         }
 
         function addGeoJsonLayer(url, layerName) {
-            clearOverlays(); // Очистити старі полігони
+            clearOverlays();
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
@@ -201,35 +201,29 @@
         var layersControl;
         var searchControl;
 
-        var fieldLayer; // Створюємо змінну для зберігання шару
-        var currentZoom = map.getZoom(); // Отримуємо поточний зум карти
-
-        // Визначаємо мінімальний і максимальний рівень зуму для відображення написів
-        var minZoomForLabels = 15; // Мінімальний зум, на якому видно написи
-        var maxZoomForLabels = 18; // Максимальний зум, на якому видно написи
+        var fieldLayer;
+        var currentZoom = map.getZoom();
+        var minZoomForLabels = 15;
+        var maxZoomForLabels = 18;
 
         function styleFieldFeature(feature) {
             return {
-                color: 'yellow', // Межа полігону жовтого кольору
-                weight: 3,       // Товщина межі
+                color: 'yellow',
+                weight: 3,
                 opacity: 1,
-                fillOpacity: 0   // Прозорий полігон
+                fillOpacity: 0
             };
         }
 
         function updateLabelsVisibility() {
-            currentZoom = map.getZoom(); // Оновлюємо поточний рівень зуму
-            if (fieldLayer) {
-                fieldLayer.eachLayer(function (layer) {
-                    if (currentZoom >= minZoomForLabels && currentZoom <= maxZoomForLabels) {
-                        // Показуємо підказки тільки на визначеному діапазоні зуму
-                        layer.getTooltip().setOpacity(1);
-                    } else {
-                        // Ховаємо підказки
-                        layer.getTooltip().setOpacity(0);
-                    }
-                });
-            }
+            currentZoom = map.getZoom();
+            fieldLayer.eachLayer(function (layer) {
+                if (currentZoom >= minZoomForLabels && currentZoom <= maxZoomForLabels) {
+                    layer.getTooltip().setOpacity(1);
+                } else {
+                    layer.getTooltip().setOpacity(0);
+                }
+            });
         }
 
         function addFieldLayer() {
@@ -238,24 +232,31 @@
                 .then(data => {
                     fieldLayer = L.geoJSON(data, {
                         style: styleFieldFeature,
-                        onEachFeature: onEachFeature
+                        onEachFeature: function (feature, layer) {
+                            if (feature.properties && feature.properties.area) {
+                                var area = feature.properties.area;
+                                layer.bindTooltip(area.toString(), {
+                                    permanent: true,
+                                    direction: 'center',
+                                    className: 'area-tooltip',
+                                    opacity: 0
+                                });
+                            }
+                        }
                     }).addTo(map);
                     updateLayersControl();
-                    map.addLayer(fieldLayer); // Додаємо шар на карту
-                    map.on('zoomend', updateLabelsVisibility); // Додаємо обробник подій
-                    updateLabelsVisibility(); // Оновлюємо видимість підказок
+                    map.addLayer(fieldLayer);
+                    map.on('zoomend', updateLabelsVisibility);
+                    updateLabelsVisibility();
                 })
                 .catch(error => console.error('Error loading field GeoJSON data:', error));
         }
 
         function updateLayersControl() {
             if (layersControl) {
-                map.removeControl(layersControl);
+                layersControl.remove();
             }
-            layersControl = L.control.layers(baseMaps, overlays, {
-                collapsed: false,
-                position: 'topright'
-            }).addTo(map);
+            layersControl = L.control.layers(baseMaps, overlays, { collapsed: false }).addTo(map);
         }
 
         function addSearchControl(layer) {
@@ -264,35 +265,57 @@
             }
             searchControl = new L.Control.Search({
                 layer: layer,
-                propertyName: 'Кадастровий номер', // Перевірте, чи поле є в даних
+                initial: false,
+                zoom: 12,
                 marker: false,
-                zoom: 14,
-                initial: false
+                textPlaceholder: 'Пошук...',
+                customMarker: null,
+                moveToLocation: function (latlng, title, map) {
+                    map.setView(latlng, 12);
+                }
             }).addTo(map);
         }
 
-        function initializeMap() {
-            addFieldLayer(); // Додаємо шар "Поля обробітку"
-            updateLayersControl();
-            map.addControl(L.control.zoom({ position: 'bottomright' }));
+        function handleFileSelect(event) {
+            var file = event.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var data = e.target.result;
+                    try {
+                        var json = JSON.parse(data);
+                        var fileName = file.name.split('.').slice(0, -1).join('.');
+                        addGeoJsonLayer(json, fileName);
+                    } catch (error) {
+                        console.error('Invalid JSON file:', error);
+                    }
+                };
+                reader.readAsText(file);
+            }
         }
 
-        initializeMap();
+        document.getElementById('fileSelect').addEventListener('change', handleFileSelect);
 
-        document.getElementById('geolocationButton').addEventListener('click', function() {
-            map.locate({ setView: true, maxZoom: 16 });
-        });
+        function handleGeolocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    map.setView([lat, lng], 15);
+                    L.marker([lat, lng]).addTo(map)
+                        .bindPopup('Ваша поточна позиція')
+                        .openPopup();
+                }, function (error) {
+                    console.error('Geolocation error:', error);
+                });
+            } else {
+                alert('Geolocation не підтримується вашим браузером.');
+            }
+        }
 
-        map.on('locationfound', function(e) {
-            var radius = e.accuracy / 2;
-            L.marker(e.latlng).addTo(map)
-                .bindPopup("Ваша позиція: " + e.latlng.toString()).openPopup();
-            L.circle(e.latlng, radius).addTo(map);
-        });
+        document.getElementById('geolocationButton').addEventListener('click', handleGeolocation);
 
-        map.on('locationerror', function(e) {
-            alert("Не вдалося знайти ваше місцезнаходження.");
-        });
+        addFieldLayer();
     </script>
 </body>
 </html>
