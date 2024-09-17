@@ -345,7 +345,7 @@ map.on('zoomend', function() {
         }
 
         function loadFileList() {
-            fetch(`${dataPath}/field.geojson`')
+            fetch(`${dataPath}/field.geojson`)
                 .then(response => response.json())
                 .then(data => {
                     var select = document.getElementById('fileSelect');
