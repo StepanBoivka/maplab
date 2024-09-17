@@ -242,7 +242,7 @@ function updateLabelsVisibility() {
 }
 
 function addFieldLayer() {
-    fetch(`${dataPath}/field.geojson`')
+    fetch(`${dataPath}/field.geojson`)
         .then(response => response.json())
         .then(data => {
             fieldLayer = L.geoJSON(data, {
