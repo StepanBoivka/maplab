@@ -202,15 +202,6 @@
         var searchControl;
 
 	    // Додаємо шар "Поля обробітку"
-function styleFieldFeature(feature) {
-    return {
-        color: 'yellow', // Межа полігону жовтого кольору
-        weight: 1,       // Товщина межі
-        opacity: 1,
-        fillOpacity: 0   // Прозорий полігон
-    };
-}
-//поля обрбітку
 // Додаємо шар "Поля обробітку"
 var fieldLayer; // Створюємо змінну для зберігання шару
 
@@ -228,7 +219,18 @@ function addFieldLayer() {
         .then(response => response.json())
         .then(data => {
             fieldLayer = L.geoJSON(data, {
-                style: styleFieldFeature
+                style: styleFieldFeature,
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties && feature.properties.area) {
+                        var area = feature.properties.area; 
+                        // Додаємо підказку з площею
+                        layer.bindTooltip("Площа: " + area + " га", {
+                            permanent: true,   // Постійна підказка (вона завжди на карті)
+                            direction: 'center', // Позиціонування в центрі полігону
+                            className: 'area-tooltip' // Додатковий клас для стилізації (необов'язково)
+                        });
+                    }
+                }
             }).addTo(map); // Додаємо шар на карту постійно
 
             // Додаємо до меню шарів
@@ -252,7 +254,8 @@ function clearOverlays() {
 // Викликаємо функцію додавання шару при завантаженні карти
 addFieldLayer();
 
-//кінець полів обробітку
+	    
+	    //кінець полів обробітку
 
 
         function updateLayersControl() {
