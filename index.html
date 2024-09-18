@@ -233,7 +233,7 @@
             };
         }
 function loadFileList() {
-            fetch('data/file_list.json')
+            fetch(dataPath +'file_list.json')
                 .then(response => response.json())
                 .then(data => {
                     var select = document.getElementById('fileSelect');
