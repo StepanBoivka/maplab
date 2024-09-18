@@ -181,17 +181,13 @@
         }
 
         function clearOverlays() {
-            for (var layerName in overlays) {
-                if (overlays.hasOwnProperty(layerName)) {
-                    map.removeLayer(overlays[layerName]);
-                }
-            }
-            overlays = { "Поля обробітку": fieldLayer }; // Зберігаємо шар "Поля обробітку"
-            tenantColors = {};
-            tenantAreas = {};
-            freeLayer = L.layerGroup();
-            freeArea = 0;
+    for (var layerName in overlays) {
+        if (overlays.hasOwnProperty(layerName) && layerName !== "Поля обробітку") { // Не очищуємо "Поля обробітку"
+            map.removeLayer(overlays[layerName]);
         }
+    }
+    overlays = { "Поля обробітку": fieldLayer }; // Зберігаємо цей шар
+}
 
         function addGeoJsonLayer(url, layerName) {
             clearOverlays(); // Очистити старі полігони
