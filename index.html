@@ -232,6 +232,19 @@
                 fillOpacity: 0.4 // Прозорість заповнення
             };
         }
+
+        function updateLabelsVisibility() {
+    currentZoom = map.getZoom(); // Оновлюємо поточний рівень зуму
+    fieldLayer.eachLayer(function (layer) {
+        if (currentZoom >= minZoomForLabels && currentZoom <= maxZoomForLabels) {
+            // Показуємо підказки тільки на визначеному діапазоні зуму
+            layer.getTooltip().setOpacity(1);
+        } else {
+            // Ховаємо підказки
+            layer.getTooltip().setOpacity(0);
+        }
+    });
+}
 function loadFileList() {
             fetch(dataPath +'file_list.json')
                 .then(response => response.json())
