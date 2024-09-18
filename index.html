@@ -274,16 +274,33 @@ function loadFileList() {
         function addFieldLayer() {
             fetch(dataPath + 'field.geojson')
                 .then(response => response.json())
-                .then(data => {
-                    fieldLayer = L.geoJSON(data, {
-                        style: styleFieldFeature
-                    });
+        .then(data => {
+            fieldLayer = L.geoJSON(data, {
+                style: styleFieldFeature,
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties && feature.properties.area) {
+                        var area = feature.properties.area; 
+                        // Додаємо підказку лише з числом площі
+                        layer.bindTooltip(area.toString(), {
+                            permanent: true,   // Постійна підказка
+                            direction: 'center', // Позиціонування в центрі полігону
+                            className: 'area-tooltip', // Додатковий клас для стилізації
+                            opacity: 0 // Спочатку підказки приховані
+                        });
+                    }
+                }
+            }).addTo(map);
 
-                    fieldLayer.addTo(map);
-                    updateLayersControl();
-                })
-                .catch(error => console.error('Error loading field data:', error));
-        }
+            // Оновлюємо видимість підказок відповідно до поточного рівня зуму
+            updateLabelsVisibility();
+
+            // Додаємо до меню шарів
+            overlays["Поля обробітку"] = fieldLayer;
+            var colorBox = '<span class="color-box" style="background-color:transparent; border: 2px solid yellow"></span>';
+            layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Поля обробітку</span>');
+        })
+        .catch(error => console.error('Error loading Field GeoJSON data:', error));
+}
 
         function updateLayersControl() {
             if (layersControl) {
