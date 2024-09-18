@@ -325,11 +325,12 @@ function addTenantLayers() {
             }
             searchControl = new L.Control.Search({
                 layer: layer,
+                propertyName: 'Кадастровий номер',
+                zoom: 15,
                 initial: false,
-                zoom: 16,
-                textPlaceholder: 'Пошук'
+                textPlaceholder: 'пошук' // Заміна тексту підказки
             });
-            searchControl.addTo(map);
+            map.addControl(searchControl);
         }
 
         // Завантаження даних при завантаженні сторінки
