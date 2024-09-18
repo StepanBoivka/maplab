@@ -98,20 +98,7 @@
             maxZoom: 19,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
-
-        // Отримуємо ідентифікатор папки з URL
-        var pathArray = window.location.pathname.split('/');
-        var folderId = pathArray[pathArray.length - 1] || '';
-        // Видаляємо будь-які параметри запиту або хеш
-        folderId = folderId.split('?')[0].split('#')[0];
-
-        // Базовий шлях до папки з даними
-        var dataPath = 'data/';
-        if (folderId) {
-            dataPath += folderId + '/';
-        }
-
-        var rasterLayer = L.tileLayer(dataPath + 'tiles/sat/{z}/{x}/{y}.png', {
+		var rasterLayer = L.tileLayer('data/tiles/sat/{z}/{x}/{y}.png', {
             maxZoom: 20,
             attribution: 'Актуальні растри'
         });
@@ -119,8 +106,10 @@
         var baseMaps = {
             "Google Maps": googleLayer,
             "OpenStreetMap": openStreetMapLayer,
-            "Актуальні растри": rasterLayer // Додаємо новий шар
+			"Актуальні растри": rasterLayer // Додаємо новий шар
         };
+		
+
 
         var overlays = {};
         var tenantColors = {};
@@ -188,11 +177,7 @@
                     map.removeLayer(overlays[layerName]);
                 }
             }
-            overlays = { "Поля обробітку": fieldLayer }; // Зберігаємо шар "Поля обробітку"
-            tenantColors = {};
-            tenantAreas = {};
-            freeLayer = L.layerGroup();
-            freeArea = 0;
+            overlays = {}; // Очистити об'єкт з шарами
         }
 
         function addGeoJsonLayer(url, layerName) {
@@ -218,88 +203,89 @@
         var layersControl;
         var searchControl;
 
-        // Додаємо шар "Поля обробітку"
-        var fieldLayer; // Створюємо змінну для зберігання шару
-        var currentZoom = map.getZoom(); // Отримуємо поточний зум карти
+	    // Додаємо шар "Поля обробітку"
+// Додаємо шар "Поля обробітку"
+var fieldLayer; // Створюємо змінну для зберігання шару
+var currentZoom = map.getZoom(); // Отримуємо поточний зум карти
 
-        // Визначаємо мінімальний і максимальний рівень зуму для відображення написів
-        var minZoomForLabels = 15; // Мінімальний зум, на якому видно написи
-        var maxZoomForLabels = 18; // Максимальний зум, на якому видно написи
+// Визначаємо мінімальний і максимальний рівень зуму для відображення написів
+var minZoomForLabels = 15; // Мінімальний зум, на якому видно написи
+var maxZoomForLabels = 18; // Максимальний зум, на якому видно написи
 
-        function styleFieldFeature(feature) {
-            return {
-                color: 'yellow', // Межа полігону жовтого кольору
-                weight: 3,       // Товщина межі
-                opacity: 1,
-                fillOpacity: 0   // Прозорий полігон
-            };
+function styleFieldFeature(feature) {
+    return {
+        color: 'yellow', // Межа полігону жовтого кольору
+        weight: 3,       // Товщина межі
+        opacity: 1,
+        fillOpacity: 0   // Прозорий полігон
+    };
+}
+
+function updateLabelsVisibility() {
+    currentZoom = map.getZoom(); // Оновлюємо поточний рівень зуму
+    fieldLayer.eachLayer(function (layer) {
+        if (currentZoom >= minZoomForLabels && currentZoom <= maxZoomForLabels) {
+            // Показуємо підказки тільки на визначеному діапазоні зуму
+            layer.getTooltip().setOpacity(1);
+        } else {
+            // Ховаємо підказки
+            layer.getTooltip().setOpacity(0);
         }
+    });
+}
 
-        function updateLabelsVisibility() {
-            currentZoom = map.getZoom(); // Оновлюємо поточний рівень зуму
-            fieldLayer.eachLayer(function (layer) {
-                if (currentZoom >= minZoomForLabels && currentZoom <= maxZoomForLabels) {
-                    // Показуємо підказки тільки на визначеному діапазоні зуму
-                    layer.getTooltip().setOpacity(1);
-                } else {
-                    // Ховаємо підказки
-                    layer.getTooltip().setOpacity(0);
+function addFieldLayer() {
+    fetch('data/field.geojson')
+        .then(response => response.json())
+        .then(data => {
+            fieldLayer = L.geoJSON(data, {
+                style: styleFieldFeature,
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties && feature.properties.area) {
+                        var area = feature.properties.area; 
+                        // Додаємо підказку лише з числом площі
+                        layer.bindTooltip(area.toString(), {
+                            permanent: true,   // Постійна підказка
+                            direction: 'center', // Позиціонування в центрі полігону
+                            className: 'area-tooltip', // Додатковий клас для стилізації
+                            opacity: 0 // Спочатку підказки приховані
+                        });
+                    }
                 }
-            });
-        }
+            }).addTo(map);
 
-        function addFieldLayer() {
-            fetch(dataPath + 'field.geojson')
-                .then(response => response.json())
-                .then(data => {
-                    fieldLayer = L.geoJSON(data, {
-                        style: styleFieldFeature,
-                        onEachFeature: function (feature, layer) {
-                            if (feature.properties && feature.properties.area) {
-                                var area = feature.properties.area;
-                                // Додаємо підказку лише з числом площі
-                                layer.bindTooltip(area.toString(), {
-                                    permanent: true,   // Постійна підказка
-                                    direction: 'center', // Позиціонування в центрі полігону
-                                    className: 'area-tooltip', // Додатковий клас для стилізації
-                                    opacity: 0 // Спочатку підказки приховані
-                                });
-                            }
-                        }
-                    }).addTo(map);
-
-                    // Оновлюємо видимість підказок відповідно до поточного рівня зуму
-                    updateLabelsVisibility();
-
-                    // Додаємо до меню шарів
-                    overlays["Поля обробітку"] = fieldLayer;
-                    var colorBox = '<span class="color-box" style="background-color:transparent; border: 2px solid yellow"></span>';
-                    layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Поля обробітку</span>');
-                })
-                .catch(error => console.error('Error loading Field GeoJSON data:', error));
-        }
-
-        // Модифікуємо функцію очищення шарів так, щоб не видаляти шар "Поля обробітку"
-        function clearOverlays() {
-            for (var layerName in overlays) {
-                if (overlays.hasOwnProperty(layerName) && layerName !== "Поля обробітку") { // Не очищуємо "Поля обробітку"
-                    map.removeLayer(overlays[layerName]);
-                }
-            }
-            overlays = { "Поля обробітку": fieldLayer }; // Зберігаємо цей шар
-            tenantColors = {};
-            tenantAreas = {};
-            freeLayer = L.layerGroup();
-            freeArea = 0;
-        }
-
-        // Викликаємо функцію додавання шару при завантаженні карти
-        addFieldLayer();
-
-        // Додаємо подію для оновлення видимості підказок при зміні зуму
-        map.on('zoomend', function() {
+            // Оновлюємо видимість підказок відповідно до поточного рівня зуму
             updateLabelsVisibility();
-        });
+
+            // Додаємо до меню шарів
+            overlays["Поля обробітку"] = fieldLayer;
+            var colorBox = '<span class="color-box" style="background-color:transparent; border: 2px solid yellow"></span>';
+            layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Поля обробітку</span>');
+        })
+        .catch(error => console.error('Error loading Field GeoJSON data:', error));
+}
+
+// Модифікуємо функцію очищення шарів так, щоб не видаляти шар "Поля обробітку"
+function clearOverlays() {
+    for (var layerName in overlays) {
+        if (overlays.hasOwnProperty(layerName) && layerName !== "Поля обробітку") { // Не очищуємо "Поля обробітку"
+            map.removeLayer(overlays[layerName]);
+        }
+    }
+    overlays = { "Поля обробітку": fieldLayer }; // Зберігаємо цей шар
+}
+
+// Викликаємо функцію додавання шару при завантаженні карти
+addFieldLayer();
+
+// Додаємо подію для оновлення видимості підказок при зміні зуму
+map.on('zoomend', function() {
+    updateLabelsVisibility();
+});
+
+	    
+	    //кінець полів обробітку
+
 
         function updateLayersControl() {
             if (layersControl) {
@@ -352,7 +338,7 @@
         }
 
         function loadFileList() {
-            fetch(dataPath + 'file_list.json')
+            fetch('data/file_list.json')
                 .then(response => response.json())
                 .then(data => {
                     var select = document.getElementById('fileSelect');
@@ -374,7 +360,7 @@
                     'content_type': 'file',
                     'item_id': selectedFile
                 });
-                addGeoJsonLayer(dataPath + selectedFile, selectedFile);
+                addGeoJsonLayer('data/' + selectedFile, selectedFile);
             }
         });
 
