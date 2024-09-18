@@ -109,15 +109,9 @@
             dataPath += id + '/';
         }
 
-        var rasterLayer = L.tileLayer(dataPath + 'tiles/sat/{z}/{x}/{y}.png', {
-            maxZoom: 20,
-            attribution: 'Актуальні растри'
-        });
-
         var baseMaps = {
             "Google Maps": googleLayer,
-            "OpenStreetMap": openStreetMapLayer,
-            "Актуальні растри": rasterLayer // Додаємо новий шар
+            "OpenStreetMap": openStreetMapLayer
         };
 
         var overlays = {};
@@ -186,7 +180,7 @@
                     map.removeLayer(overlays[layerName]);
                 }
             }
-            overlays = { "Поля обробітку": fieldLayer }; // Зберігаємо шар "Поля обробітку"
+            overlays = {}; // Очищуємо всі шари
             tenantColors = {};
             tenantAreas = {};
             freeLayer = L.layerGroup();
@@ -216,37 +210,6 @@
         var layersControl;
         var searchControl;
 
-        // Додаємо шар "Поля обробітку"
-        var fieldLayer; // Створюємо змінну для зберігання шару
-        var currentZoom = map.getZoom(); // Отримуємо поточний зум карти
-
-        // Визначаємо мінімальний і максимальний рівень зуму для відображення написів
-        var minZoomForLabels = 15; // Мінімальний зум, на якому видно написи
-        var maxZoomForLabels = 18; // Максимальний зум, на якому видно написи
-
-        function styleFieldFeature(feature) {
-            return {
-                color: 'yellow', // Межа жовта
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.4 // Прозорість заповнення
-            };
-        }
-
-        function addFieldLayer() {
-            fetch('data/field.geojson')
-                .then(response => response.json())
-                .then(data => {
-                    fieldLayer = L.geoJSON(data, {
-                        style: styleFieldFeature
-                    });
-
-                    fieldLayer.addTo(map);
-                    updateLayersControl();
-                })
-                .catch(error => console.error('Error loading field data:', error));
-        }
-
         function updateLayersControl() {
             if (layersControl) {
                 map.removeControl(layersControl);
@@ -267,12 +230,37 @@
             searchControl.addTo(map);
         }
 
+        // Функція для завантаження списку файлів
+        function loadFileList() {
+            fetch('data/fileList.json') // Ваш файл JSON зі списком файлів
+                .then(response => response.json())
+                .then(data => {
+                    var fileSelect = document.getElementById('fileSelect');
+                    data.files.forEach(file => {
+                        var option = document.createElement('option');
+                        option.value = file;
+                        option.text = file;
+                        fileSelect.add(option);
+                    });
+                })
+                .catch(error => console.error('Error loading file list:', error));
+        }
+
         // Завантаження даних при завантаженні сторінки
         if (id) {
             addGeoJsonLayer(dataPath + 'yourDataFile.geojson', 'Ваш шар');
         }
 
         addFieldLayer();
+        loadFileList(); // Завантажити список файлів
+
+        // Обробка вибору файлу з випадаючого списку
+        document.getElementById('fileSelect').addEventListener('change', function() {
+            var selectedFile = this.value;
+            if (selectedFile && selectedFile !== 'Виберіть файл') {
+                addGeoJsonLayer(dataPath + selectedFile, selectedFile);
+            }
+        });
 
         // Обробка натискання кнопки геолокації
         document.getElementById('geolocationButton').addEventListener('click', function() {
