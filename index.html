@@ -255,11 +255,11 @@ function loadFileList() {
                     'content_type': 'file',
                     'item_id': selectedFile
                 });
-                addGeoJsonLayer('data/' + selectedFile, selectedFile);
+                addGeoJsonLayer(dataPath + + selectedFile, selectedFile);
             }
         });
         function addFieldLayer() {
-            fetch('data/field.geojson')
+            fetch(dataPath + 'field.geojson')
                 .then(response => response.json())
                 .then(data => {
                     fieldLayer = L.geoJSON(data, {
