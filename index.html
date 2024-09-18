@@ -232,7 +232,32 @@
                 fillOpacity: 0.4 // Прозорість заповнення
             };
         }
+function loadFileList() {
+            fetch('data/file_list.json')
+                .then(response => response.json())
+                .then(data => {
+                    var select = document.getElementById('fileSelect');
+                    select.innerHTML = '<option>Виберіть раду</option>';
+                    data.files.forEach(file => {
+                        var option = document.createElement('option');
+                        option.value = file;
+                        option.textContent = file;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading file list:', error));
+        }
 
+        document.getElementById('fileSelect').addEventListener('change', function () {
+            var selectedFile = this.value;
+            if (selectedFile !== 'Виберіть файл') {
+                gtag('event', 'select_content', {
+                    'content_type': 'file',
+                    'item_id': selectedFile
+                });
+                addGeoJsonLayer('data/' + selectedFile, selectedFile);
+            }
+        });
         function addFieldLayer() {
             fetch('data/field.geojson')
                 .then(response => response.json())
