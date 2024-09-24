@@ -8,8 +8,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css" />
     <link rel="stylesheet" href="css/area-tooltip.css">
-	<!-- Додаємо CSS для leaflet-measure -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-measure/dist/leaflet-measure.css" />
 
     <style>
         html, body, #map {
@@ -121,14 +119,6 @@
             "OpenStreetMap": openStreetMapLayer,
             "Актуальні растри": rasterLayer // Додаємо новий шар
         };
-		var measureControl = new L.Control.Measure({
-            position: 'topright',
-            primaryLengthUnit: 'meters',
-            primaryAreaUnit: 'sqmeters',
-            activeColor: '#f00',
-            completedColor: '#0f0'
-        });
-		map.addControl(measureControl);
 
         var overlays = {};
         var tenantColors = {};
@@ -355,18 +345,9 @@ function addTenantLayers() {
             if (freeLayer.getLayers().length > 0) {
                 overlays["вільні від оренди"] = freeLayer;
                 var colorBox = '<span class="color-box" style="background-color:#ffffff"></span>';
-                            layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
-            });
-        }
-
-        function addFreeLayer() {
-            if (freeArea > 0) {
-                overlays["Вільні ділянки"] = freeLayer;
-                var colorBox = '<span class="color-box" style="background-color:white"></span>';
-                layersControl.addOverlay(freeLayer, colorBox + '<span class="layer-name">Вільні ділянки (' + freeArea.toFixed(2) + ' га)</span>');
+                layersControl.addOverlay(freeLayer, colorBox + '<span class="layer-name">вільні від оренди (' + freeArea.toFixed(2) + ' га)</span>');
             }
         }
-
         function addSearchControl(layer) {
             if (searchControl) {
                 map.removeControl(searchControl);
@@ -374,18 +355,39 @@ function addTenantLayers() {
             searchControl = new L.Control.Search({
                 layer: layer,
                 propertyName: 'Кадастровий номер',
-                marker: false,
-                moveToLocation: function(latlng, title, map) {
-                    map.setView(latlng, 18); // Зум при пошуку
-                }
-            }).addTo(map);
+                zoom: 15,
+                initial: false,
+                textPlaceholder: 'пошук' // Заміна тексту підказки
+            });
+            map.addControl(searchControl);
         }
 
-        // Завантаження списку файлів GeoJSON
-        loadFileList();
+        // Завантаження даних при завантаженні сторінки
+       // if (id) {
+       //     addGeoJsonLayer(dataPath + 'yourDataFile.geojson', 'Ваш шар');
+       // }
 
-        // Додаємо шар Поля обробітку після завантаження карти
         addFieldLayer();
+
+        // Обробка натискання кнопки геолокації
+        document.getElementById('geolocationButton').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    map.setView([lat, lng], 16);
+                    L.marker([lat, lng]).addTo(map)
+                        .bindPopup('Ви тут!')
+                        .openPopup();
+                }, function() {
+                    alert('Не вдалося отримати ваше місцезнаходження.');
+                });
+            } else {
+                alert('Геолокація не підтримується вашим браузером.');
+            }
+        });
+        loadFileList();
+        updateLayersControl();
     </script>
 </body>
 </html>
