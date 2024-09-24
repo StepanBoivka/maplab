@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css" />
     <link rel="stylesheet" href="css/area-tooltip.css">
+    <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
 
     <style>
         html, body, #map {
@@ -102,7 +103,35 @@
             maxZoom: 19,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
+// Додати інструмент "ласо"
+        var drawnItems = L.featureGroup().addTo(map);
 
+        var drawControl = new L.Control.Draw({
+            edit: {
+                featureGroup: drawnItems
+            },
+            draw: {
+                polyline: false,
+                polygon: {
+                    allowIntersection: false, // Не дозволяємо перетворення
+                    showArea: true // Показуємо площу
+                },
+                rectangle: false,
+                circle: false,
+                marker: false
+            }
+        });
+
+        map.addControl(drawControl);
+
+        map.on(L.Draw.Event.CREATED, function (event) {
+            var layer = event.layer;
+            drawnItems.addLayer(layer);
+
+            // Тут можна додати код для обробки вибраної ділянки
+            var area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+            console.log("Вибрана площа: " + area.toFixed(2) + " м²");
+        });
         // Отримуємо ідентифікатор папки з URL, якщо є
         var dataPath = 'data/';
         if (id) {
