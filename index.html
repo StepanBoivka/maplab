@@ -351,10 +351,11 @@ function addTenantLayers() {
             tenantList.sort((a, b) => b.area - a.area);
 
             tenantList.forEach(item => {
-                overlays[item.tenant] = item.layer;
-                var colorBox = '<span class="color-box" style="background-color:' + getColor(item.tenant) + '"></span>';
-                layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
-            });
+    overlays[item.tenant] = item.layer;
+    var colorBox = '<span class="color-box" style="background-color:' + getColor(item.tenant) + '"></span>';
+    layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
+});
+
         }
         function addFreeLayer() {
             if (freeLayer.getLayers().length > 0) {
