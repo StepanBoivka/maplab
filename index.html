@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css" />
     <link rel="stylesheet" href="css/area-tooltip.css">
+    <!-- Додаємо CSS для leaflet-measure -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-measure/dist/leaflet-measure.css" />
+
 
     <style>
         html, body, #map {
@@ -85,6 +88,10 @@
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
     <script>
+        <!-- Додаємо JS для leaflet-measure -->
+    <script src="https://unpkg.com/leaflet-measure/dist/leaflet-measure.js"></script>
+    
+    <script>
         // Отримання параметрів з URL
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id'); // Отримання значення параметра 'id'
@@ -119,6 +126,14 @@
             "OpenStreetMap": openStreetMapLayer,
             "Актуальні растри": rasterLayer // Додаємо новий шар
         };
+        var measureControl = new L.Control.Measure({
+            position: 'topright',
+            primaryLengthUnit: 'meters',
+            primaryAreaUnit: 'sqmeters',
+            activeColor: '#f00',
+            completedColor: '#0f0'
+        });
+        map.addControl(measureControl);
 
         var overlays = {};
         var tenantColors = {};
