@@ -74,10 +74,6 @@
     </script>
 </head>
 <body>
-<select id="fieldsDropdown">
-        <option value="">Оберіть поле</option>
-    </select>
-	
     <div id="map"></div>
     <div id="controls">
         <select id="fileSelect">
@@ -101,60 +97,6 @@
             maxZoom: 20,
             attribution: '&copy; <a href="https://www.google.com/maps">Google</a>'
         }).addTo(map);
-		let fieldsData = []; // Змінна для зберігання даних з field.geojson
-
-        // Завантаження даних з файлу field.geojson
-        fetch('path/to/your/field.geojson')
-            .then(response => response.json())
-            .then(data => {
-                fieldsData = data.features; // Зберігаємо дані у fieldsData
-                populateDropdown(fieldsData); // Заповнюємо випадаючий список
-                addFieldsToMap(fieldsData); // Додаємо всі поля на карту
-            })
-            .catch(error => console.error('Error loading GeoJSON:', error));
-
-        // Функція для заповнення випадаючого списку
-        function populateDropdown(fields) {
-            const dropdown = document.getElementById('fieldsDropdown');
-            dropdown.innerHTML = ''; // Очищуємо попередній вміст
-
-            fields.forEach(field => {
-                const option = document.createElement('option');
-                option.value = field.properties.name; // Значення з поля name
-                option.textContent = field.properties.name; // Текст для відображення
-                dropdown.appendChild(option);
-            });
-        }
-
-        // Додавання всіх полів на карту
-        function addFieldsToMap(fields) {
-            fields.forEach(field => {
-                L.geoJSON(field).addTo(map); // Додаємо поле на карту
-            });
-        }
-
-        // Обробник події для фільтрації
-        document.getElementById('fieldsDropdown').addEventListener('change', function() {
-            const selectedField = this.value;
-            filterFields(selectedField);
-        });
-
-        // Функція для фільтрації полів на карті
-        function filterFields(selectedField) {
-            // Очистити карту від попередніх шарів (якщо потрібно)
-            map.eachLayer(function (layer) {
-                if (layer instanceof L.GeoJSON) {
-                    map.removeLayer(layer);
-                }
-            });
-
-            fieldsData.forEach(field => {
-                if (field.properties.name === selectedField) {
-                    // Додаємо поле на карту
-                    L.geoJSON(field).addTo(map); // 'map' - ваша змінна з картою Leaflet
-                }
-            });
-        }
 
         var openStreetMapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
