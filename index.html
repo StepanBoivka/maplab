@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css" />
     <link rel="stylesheet" href="css/area-tooltip.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
-    
+    <link rel="stylesheet" href="styles.css">
+
 
     <style>
         html, body, #map {
@@ -71,16 +72,25 @@
         .leaflet-control-search {
             top: 50px !important; /* Змістити поле пошуку вниз */
         }
+
+        <head >
+        <style >
+        .leaflet-control-container .leaflet-draw {
+            top: 50px; /* Встановіть відстань, на яку ви хочете зрушити контрол */
+        }
     </style>
-    <title>Карта земельних ділянок</title>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMBXL0TQLR"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-CMBXL0TQLR');
-    </script>
+</head>
+
+    </style>
+<title>Карта земельних ділянок</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CMBXL0TQLR"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-CMBXL0TQLR');
+</script>
 </head>
 <body>
     <div id="map"></div>
@@ -122,8 +132,8 @@
             draw: {
                 polyline: false,
                 polygon: {
-                    allowIntersection: false, // Не дозволяємо перетворення
-                    showArea: true // Показуємо площу
+                    allowIntersection: false,
+                    showArea: true
                 },
                 rectangle: false,
                 circle: false,
@@ -132,6 +142,10 @@
         });
 
         map.addControl(drawControl);
+        var controlsDiv = document.getElementById('controls');
+        controlsDiv.appendChild(drawControl.getContainer());
+
+
 
         map.on(L.Draw.Event.CREATED, function (event) {
             var layer = event.layer;
