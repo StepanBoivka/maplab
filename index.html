@@ -16,6 +16,7 @@
             padding: 0;
             margin: 0;
         }
+
         #controls {
             position: absolute;
             z-index: 1000;
@@ -25,6 +26,7 @@
             flex-direction: column;
             width: 200px;
         }
+
         #fileSelect {
             padding: 5px;
             border: 1px solid #ccc;
@@ -32,6 +34,7 @@
             margin-bottom: 5px;
             font-size: 12px;
         }
+
         #geolocationButton {
             position: absolute;
             bottom: 10px;
@@ -45,20 +48,24 @@
             z-index: 1000;
             font-size: 16px;
         }
-        #geolocationButton:hover {
-            background: #218838;
-            border-color: #1e7e34;
-        }
+
+            #geolocationButton:hover {
+                background: #218838;
+                border-color: #1e7e34;
+            }
+
         .color-box {
             width: 12px;
             height: 12px;
             display: inline-block;
             margin-right: 5px;
         }
+
         .layer-name {
             color: black;
             font-size: 12px;
         }
+
         .leaflet-control-search {
             top: 50px !important; /* Змістити поле пошуку вниз */
         }
@@ -68,7 +75,7 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMBXL0TQLR"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
+        function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
         gtag('config', 'G-CMBXL0TQLR');
     </script>
@@ -181,13 +188,13 @@
         }
 
         function clearOverlays() {
-    for (var layerName in overlays) {
-        if (overlays.hasOwnProperty(layerName) && layerName !== "Поля обробітку") { // Не очищуємо "Поля обробітку"
-            map.removeLayer(overlays[layerName]);
+            for (var layerName in overlays) {
+                if (overlays.hasOwnProperty(layerName) && layerName !== "Поля обробітку") { // Не очищуємо "Поля обробітку"
+                    map.removeLayer(overlays[layerName]);
+                }
+            }
+            overlays = { "Поля обробітку": fieldLayer }; // Зберігаємо цей шар
         }
-    }
-    overlays = { "Поля обробітку": fieldLayer }; // Зберігаємо цей шар
-}
 
         function addGeoJsonLayer(url, layerName) {
             clearOverlays(); // Очистити старі полігони
@@ -230,19 +237,19 @@
         }
 
         function updateLabelsVisibility() {
-    currentZoom = map.getZoom(); // Оновлюємо поточний рівень зуму
-    fieldLayer.eachLayer(function (layer) {
-        if (currentZoom >= minZoomForLabels && currentZoom <= maxZoomForLabels) {
-            // Показуємо підказки тільки на визначеному діапазоні зуму
-            layer.getTooltip().setOpacity(1);
-        } else {
-            // Ховаємо підказки
-            layer.getTooltip().setOpacity(0);
+            currentZoom = map.getZoom(); // Оновлюємо поточний рівень зуму
+            fieldLayer.eachLayer(function (layer) {
+                if (currentZoom >= minZoomForLabels && currentZoom <= maxZoomForLabels) {
+                    // Показуємо підказки тільки на визначеному діапазоні зуму
+                    layer.getTooltip().setOpacity(1);
+                } else {
+                    // Ховаємо підказки
+                    layer.getTooltip().setOpacity(0);
+                }
+            });
         }
-    });
-}
-function loadFileList() {
-            fetch(dataPath +'file_list.json')
+        function loadFileList() {
+            fetch(dataPath + 'file_list.json')
                 .then(response => response.json())
                 .then(data => {
                     var select = document.getElementById('fileSelect');
@@ -270,36 +277,36 @@ function loadFileList() {
         function addFieldLayer() {
             fetch(dataPath + 'field.geojson')
                 .then(response => response.json())
-        .then(data => {
-            fieldLayer = L.geoJSON(data, {
-                style: styleFieldFeature,
-                onEachFeature: function (feature, layer) {
-                    if (feature.properties && feature.properties.area) {
-                        var area = feature.properties.area; 
-                        // Додаємо підказку лише з числом площі
-                        layer.bindTooltip(area.toString(), {
-                            permanent: true,   // Постійна підказка
-                            direction: 'center', // Позиціонування в центрі полігону
-                            className: 'area-tooltip', // Додатковий клас для стилізації
-                            opacity: 0 // Спочатку підказки приховані
-                        });
-                    }
-                }
-            }).addTo(map);
+                .then(data => {
+                    fieldLayer = L.geoJSON(data, {
+                        style: styleFieldFeature,
+                        onEachFeature: function (feature, layer) {
+                            if (feature.properties && feature.properties.area) {
+                                var area = feature.properties.area;
+                                // Додаємо підказку лише з числом площі
+                                layer.bindTooltip(area.toString(), {
+                                    permanent: true,   // Постійна підказка
+                                    direction: 'center', // Позиціонування в центрі полігону
+                                    className: 'area-tooltip', // Додатковий клас для стилізації
+                                    opacity: 0 // Спочатку підказки приховані
+                                });
+                            }
+                        }
+                    }).addTo(map);
 
-            // Оновлюємо видимість підказок відповідно до поточного рівня зуму
-            updateLabelsVisibility();
-// Додаємо подію для оновлення видимості підказок при зміні зуму
-map.on('zoomend', function() {
-    updateLabelsVisibility();
-});
-            // Додаємо до меню шарів
-            overlays["Поля обробітку"] = fieldLayer;
-            var colorBox = '<span class="color-box" style="background-color:transparent; border: 2px solid yellow"></span>';
-            layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Поля обробітку</span>');
-        })
-        .catch(error => console.error('Error loading Field GeoJSON data:', error));
-}
+                    // Оновлюємо видимість підказок відповідно до поточного рівня зуму
+                    updateLabelsVisibility();
+                    // Додаємо подію для оновлення видимості підказок при зміні зуму
+                    map.on('zoomend', function () {
+                        updateLabelsVisibility();
+                    });
+                    // Додаємо до меню шарів
+                    overlays["Поля обробітку"] = fieldLayer;
+                    var colorBox = '<span class="color-box" style="background-color:transparent; border: 2px solid yellow"></span>';
+                    layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Поля обробітку</span>');
+                })
+                .catch(error => console.error('Error loading Field GeoJSON data:', error));
+        }
 
         function updateLayersControl() {
             if (layersControl) {
@@ -311,7 +318,7 @@ map.on('zoomend', function() {
             addTenantLayers();
             addFreeLayer();
         }
-function addTenantLayers() {
+        function addTenantLayers() {
             var tenantLayers = {};
             Object.values(overlays).forEach(layerGroup => {
                 layerGroup.eachLayer(layer => {
@@ -363,23 +370,23 @@ function addTenantLayers() {
         }
 
         // Завантаження даних при завантаженні сторінки
-       // if (id) {
-       //     addGeoJsonLayer(dataPath + 'yourDataFile.geojson', 'Ваш шар');
-       // }
+        // if (id) {
+        //     addGeoJsonLayer(dataPath + 'yourDataFile.geojson', 'Ваш шар');
+        // }
 
         addFieldLayer();
 
         // Обробка натискання кнопки геолокації
-        document.getElementById('geolocationButton').addEventListener('click', function() {
+        document.getElementById('geolocationButton').addEventListener('click', function () {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
+                navigator.geolocation.getCurrentPosition(function (position) {
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
                     map.setView([lat, lng], 16);
                     L.marker([lat, lng]).addTo(map)
                         .bindPopup('Ви тут!')
                         .openPopup();
-                }, function() {
+                }, function () {
                     alert('Не вдалося отримати ваше місцезнаходження.');
                 });
             } else {
