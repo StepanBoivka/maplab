@@ -447,27 +447,33 @@ function addTenantLayers() {
                     var key = headers[index];
                     var value = array[i][key];
                     
-                    // Особлива обробка для полів "Площа" та "Площа розрахована"
-                    if (key === "Площа" || key === "Площа розрахована" || key === "Площа ДЗК") {
-                        if (typeof value === 'number') {
-                            value = value.toFixed(4); // Форматуємо число з 4 знаками після коми
-                        } else if (typeof value === 'string') {
-                            // Якщо значення є рядком, спробуємо перетворити його на число
-                            var numValue = parseFloat(value);
-                            if (!isNaN(numValue)) {
-                                value = numValue.toFixed(4);
+                    // Перевірка на null або undefined
+                    if (value === null || value === undefined) {
+                        value = '';
+                    } else {
+                        // Особлива обробка для різних типів полів
+                        if (key === "Площа" || key === "Площа розрахована" || key === "Площа ДЗК" || key === "НГО") {
+                            if (typeof value === 'number') {
+                                value = value.toFixed(4); // Форматуємо число з 4 знаками після коми
+                            } else if (typeof value === 'string') {
+                                // Якщо значення є рядком, спробуємо перетворити його на число
+                                var numValue = parseFloat(value);
+                                if (!isNaN(numValue)) {
+                                    value = numValue.toFixed(4);
+                                }
                             }
+                        } else if (key === "Дата НГО") {
+                            // Переконуємося, що дата коректно форматована
+                            value = value.toString();
+                        } else if (typeof value === 'string') {
+                            value = value.replace(/"/g, '""'); // Екранування лапок
+                            value = '"' + value + '"'; // Огортання значення в лапки
+                        } else if (typeof value === 'object') {
+                            value = JSON.stringify(value).replace(/"/g, '""');
+                            value = '"' + value + '"'; // Огортання значення в лапки
                         }
-                    } else if (typeof value === 'string') {
-                        value = value.replace(/"/g, '""'); // Екранування лапок
-                        value = '"' + value + '"'; // Огортання значення в лапки
-                    } else if (value === null || value === undefined) {
-                        value = ''; // Пусте значення для null або undefined
-                    } else if (typeof value === 'object') {
-                        value = JSON.stringify(value).replace(/"/g, '""');
-                        value = '"' + value + '"'; // Огортання значення в лапки
                     }
-                    // Для інших типів (числа, булеві значення) просто використовуємо їх як є
+                    
                     line += value;
                 }
                 str += line + '\r\n';
