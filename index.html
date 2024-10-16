@@ -375,7 +375,7 @@ function addTenantLayers() {
             }
             searchControl = new L.Control.Search({
                 layer: layer,
-                propertyName: '_searchField', // Використовуємо спеціальне поле для пошуку
+                propertyName: '_searchField',
                 initial: false,
                 textPlaceholder: 'Пошук за кадастровим номером або власником',
                 filterData: function(text, records) {
@@ -386,15 +386,19 @@ function addTenantLayers() {
                     var reg = new RegExp(text, 'i');
                     
                     for (var i in jsons) {
-                        var props = jsons[i].feature.properties;
-                        var kadastrovyNomer = props['Кадастровий номер'] || '';
-                        var vlasnyk = props['Власник'] || '';
-                        
-                        console.log('Перевірка:', kadastrovyNomer, vlasnyk); // Додаємо логування
+                        try {
+                            var props = jsons[i].layer.feature && jsons[i].layer.feature.properties ? jsons[i].layer.feature.properties : {};
+                            var kadastrovyNomer = props['Кадастровий номер'] || '';
+                            var vlasnyk = props['Власник'] || '';
+                            
+                            console.log('Перевірка:', kadastrovyNomer, vlasnyk);
 
-                        if (reg.test(kadastrovyNomer) || reg.test(vlasnyk)) {
-                            ret[i] = jsons[i];
-                            console.log('Знайдено співпадіння:', i, kadastrovyNomer, vlasnyk);
+                            if (reg.test(kadastrovyNomer) || reg.test(vlasnyk)) {
+                                ret[i] = jsons[i];
+                                console.log('Знайдено співпадіння:', i, kadastrovyNomer, vlasnyk);
+                            }
+                        } catch (error) {
+                            console.error('Помилка при обробці об\'єкта:', error, jsons[i]);
                         }
                     }
                     
@@ -402,22 +406,33 @@ function addTenantLayers() {
                     return ret;
                 },
                 buildTip: function(text, val) {
-                    var props = val.layer.feature.properties;
-                    var kadastrovyNomer = props['Кадастровий номер'] || 'Не вказано';
-                    var vlasnyk = props['Власник'] || 'Не вказано';
-                    return '<a href="#">Кадастровий номер: ' + kadastrovyNomer + '<br>Власник: ' + vlasnyk + '</a>';
+                    try {
+                        var props = val.layer.feature && val.layer.feature.properties ? val.layer.feature.properties : {};
+                        var kadastrovyNomer = props['Кадастровий номер'] || 'Не вказано';
+                        var vlasnyk = props['Власник'] || 'Не вказано';
+                        return '<a href="#">Кадастровий номер: ' + kadastrovyNomer + '<br>Власник: ' + vlasnyk + '</a>';
+                    } catch (error) {
+                        console.error('Помилка при створенні підказки:', error);
+                        return '<a href="#">Помилка: неможливо відобразити дані</a>';
+                    }
                 },
                 moveToLocation: function(latlng, title, map) {
-                    map.fitBounds(latlng.layer.getBounds());
+                    if (latlng.layer && latlng.layer.getBounds) {
+                        map.fitBounds(latlng.layer.getBounds());
+                    } else {
+                        map.setView(latlng, 15);
+                    }
                 }
             });
             map.addControl(searchControl);
 
             // Додаємо спеціальне поле для пошуку до кожного об'єкта
             layer.eachLayer(function(layer) {
-                var props = layer.feature.properties;
-                var searchField = (props['Кадастровий номер'] || '') + ' ' + (props['Власник'] || '');
-                layer.feature.properties._searchField = searchField;
+                if (layer.feature && layer.feature.properties) {
+                    var props = layer.feature.properties;
+                    var searchField = (props['Кадастровий номер'] || '') + ' ' + (props['Власник'] || '');
+                    layer.feature.properties._searchField = searchField;
+                }
             });
         }
 
