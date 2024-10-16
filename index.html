@@ -530,13 +530,14 @@ function addTenantLayers() {
         }
 
             // Додаємо спеціальне поле для пошуку до кожного об'єкта
-layer.eachLayer(function(layer) {
+geoJsonLayer.eachLayer(function(layer) {  // geoJsonLayer, якщо це шар з даними
     if (layer.feature && layer.feature.properties) {
         var props = layer.feature.properties;
         var searchField = (props['Кадастровий номер'] || '') + ' ' + (props['Власник'] || '');
         layer.feature.properties._searchField = searchField;
     }
-}); // Закриття функції eachLayer
+});
+
 
 
 
