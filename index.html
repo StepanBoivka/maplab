@@ -62,6 +62,22 @@
         .leaflet-control-search {
             top: 50px !important; /* Змістити поле пошуку вниз */
         }
+        #exportButton {
+            position: absolute;
+            bottom: 50px;
+            right: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        #exportButton:hover {
+            background: #0056b3;
+        }
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -81,6 +97,7 @@
         </select>
     </div>
     <div id="geolocationButton">📍</div>
+    <button id="exportButton">Експорт CSV</button>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
@@ -392,6 +409,68 @@ function addTenantLayers() {
         });
         loadFileList();
         updateLayersControl();
+
+// Додаємо нову функцію для збору даних з карти
+        function collectMapData() {
+            var data = [];
+            Object.values(overlays).forEach(layerGroup => {
+                layerGroup.eachLayer(layer => {
+                    if (layer.feature && layer.feature.properties) {
+                        data.push(layer.feature.properties);
+                    }
+                });
+            });
+            return data;
+        }
+
+        // Функція для конвертації даних у CSV
+        function convertToCSV(objArray) {
+            var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+            var str = '';
+            var headers = Object.keys(array[0]);
+
+            str += headers.join(',') + '\r\n';
+
+            for (var i = 0; i < array.length; i++) {
+                var line = '';
+                for (var index in headers) {
+                    if (line != '') line += ',';
+                    var value = array[i][headers[index]] || '';
+                    line += '"' + value.replace(/"/g, '""') + '"';
+                }
+                str += line + '\r\n';
+            }
+            return str;
+        }
+
+        // Функція для завантаження CSV файлу
+        function downloadCSV(csv, filename) {
+            var blob = new Blob(["\ufeff", csv], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement("a");
+            if (link.download !== undefined) {
+                var url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Додаємо обробник події для кнопки експорту
+        document.getElementById('exportButton').addEventListener('click', function() {
+            var data = collectMapData();
+            if (data.length > 0) {
+                var csv = convertToCSV(data);
+                downloadCSV(csv, 'map_data.csv');
+            } else {
+                alert('Немає даних для експорту. Будь ласка, виберіть файл з даними спочатку.');
+            }
+        });
+
+
+        
     </script>
 </body>
 </html>
