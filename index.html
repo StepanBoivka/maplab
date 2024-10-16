@@ -375,27 +375,50 @@ function addTenantLayers() {
             }
             searchControl = new L.Control.Search({
                 layer: layer,
-                propertyName: 'Кадастровий номер',
-                filterProperties: function(propertyName, layerProp, searchText) {
-                    // Пошук за кадастровим номером
-                    if (layerProp['Кадастровий номер'] && layerProp['Кадастровий номер'].toString().toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
-                        return true;
+                propertyName: '_searchField', // Використовуємо спеціальне поле для пошуку
+                initial: false,
+                textPlaceholder: 'Пошук за кадастровим номером або власником',
+                filterData: function(text, records) {
+                    var jsons = records;
+                    var ret = {};
+
+                    text = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Екрануємо спеціальні символи
+                    var reg = new RegExp(text, 'i');
+                    
+                    for (var i in jsons) {
+                        var props = jsons[i].feature.properties;
+                        var kadastrovyNomer = props['Кадастровий номер'] || '';
+                        var vlasnyk = props['Власник'] || '';
+                        
+                        console.log('Перевірка:', kadastrovyNomer, vlasnyk); // Додаємо логування
+
+                        if (reg.test(kadastrovyNomer) || reg.test(vlasnyk)) {
+                            ret[i] = jsons[i];
+                            console.log('Знайдено співпадіння:', i, kadastrovyNomer, vlasnyk);
+                        }
                     }
-                    // Пошук за власником
-                    if (layerProp['Власник'] && layerProp['Власник'].toString().toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
-                        return true;
-                    }
-                    return false;
+                    
+                    console.log('Кількість знайдених результатів:', Object.keys(ret).length);
+                    return ret;
                 },
                 buildTip: function(text, val) {
-                    var type = val.layer.feature.properties['Кадастровий номер'] === text ? 'Кадастровий номер' : 'Власник';
-                    return '<a href="#">' + text + ' <b>' + type + '</b></a>';
+                    var props = val.layer.feature.properties;
+                    var kadastrovyNomer = props['Кадастровий номер'] || 'Не вказано';
+                    var vlasnyk = props['Власник'] || 'Не вказано';
+                    return '<a href="#">Кадастровий номер: ' + kadastrovyNomer + '<br>Власник: ' + vlasnyk + '</a>';
                 },
-                zoom: 15,
-                initial: false,
-                textPlaceholder: 'Пошук за кадастровим номером або власником'
+                moveToLocation: function(latlng, title, map) {
+                    map.fitBounds(latlng.layer.getBounds());
+                }
             });
             map.addControl(searchControl);
+
+            // Додаємо спеціальне поле для пошуку до кожного об'єкта
+            layer.eachLayer(function(layer) {
+                var props = layer.feature.properties;
+                var searchField = (props['Кадастровий номер'] || '') + ' ' + (props['Власник'] || '');
+                layer.feature.properties._searchField = searchField;
+            });
         }
 
         // Завантаження даних при завантаженні сторінки
