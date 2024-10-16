@@ -530,14 +530,14 @@ function addTenantLayers() {
         }
 
             // Додаємо спеціальне поле для пошуку до кожного об'єкта
-                    layer.eachLayer(function(layer) {
-            if (layer.feature && layer.feature.properties) {
-                var props = layer.feature.properties;
-                var searchField = (props['Кадастровий номер'] || '') + ' ' + (props['Власник'] || '');
-                layer.feature.properties._searchField = searchField;
-            }
-        });
-    } // Закриття функції
+layer.eachLayer(function(layer) {
+    if (layer.feature && layer.feature.properties) {
+        var props = layer.feature.properties;
+        var searchField = (props['Кадастровий номер'] || '') + ' ' + (props['Власник'] || '');
+        layer.feature.properties._searchField = searchField;
+    }
+}); // Закриття функції eachLayer
+
 
 
         // Завантаження даних при завантаженні сторінки
