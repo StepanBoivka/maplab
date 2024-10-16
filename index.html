@@ -62,13 +62,6 @@
         .leaflet-control-search {
             top: 50px !important; /* Змістити поле пошуку вниз */
         }
-        .leaflet-popup-content a {
-            color: #0078A8;
-            text-decoration: none;
-        }
-        .leaflet-popup-content a:hover {
-            text-decoration: underline;
-        }
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -141,6 +134,7 @@
     "#F5B041", "#2471A3", "#AF7AC5", "#58D68D", "#5DADE2"
 ];
 
+
         var colorIndex = 0;
 
         function getColor(tenant) {
@@ -159,12 +153,7 @@
                 var popupContent = '<table>';
                 for (var key in feature.properties) {
                     if (feature.properties.hasOwnProperty(key)) {
-                        var value = feature.properties[key];
-                        if (key === "Посилання" && value) {
-                            // Створюємо гіперпосилання для поля "Посилання"
-                            value = '<a href="' + value + '" target="_blank">Відкрити посилання</a>';
-                        }
-                        popupContent += '<tr><td><strong>' + key + ':</strong></td><td>' + value + '</td></tr>';
+                        popupContent += '<tr><td><strong>' + key + ':</strong></td><td>' + feature.properties[key] + '</td></tr>';
                     }
                 }
                 popupContent += '</table>';
@@ -348,4 +337,61 @@ function addTenantLayers() {
                 };
             });
 
-            ten
+            tenantList.sort((a, b) => b.area - a.area);
+
+            tenantList.forEach(item => {
+                overlays[item.tenant] = item.layer;
+                var colorBox = '<span class="color-box" style="background-color:' + getColor(item.tenant) + '"></span>';
+                layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
+            });
+        }
+        function addFreeLayer() {
+            if (freeLayer.getLayers().length > 0) {
+                overlays["вільні від оренди"] = freeLayer;
+                var colorBox = '<span class="color-box" style="background-color:#ffffff"></span>';
+                layersControl.addOverlay(freeLayer, colorBox + '<span class="layer-name">вільні від оренди (' + freeArea.toFixed(2) + ' га)</span>');
+            }
+        }
+        function addSearchControl(layer) {
+            if (searchControl) {
+                map.removeControl(searchControl);
+            }
+            searchControl = new L.Control.Search({
+                layer: layer,
+                propertyName: 'Кадастровий номер',
+                zoom: 15,
+                initial: false,
+                textPlaceholder: 'пошук' // Заміна тексту підказки
+            });
+            map.addControl(searchControl);
+        }
+
+        // Завантаження даних при завантаженні сторінки
+       // if (id) {
+       //     addGeoJsonLayer(dataPath + 'yourDataFile.geojson', 'Ваш шар');
+       // }
+
+        addFieldLayer();
+
+        // Обробка натискання кнопки геолокації
+        document.getElementById('geolocationButton').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    map.setView([lat, lng], 16);
+                    L.marker([lat, lng]).addTo(map)
+                        .bindPopup('Ви тут!')
+                        .openPopup();
+                }, function() {
+                    alert('Не вдалося отримати ваше місцезнаходження.');
+                });
+            } else {
+                alert('Геолокація не підтримується вашим браузером.');
+            }
+        });
+        loadFileList();
+        updateLayersControl();
+    </script>
+</body>
+</html>
