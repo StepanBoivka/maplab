@@ -119,6 +119,67 @@
         #filterButton:hover {
             background-color: #45a049;
         }
+        #controlPanel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .control-buttons {
+            display: flex;
+            flex-direction: column;
+        }
+        .control-button {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: none;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .control-button:last-child {
+            border-bottom: none;
+        }
+        .control-button:hover {
+            background: #f0f0f0;
+        }
+        .control-content {
+            display: none;
+            padding: 10px;
+            width: 250px;
+        }
+        #fileSelect, #filterPanel select, #filterPanel input, #filterButton, #addFilterButton {
+            width: 100%;
+            margin-bottom: 5px;
+            padding: 5px;
+        }
+        #filterButton, #addFilterButton {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #activeFilters div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+        #activeFilters button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            padding: 2px 5px;
+        }
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -131,23 +192,36 @@
     </script>
 </head>
 <body>
-    <div id="map"></div>
-    <div id="controls">
-        <select id="fileSelect">
-            <option>Виберіть файл</option>
-        </select>
+    div id="map"></div>
+    <div id="controlPanel">
+        <div class="control-buttons">
+            <button class="control-button" data-target="fileContent"><i class="fas fa-file"></i></button>
+            <button class="control-button" data-target="searchContent"><i class="fas fa-search"></i></button>
+            <button class="control-button" data-target="filterContent"><i class="fas fa-filter"></i></button>
+            <button class="control-button" data-target="exportContent"><i class="fas fa-download"></i></button>
+        </div>
+        <div id="fileContent" class="control-content">
+            <select id="fileSelect">
+                <option>Виберіть файл</option>
+            </select>
+        </div>
+        <div id="searchContent" class="control-content">
+            <!-- Leaflet Search Control буде додано сюди через JavaScript -->
+        </div>
+        <div id="filterContent" class="control-content">
+            <select id="fieldSelect">
+                <option value="">Виберіть поле</option>
+            </select>
+            <input type="text" id="filterValue" placeholder="Введіть значення">
+            <button id="addFilterButton">Додати фільтр</button>
+            <div id="activeFilters"></div>
+            <button id="filterButton">Фільтрувати</button>
+        </div>
+        <div id="exportContent" class="control-content">
+            <button id="exportButton">Експорт CSV</button>
+        </div>
     </div>
     <div id="geolocationButton">📍</div>
-    <button id="exportButton">Експорт CSV</button>
-    <div id="filterPanel">
-        <select id="fieldSelect">
-            <option value="">Виберіть поле</option>
-        </select>
-        <input type="text" id="filterValue" placeholder="Введіть значення">
-        <button id="addFilterButton">Додати фільтр</button>
-        <div id="activeFilters"></div>
-        <button id="filterButton">Фільтрувати</button>
-    </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
@@ -344,6 +418,19 @@ function loadFileList() {
                 addGeoJsonLayer(dataPath + selectedFile, selectedFile);
             }
         });
+        // Додаємо новий код для роботи з панеллю керування
+        document.querySelectorAll('.control-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                document.querySelectorAll('.control-content').forEach(content => {
+                    if (content.id === targetId) {
+                        content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                    } else {
+                        content.style.display = 'none';
+                    }
+                });
+            });
+        });
         function addFieldLayer() {
             fetch(dataPath + 'field.geojson')
                 .then(response => response.json())
@@ -427,60 +514,20 @@ function addTenantLayers() {
         }
         function addSearchControl(layer) {
             if (searchControl) {
-                map.removeControl(searchControl);
+                searchControl.remove();
             }
             searchControl = new L.Control.Search({
                 layer: layer,
-                propertyName: '_searchField',
+                propertyName: 'Кадастровий номер',
+                zoom: 15,
                 initial: false,
-                textPlaceholder: 'Пошук за кадастровим номером або власником',
-                filterData: function(text, records) {
-                    var jsons = records;
-                    var ret = {};
-
-                    text = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Екрануємо спеціальні символи
-                    var reg = new RegExp(text, 'i');
-                    
-                    for (var i in jsons) {
-                        try {
-                            var props = jsons[i].layer.feature && jsons[i].layer.feature.properties ? jsons[i].layer.feature.properties : {};
-                            var kadastrovyNomer = props['Кадастровий номер'] || '';
-                            var vlasnyk = props['Власник'] || '';
-                            
-                            console.log('Перевірка:', kadastrovyNomer, vlasnyk);
-
-                            if (reg.test(kadastrovyNomer) || reg.test(vlasnyk)) {
-                                ret[i] = jsons[i];
-                                console.log('Знайдено співпадіння:', i, kadastrovyNomer, vlasnyk);
-                            }
-                        } catch (error) {
-                            console.error('Помилка при обробці об\'єкта:', error, jsons[i]);
-                        }
-                    }
-                    
-                    console.log('Кількість знайдених результатів:', Object.keys(ret).length);
-                    return ret;
-                },
-                buildTip: function(text, val) {
-                    try {
-                        var props = val.layer.feature && val.layer.feature.properties ? val.layer.feature.properties : {};
-                        var kadastrovyNomer = props['Кадастровий номер'] || 'Не вказано';
-                        var vlasnyk = props['Власник'] || 'Не вказано';
-                        return '<a href="#">Кадастровий номер: ' + kadastrovyNomer + '<br>Власник: ' + vlasnyk + '</a>';
-                    } catch (error) {
-                        console.error('Помилка при створенні підказки:', error);
-                        return '<a href="#">Помилка: неможливо відобразити дані</a>';
-                    }
-                },
-                moveToLocation: function(latlng, title, map) {
-                    if (latlng.layer && latlng.layer.getBounds) {
-                        map.fitBounds(latlng.layer.getBounds());
-                    } else {
-                        map.setView(latlng, 15);
-                    }
-                }
+                textPlaceholder: 'Пошук за кадастровим номером'
             });
-            map.addControl(searchControl);
+            
+            var searchContainer = document.getElementById('searchContent');
+            searchContainer.innerHTML = ''; // Очищаємо контейнер
+            searchContainer.appendChild(searchControl.onAdd(map));
+        }
 
             // Додаємо спеціальне поле для пошуку до кожного об'єкта
             layer.eachLayer(function(layer) {
