@@ -438,36 +438,35 @@ function addTenantLayers() {
             var str = '';
             var headers = Object.keys(array[0]);
 
-            str += headers.join(';') + '\r\n';  // Змінено розділювач на крапку з комою
+            str += headers.join(';') + '\r\n';
 
             for (var i = 0; i < array.length; i++) {
                 var line = '';
                 for (var index in headers) {
-                    if (line != '') line += ';';  // Змінено розділювач на крапку з комою
+                    if (line != '') line += ';';
                     var key = headers[index];
                     var value = array[i][key];
                     
                     // Особлива обробка для полів "Площа" та "Площа розрахована"
-                    if (key === "Площа" || key === "Площа розрахована") {
+                    if (key === "Площа" || key === "Площа розрахована" || key === "Площа ДЗК") {
                         if (typeof value === 'number') {
-                            value = value.toFixed(4).replace('.', ','); // Форматуємо число з 4 знаками після коми і замінюємо крапку на кому
+                            value = value.toFixed(4).replace('.', ',');
                         } else if (typeof value === 'string') {
-                            // Якщо значення є рядком, спробуємо перетворити його на число
-                            var numValue = parseFloat(value.replace(',', '.'));
-                            if (!isNaN(numValue)) {
-                                value = numValue.toFixed(4).replace('.', ',');
+                            // Видаляємо всі пробіли та замінюємо крапку на кому
+                            value = value.replace(/\s/g, '').replace('.', ',');
+                            // Перевіряємо, чи є значення числом
+                            if (!isNaN(parseFloat(value))) {
+                                value = parseFloat(value).toFixed(4).replace('.', ',');
                             }
                         }
                     } else if (typeof value === 'string') {
-                        value = value.replace(/"/g, '""'); // Екранування лапок
-                        value = '"' + value + '"'; // Огортання значення в лапки
+                        // Екрануємо подвійні лапки та огортаємо значення в лапки
+                        value = '"' + value.replace(/"/g, '""') + '"';
                     } else if (value === null || value === undefined) {
-                        value = ''; // Пусте значення для null або undefined
+                        value = '';
                     } else if (typeof value === 'object') {
-                        value = JSON.stringify(value).replace(/"/g, '""');
-                        value = '"' + value + '"'; // Огортання значення в лапки
+                        value = '"' + JSON.stringify(value).replace(/"/g, '""') + '"';
                     }
-                    // Для інших типів (числа, булеві значення) просто використовуємо їх як є
                     line += value;
                 }
                 str += line + '\r\n';
