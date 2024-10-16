@@ -92,12 +92,6 @@
             font-size: 14px;
             color: #0066cc;
         }
-        #filters {
-    margin: 10px 0;
-}
-#filters input, #filters button {
-    margin-right: 10px;
-}
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -117,11 +111,6 @@
         </select>
     </div>
     <div id="geolocationButton">📍</div>
-    <div id="filters">
-    <input type="text" id="tenantFilter" placeholder="Фільтр за орендарем">
-    <input type="date" id="registrationDateFilter">
-    <button id="applyFilters">Застосувати фільтри</button>
-</div>
     <button id="exportButton">Експорт в список</button>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
@@ -589,77 +578,7 @@ function addTenantLayers() {
             }
         });
 
-let parcelsLayer;
 
-// Припускаємо, що у вас вже є код для завантаження GeoJSON файлу.
-// Якщо ні, додайте наступний код:
-document.getElementById('fileInput').addEventListener('change', function(e) {
-    let file = e.target.files[0];
-    let reader = new FileReader();
-    reader.onload = function(e) {
-        let geojson = JSON.parse(e.target.result);
-        if (parcelsLayer) {
-            map.removeLayer(parcelsLayer);
-        }
-        parcelsLayer = L.geoJSON(geojson).addTo(map);
-        map.fitBounds(parcelsLayer.getBounds());
-    };
-    reader.readAsText(file);
-});
-
-document.getElementById('applyFilters').addEventListener('click', function() {
-    if (!parcelsLayer) return;
-
-    let tenantFilter = document.getElementById('tenantFilter').value.toLowerCase();
-    let dateFilter = document.getElementById('registrationDateFilter').value;
-
-    parcelsLayer.eachLayer(function (layer) {
-        let properties = layer.feature.properties;
-        let visible = true;
-
-        if (tenantFilter && properties.tenant) {
-            visible = properties.tenant.toLowerCase().includes(tenantFilter);
-        }
-
-        if (dateFilter && properties.registrationDate) {
-            visible = visible && (properties.registrationDate >= dateFilter);
-        }
-
-        if (visible) {
-            layer.addTo(map);
-        } else {
-            map.removeLayer(layer);
-        }
-    });
-});
-
-// Оновіть вашу існуючу функцію експорту або додайте цю, якщо її немає:
-document.getElementById('exportButton').addEventListener('click', function() {
-    if (!parcelsLayer) return;
-
-    let exportData = [];
-    parcelsLayer.eachLayer(function (layer) {
-        if (map.hasLayer(layer)) {
-            exportData.push(layer.feature.properties);
-        }
-    });
-
-    if (exportData.length === 0) {
-        alert("Немає даних для експорту");
-        return;
-    }
-
-    let csvContent = "data:text/csv;charset=utf-8," 
-        + Object.keys(exportData[0]).join(",") + "\n"
-        + exportData.map(row => Object.values(row).join(",")).join("\n");
-
-    let encodedUri = encodeURI(csvContent);
-    let link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "export.csv");
-    document.body.appendChild(link);
-    link.click();
-});
         
     </script>
 </body>
