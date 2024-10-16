@@ -104,18 +104,28 @@
     </script>
 </head>
 <body>
+    <div id="filterContainer">
+    <label for="tenantFilter">Фільтр за орендарем:</label>
+    <input type="text" id="tenantFilter" placeholder="Введіть ім'я орендаря">
+    <button onclick="applyFilter()">Застосувати фільтр</button>
+</div>
     <div id="map"></div>
-    <div id="controls">
-        <select id="fileSelect">
-            <option>Виберіть файл</option>
-        </select>
-    </div>
+    <div id="controls">Виберіть файл
+    <input type="file" id="fileInput" accept=".geojson,.json">
+</div>
     <div id="geolocationButton">📍</div>
     <button id="exportButton">Експорт в список</button>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
     <script>
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    let file = e.target.files[0];
+    loadGeoJson(file);
+});
+
+
+        
         // Отримання параметрів з URL
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id'); // Отримання значення параметра 'id'
@@ -578,7 +588,26 @@ function addTenantLayers() {
             }
         });
 
+function applyFilter() {
+    let filterValue = document.getElementById('tenantFilter').value.toLowerCase();
+    
+    if (geoJsonLayer) {
+        map.removeLayer(geoJsonLayer);
+    }
 
+    geoJsonLayer = L.geoJSON(originalData, {
+        filter: function(feature) {
+            return feature.properties.Орендар && 
+                   feature.properties.Орендар.toLowerCase().includes(filterValue);
+        }
+    }).addTo(map);
+
+    if (!geoJsonLayer.getLayers().length) {
+        alert('Нічого не знайдено');
+    } else {
+        map.fitBounds(geoJsonLayer.getBounds());
+    }
+}
         
     </script>
 </body>
