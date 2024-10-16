@@ -92,6 +92,33 @@
             font-size: 14px;
             color: #0066cc;
         }
+        #filterPanel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 300px;
+        }
+        #filterPanel select, #filterPanel input {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        #filterButton {
+            width: 100%;
+            padding: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #filterButton:hover {
+            background-color: #45a049;
+        }
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -111,7 +138,16 @@
         </select>
     </div>
     <div id="geolocationButton">📍</div>
-    <button id="exportButton">Експорт в список</button>
+    <button id="exportButton">Експорт CSV</button>
+    <div id="filterPanel">
+        <select id="fieldSelect">
+            <option value="">Виберіть поле</option>
+        </select>
+        <input type="text" id="filterValue" placeholder="Введіть значення">
+        <button id="addFilterButton">Додати фільтр</button>
+        <div id="activeFilters"></div>
+        <button id="filterButton">Фільтрувати</button>
+    </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
@@ -577,6 +613,94 @@ function addTenantLayers() {
                 alert('Немає даних для експорту. Будь ласка, виберіть файл з даними спочатку.');
             }
         });
+
+
+        // Додаємо новий код для фільтрації
+
+        var activeFilters = [];
+
+        function populateFieldSelect() {
+            var select = document.getElementById('fieldSelect');
+            select.innerHTML = '<option value="">Виберіть поле</option>';
+            var sampleFeature = overlays[Object.keys(overlays)[0]].getLayers()[0].feature;
+            if (sampleFeature && sampleFeature.properties) {
+                Object.keys(sampleFeature.properties).forEach(function(key) {
+                    if (key !== '_searchField' && key !== 'Посилання') {
+                        var option = document.createElement('option');
+                        option.value = key;
+                        option.textContent = key;
+                        select.appendChild(option);
+                    }
+                });
+            }
+        }
+
+        document.getElementById('addFilterButton').addEventListener('click', function() {
+            var field = document.getElementById('fieldSelect').value;
+            var value = document.getElementById('filterValue').value;
+            if (field && value) {
+                activeFilters.push({field: field, value: value});
+                updateActiveFiltersDisplay();
+            }
+        });
+
+        function updateActiveFiltersDisplay() {
+            var container = document.getElementById('activeFilters');
+            container.innerHTML = '';
+            activeFilters.forEach(function(filter, index) {
+                var filterElement = document.createElement('div');
+                filterElement.textContent = filter.field + ': ' + filter.value;
+                var removeButton = document.createElement('button');
+                removeButton.textContent = 'X';
+                removeButton.onclick = function() {
+                    activeFilters.splice(index, 1);
+                    updateActiveFiltersDisplay();
+                };
+                filterElement.appendChild(removeButton);
+                container.appendChild(filterElement);
+            });
+        }
+
+        document.getElementById('filterButton').addEventListener('click', function() {
+            applyFilters();
+        });
+
+        function applyFilters() {
+            Object.values(overlays).forEach(function(layer) {
+                layer.eachLayer(function(feature) {
+                    var visible = activeFilters.every(function(filter) {
+                        var propertyValue = feature.feature.properties[filter.field];
+                        return propertyValue && propertyValue.toString().toLowerCase().includes(filter.value.toLowerCase());
+                    });
+                    if (visible) {
+                        feature.addTo(map);
+                    } else {
+                        map.removeLayer(feature);
+                    }
+                });
+            });
+        }
+
+        // Додаємо виклик populateFieldSelect() після завантаження даних
+        function addGeoJsonLayer(url, layerName) {
+            clearOverlays();
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    var geoJsonLayer = L.geoJSON(data, {
+                        style: styleFeature,
+                        onEachFeature: onEachFeature
+                    });
+
+                    overlays[layerName] = geoJsonLayer;
+                    geoJsonLayer.addTo(map);
+                    map.fitBounds(geoJsonLayer.getBounds());
+                    updateLayersControl();
+                    addSearchControl(geoJsonLayer);
+                    populateFieldSelect();  // Додано цей рядок
+                })
+                .catch(error => console.error('Error loading GeoJSON data:', error));
+        }
 
 
         
