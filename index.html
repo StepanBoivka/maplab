@@ -433,29 +433,29 @@ function addTenantLayers() {
         }
 
         // Функція для конвертації даних у CSV
-        function convertToCSV(objArray) {
+       function convertToCSV(objArray) {
             var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
             var str = '';
             var headers = Object.keys(array[0]);
 
-            str += headers.join(',') + '\r\n';
+            str += headers.join(';') + '\r\n';  // Змінено розділювач на крапку з комою
 
             for (var i = 0; i < array.length; i++) {
                 var line = '';
                 for (var index in headers) {
-                    if (line != '') line += ',';
+                    if (line != '') line += ';';  // Змінено розділювач на крапку з комою
                     var key = headers[index];
                     var value = array[i][key];
                     
                     // Особлива обробка для полів "Площа" та "Площа розрахована"
                     if (key === "Площа" || key === "Площа розрахована") {
                         if (typeof value === 'number') {
-                            value = value.toFixed(4); // Форматуємо число з 4 знаками після коми
+                            value = value.toFixed(4).replace('.', ','); // Форматуємо число з 4 знаками після коми і замінюємо крапку на кому
                         } else if (typeof value === 'string') {
                             // Якщо значення є рядком, спробуємо перетворити його на число
-                            var numValue = parseFloat(value);
+                            var numValue = parseFloat(value.replace(',', '.'));
                             if (!isNaN(numValue)) {
-                                value = numValue.toFixed(4);
+                                value = numValue.toFixed(4).replace('.', ',');
                             }
                         }
                     } else if (typeof value === 'string') {
@@ -474,7 +474,6 @@ function addTenantLayers() {
             }
             return str;
         }
-
         // Функція для завантаження CSV файлу
         function downloadCSV(csv, filename) {
             var blob = new Blob(["\ufeff", csv], { type: 'text/csv;charset=utf-8;' });
