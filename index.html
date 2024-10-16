@@ -92,8 +92,6 @@
             font-size: 14px;
             color: #0066cc;
         }
-
-        #filterControls { margin: 10px 0; }
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -112,12 +110,6 @@
             <option>Виберіть файл</option>
         </select>
     </div>
-    <div id="filterControls">
-    <label for="tenantFilter">Фільтр за орендарем:</label>
-    <input type="text" id="tenantFilter">
-    <button id="applyFilter">Застосувати фільтр</button>
-    <button id="resetFilter">Скинути фільтр</button>
-</div>
     <div id="geolocationButton">📍</div>
     <button id="exportButton">Експорт в список</button>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -141,41 +133,7 @@
             maxZoom: 19,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
-let geoJsonLayer;
 
-document.getElementById('fileInput').addEventListener('change', function(e) {
-    let file = e.target.files[0];
-    let reader = new FileReader();
-    reader.onload = function(e) {
-        let geojsonData = JSON.parse(e.target.result);
-        if (geoJsonLayer) {
-            map.removeLayer(geoJsonLayer);
-        }
-        geoJsonLayer = L.geoJSON(geojsonData).addTo(map);
-        map.fitBounds(geoJsonLayer.getBounds());
-    };
-    reader.readAsText(file);
-});
-
-document.getElementById('applyFilter').addEventListener('click', function() {
-    let filterValue = document.getElementById('tenantFilter').value.toLowerCase();
-    if (geoJsonLayer) {
-        geoJsonLayer.clearLayers();
-        geoJsonLayer.addData(geoJsonLayer.toGeoJSON());
-        geoJsonLayer.setFilter(function(feature) {
-            return feature.properties.Орендар && 
-                   feature.properties.Орендар.toLowerCase().includes(filterValue);
-        });
-    }
-});
-
-document.getElementById('resetFilter').addEventListener('click', function() {
-    document.getElementById('tenantFilter').value = '';
-    if (geoJsonLayer) {
-        geoJsonLayer.clearLayers();
-        geoJsonLayer.addData(geoJsonLayer.toGeoJSON());
-    }
-});
         // Отримуємо ідентифікатор папки з URL, якщо є
         var dataPath = 'data/';
         if (id) {
