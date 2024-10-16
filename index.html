@@ -438,35 +438,36 @@ function addTenantLayers() {
             var str = '';
             var headers = Object.keys(array[0]);
 
-            str += headers.join(';') + '\r\n';
+            str += headers.join(',') + '\r\n';
 
             for (var i = 0; i < array.length; i++) {
                 var line = '';
                 for (var index in headers) {
-                    if (line != '') line += ';';
+                    if (line != '') line += ',';
                     var key = headers[index];
                     var value = array[i][key];
                     
                     // Особлива обробка для полів "Площа" та "Площа розрахована"
                     if (key === "Площа" || key === "Площа розрахована" || key === "Площа ДЗК") {
                         if (typeof value === 'number') {
-                            value = value.toFixed(4).replace('.', ',');
+                            value = value.toFixed(4); // Форматуємо число з 4 знаками після коми
                         } else if (typeof value === 'string') {
-                            // Видаляємо всі пробіли та замінюємо крапку на кому
-                            value = value.replace(/\s/g, '').replace('.', ',');
-                            // Перевіряємо, чи є значення числом
-                            if (!isNaN(parseFloat(value))) {
-                                value = parseFloat(value).toFixed(4).replace('.', ',');
+                            // Якщо значення є рядком, спробуємо перетворити його на число
+                            var numValue = parseFloat(value);
+                            if (!isNaN(numValue)) {
+                                value = numValue.toFixed(4);
                             }
                         }
                     } else if (typeof value === 'string') {
-                        // Екрануємо подвійні лапки та огортаємо значення в лапки
-                        value = '"' + value.replace(/"/g, '""') + '"';
+                        value = value.replace(/"/g, '""'); // Екранування лапок
+                        value = '"' + value + '"'; // Огортання значення в лапки
                     } else if (value === null || value === undefined) {
-                        value = '';
+                        value = ''; // Пусте значення для null або undefined
                     } else if (typeof value === 'object') {
-                        value = '"' + JSON.stringify(value).replace(/"/g, '""') + '"';
+                        value = JSON.stringify(value).replace(/"/g, '""');
+                        value = '"' + value + '"'; // Огортання значення в лапки
                     }
+                    // Для інших типів (числа, булеві значення) просто використовуємо їх як є
                     line += value;
                 }
                 str += line + '\r\n';
@@ -487,7 +488,6 @@ function addTenantLayers() {
                 document.body.removeChild(link);
             }
         }
-
         // Додаємо обробник події для кнопки експорту
         document.getElementById('exportButton').addEventListener('click', function() {
             var data = collectMapData();
