@@ -489,7 +489,7 @@ function addTenantLayers() {
        function convertToCSV(objArray) {
             var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
             var str = '';
-            var headers = Object.keys(array[0]).filter(key => key !== '_searchField');
+            var headers = Object.keys(array[0]).filter(key => key !== '_searchField' && key !== 'Посилання');
 
             str += headers.join(',') + '\r\n';
 
