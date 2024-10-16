@@ -413,13 +413,22 @@ function addTenantLayers() {
 // Додаємо нову функцію для збору даних з карти
         function collectMapData() {
             var data = [];
-            Object.values(overlays).forEach(layerGroup => {
-                layerGroup.eachLayer(layer => {
+            // Перевіряємо, чи є активний шар ділянок
+            var activeLayer = null;
+            for (var key in overlays) {
+                if (overlays.hasOwnProperty(key) && key !== "Поля обробітку") {
+                    activeLayer = overlays[key];
+                    break;
+                }
+            }
+            
+            if (activeLayer) {
+                activeLayer.eachLayer(layer => {
                     if (layer.feature && layer.feature.properties) {
                         data.push(layer.feature.properties);
                     }
                 });
-            });
+            }
             return data;
         }
 
