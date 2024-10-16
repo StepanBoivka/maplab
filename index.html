@@ -62,18 +62,22 @@
         .leaflet-control-search {
             top: 50px !important; /* Змістити поле пошуку вниз */
         }
-       #exportButton {
-    top: 50px;
-    left: 10px;
-    background: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-#exportButton:hover {
-    background: #0056b3;
-}
+        #exportButton {
+            position: absolute;
+            bottom: 50px;
+            right: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        #exportButton:hover {
+            background: #0056b3;
+        }
         .link-icon {
             width: 16px;
             height: 16px;
@@ -107,10 +111,7 @@
         </select>
     </div>
     <div id="geolocationButton">📍</div>
-    <div id="exportButton">
-    Експорт в список
-</div>
-   
+    <button id="exportButton">Експорт в список</button>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
