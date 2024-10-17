@@ -118,6 +118,25 @@
 .popup-content.active {
     display: block;
 }
+        .popup-content table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 5px;
+}
+.popup-content td {
+    padding: 2px 5px;
+    vertical-align: top;
+}
+.popup-content td.property-name {
+    text-align: right;
+    white-space: nowrap;
+    width: 1%;  /* Це змушує колонку займати мінімальну необхідну ширину */
+}
+.popup-content td.property-value {
+    text-align: left;
+    padding-left: 10px;  /* Додатковий відступ зліва для значень */
+}
+
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -213,29 +232,28 @@
             '<div class="popup-tab" data-tab="other">Обмеження</div>' +
             '</div>';
 
-        var ownershipContent = '<div class="popup-content active" id="ownership">';
-        var leaseContent = '<div class="popup-content" id="lease">';
-        var otherContent = '<div class="popup-content" id="other">';
+        var ownershipContent = '<div class="popup-content active" id="ownership"><table>';
+        var leaseContent = '<div class="popup-content" id="lease"><table>';
+        var otherContent = '<div class="popup-content" id="other"><table>';
 
         for (var key in feature.properties) {
             if (feature.properties.hasOwnProperty(key)) {
                 var value = feature.properties[key];
-                var row = '<p><strong>' + key + ':</strong> ';
+                var row = '<tr><td class="property-name">' + key + ':</td><td class="property-value">';
                 if (key === "Посилання" && value) {
                     row += '<a href="' + value + '" target="_blank"><span class="link-icon"></span><span class="link-text">інформація ДЗК</span></a>';
                 } else {
                     row += value;
                 }
-                row += '</p>';
+                row += '</td></tr>';
 
                 // Розподіляємо інформацію по вкладках
                 switch (key) {
                     case "Кадастровий номер":
                     case "Власник":
-                    case "Орендар":
-                    case "Цільове":
+                    case "Форма власності":
+                    case "Площа":
                     case "Площа розрахована":
-                    case "Посилання":
                         ownershipContent += row;
                         break;
                     case "Орендар":             
@@ -248,7 +266,11 @@
             }
         }
 
-        popupContent += ownershipContent + '</div>' + leaseContent + '</div>' + otherContent + '</div>';
+        ownershipContent += '</table></div>';
+        leaseContent += '</table></div>';
+        otherContent += '</table></div>';
+
+        popupContent += ownershipContent + leaseContent + otherContent;
         
         var popup = L.popup({maxWidth: 300, maxHeight: 300});
         popup.setContent(popupContent);
