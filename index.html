@@ -208,15 +208,13 @@
         function onEachFeature(feature, layer) {
     if (feature.properties) {
         var popupContent = '<div class="popup-tabs">' +
-            
-            '<div class="popup-tab" data-tab="ownership">Власність</div>' +
+            '<div class="popup-tab active" data-tab="ownership">Власність</div>' +
             '<div class="popup-tab" data-tab="lease">Оренда</div>' +
             '<div class="popup-tab" data-tab="other">Обмеження</div>' +
             '</div>';
 
-        
-        var ownershipContent = '<div class="popup-content" id="ownership">';
-        var areaContent = '<div class="popup-content" id="lease">';
+        var ownershipContent = '<div class="popup-content active" id="ownership">';
+        var leaseContent = '<div class="popup-content" id="lease">';
         var otherContent = '<div class="popup-content" id="other">';
 
         for (var key in feature.properties) {
@@ -239,8 +237,8 @@
                     case "Площа розрахована":
                         ownershipContent += row;
                         break;
-                        case "Орендар":             
-                        case "Дата реєстрації":
+                    case "Орендар":             
+                    case "Дата реєстрації":
                         leaseContent += row;
                         break;
                     default:
@@ -248,7 +246,8 @@
                 }
             }
         }
-        popupContent += mainContent + '</div>' + ownershipContent + '</div>' + areaContent + '</div>' + otherContent + '</div>';
+
+        popupContent += ownershipContent + '</div>' + leaseContent + '</div>' + otherContent + '</div>';
         
         var popup = L.popup({maxWidth: 300, maxHeight: 300});
         popup.setContent(popupContent);
@@ -270,7 +269,6 @@
         });
     }
 }
-
         function styleFeature(feature) {
             return {
                 color: getColor(feature.properties["Орендар"]),
