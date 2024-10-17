@@ -123,20 +123,23 @@
     border-collapse: separate;
     border-spacing: 0 5px;
 }
+.popup-content table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 5px;
+}
 .popup-content td {
-    padding: 2px 5px;
+    padding: 2px 0;
     vertical-align: top;
 }
 .popup-content td.property-name {
-    text-align: right;
+    font-weight: bold;
+    padding-right: 10px;
     white-space: nowrap;
-    width: 1%;  /* Це змушує колонку займати мінімальну необхідну ширину */
 }
 .popup-content td.property-value {
-    text-align: left;
-    padding-left: 10px;  /* Додатковий відступ зліва для значень */
+    padding-left: 5px;
 }
-
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -292,6 +295,8 @@
         });
     }
 }
+
+Versi
         function styleFeature(feature) {
             return {
                 color: getColor(feature.properties["Орендар"]),
