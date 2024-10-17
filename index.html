@@ -293,9 +293,23 @@
                 });
             });
         });
+
+        // Додаткова логіка для обробки орендарів та площ
+        var tenant = feature.properties["Орендар"];
+        var area = parseFloat(feature.properties["Площа розрахована"]);
+        if (!isNaN(area)) {
+            if (tenant === null || tenant === "" || tenant === undefined) {
+                freeLayer.addLayer(layer);
+                freeArea += area;
+            } else {
+                if (!tenantAreas[tenant]) {
+                    tenantAreas[tenant] = 0;
+                }
+                tenantAreas[tenant] += area;
+            }
+        }
     }
 }
-
         function styleFeature(feature) {
             return {
                 color: getColor(feature.properties["Орендар"]),
