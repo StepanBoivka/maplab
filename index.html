@@ -208,15 +208,15 @@
         function onEachFeature(feature, layer) {
     if (feature.properties) {
         var popupContent = '<div class="popup-tabs">' +
-            '<div class="popup-tab active" data-tab="main">Основна інформація</div>' +
+            
             '<div class="popup-tab" data-tab="ownership">Власність</div>' +
-            '<div class="popup-tab" data-tab="area">Площа</div>' +
-            '<div class="popup-tab" data-tab="other">Інше</div>' +
+            '<div class="popup-tab" data-tab="lease">Оренда</div>' +
+            '<div class="popup-tab" data-tab="other">Обмеження</div>' +
             '</div>';
 
-        var mainContent = '<div class="popup-content active" id="main">';
+        
         var ownershipContent = '<div class="popup-content" id="ownership">';
-        var areaContent = '<div class="popup-content" id="area">';
+        var areaContent = '<div class="popup-content" id="lease">';
         var otherContent = '<div class="popup-content" id="other">';
 
         for (var key in feature.properties) {
@@ -233,21 +233,15 @@
                 // Розподіляємо інформацію по вкладках
                 switch (key) {
                     case "Кадастровий номер":
-                    case "Цільове призначення":
-                    case "Категорія земель":
-                    case "Розташування":
-                        mainContent += row;
-                        break;
-                    case "Форма власності":
                     case "Власник":
-                    case "Орендар":
-                    case "Право власності":
-                        ownershipContent += row;
-                        break;
+                    case "Форма власності":
                     case "Площа":
                     case "Площа розрахована":
-                    case "Площа ДЗК":
-                        areaContent += row;
+                        ownershipContent += row;
+                        break;
+                        case "Орендар":             
+                        case "Дата реєстрації":
+                        leaseContent += row;
                         break;
                     default:
                         otherContent += row;
