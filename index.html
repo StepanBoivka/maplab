@@ -230,7 +230,7 @@
         function onEachFeature(feature, layer) {
     if (feature.properties) {
         var popupContent = '<div class="popup-tabs">' +
-            '<div class="popup-tab active" data-tab="ownership">Власність</div>' +
+            '<div class="popup-tab active" data-tab="ownership">Основна</div>' +
             '<div class="popup-tab" data-tab="lease">Оренда</div>' +
             '<div class="popup-tab" data-tab="other">Обмеження</div>' +
             '</div>';
@@ -253,14 +253,15 @@
                 // Розподіляємо інформацію по вкладках
                 switch (key) {
                     case "Кадастровий номер":
+                    case "Площа розрахована":
                     case "Власник":
                     case "Орендар":
-                    
-                    case "Площа розрахована":
+                                 
                         ownershipContent += row;
                         break;
                     case "Орендар":             
                     case "Дата реєстрації":
+                    case "Дата завершення":
                         leaseContent += row;
                         break;
                     default:
