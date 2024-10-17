@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css" />
     <link rel="stylesheet" href="css/area-tooltip.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
 
     <style>
         html, body, #map {
@@ -113,7 +112,6 @@
     </div>
     <div id="geolocationButton">📍</div>
     <button id="exportButton">Експорт в список</button>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
@@ -122,12 +120,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id'); // Отримання значення параметра 'id'
 
-        var map = L.map('map').setView([50.4501, 30.5234], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map);
-
-L.control.locate().addTo(map);
+        var map = L.map('map', {
+            zoomControl: false
+        }).setView([48.3794, 31.1656], 6);
 
         var googleLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
             maxZoom: 20,
