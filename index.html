@@ -231,8 +231,8 @@
     if (feature.properties) {
         var popupContent = '<div class="popup-tabs">' +
             '<div class="popup-tab active" data-tab="ownership">Основна</div>' +
-            '<div class="popup-tab" data-tab="lease">Оренда</div>' +
-            '<div class="popup-tab" data-tab="other">Обмеження</div>' +
+            '<div class="popup-tab" data-tab="lease">Інше</div>' +
+            
             '</div>';
 
         var ownershipContent = '<div class="popup-content active" id="ownership"><table>';
@@ -288,7 +288,7 @@
                         leaseContent += row;
                         break;
                     default:
-                        otherContent += row;
+                        
                 }
             }
         });
