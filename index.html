@@ -92,6 +92,32 @@
             font-size: 14px;
             color: #0066cc;
         }
+        .popup-tabs {
+    display: flex;
+    border-bottom: 1px solid #ccc;
+}
+.popup-tab {
+    padding: 8px 12px;
+    cursor: pointer;
+    background: #f1f1f1;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    margin-right: 2px;
+    font-size: 12px;
+}
+.popup-tab.active {
+    background: #fff;
+    border-bottom: 1px solid #fff;
+    margin-bottom: -1px;
+}
+.popup-content {
+    display: none;
+    padding: 10px;
+    font-size: 12px;
+}
+.popup-content.active {
+    display: block;
+}
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -180,37 +206,76 @@
         }
 
         function onEachFeature(feature, layer) {
-            if (feature.properties) {
-                var popupContent = '<table>';
-                for (var key in feature.properties) {
-                    if (feature.properties.hasOwnProperty(key)) {
-                        if (key === "Посилання") {
-                            if (feature.properties[key]) {
-                                popupContent += '<tr><td><strong>' + key + ':</strong></td><td><a href="' + feature.properties[key] + '" target="_blank"><span class="link-icon"></span><span class="link-text">інформація ДЗК</span></a></td></tr>';
-                            }
-                        } else {
-                            popupContent += '<tr><td><strong>' + key + ':</strong></td><td>' + feature.properties[key] + '</td></tr>';
-                        }
-                    }
-                }
-                popupContent += '</table>';
-                layer.bindPopup(popupContent);
+    if (feature.properties) {
+        var popupContent = '<div class="popup-tabs">' +
+            '<div class="popup-tab active" data-tab="main">Основна інформація</div>' +
+            '<div class="popup-tab" data-tab="ownership">Власність</div>' +
+            '<div class="popup-tab" data-tab="area">Площа</div>' +
+            '<div class="popup-tab" data-tab="other">Інше</div>' +
+            '</div>';
 
-                var tenant = feature.properties["Орендар"];
-                var area = parseFloat(feature.properties["Площа розрахована"]);
-                if (!isNaN(area)) {
-                    if (tenant === null || tenant === "" || tenant === undefined) {
-                        freeLayer.addLayer(layer);
-                        freeArea += area;
-                    } else {
-                        if (!tenantAreas[tenant]) {
-                            tenantAreas[tenant] = 0;
-                        }
-                        tenantAreas[tenant] += area;
-                    }
+        var mainContent = '<div class="popup-content active" id="main">';
+        var ownershipContent = '<div class="popup-content" id="ownership">';
+        var areaContent = '<div class="popup-content" id="area">';
+        var otherContent = '<div class="popup-content" id="other">';
+
+        for (var key in feature.properties) {
+            if (feature.properties.hasOwnProperty(key)) {
+                var value = feature.properties[key];
+                var row = '<p><strong>' + key + ':</strong> ';
+                if (key === "Посилання" && value) {
+                    row += '<a href="' + value + '" target="_blank"><span class="link-icon"></span><span class="link-text">інформація ДЗК</span></a>';
+                } else {
+                    row += value;
+                }
+                row += '</p>';
+
+                // Розподіляємо інформацію по вкладках
+                switch (key) {
+                    case "Кадастровий номер":
+                    case "Цільове призначення":
+                    case "Категорія земель":
+                    case "Розташування":
+                        mainContent += row;
+                        break;
+                    case "Форма власності":
+                    case "Власник":
+                    case "Орендар":
+                    case "Право власності":
+                        ownershipContent += row;
+                        break;
+                    case "Площа":
+                    case "Площа розрахована":
+                    case "Площа ДЗК":
+                        areaContent += row;
+                        break;
+                    default:
+                        otherContent += row;
                 }
             }
         }
+        popupContent += mainContent + '</div>' + ownershipContent + '</div>' + areaContent + '</div>' + otherContent + '</div>';
+        
+        var popup = L.popup({maxWidth: 300, maxHeight: 300});
+        popup.setContent(popupContent);
+        layer.bindPopup(popup);
+
+        // Додаємо обробник подій для вкладок після відкриття попапу
+        layer.on('popupopen', function() {
+            var tabs = document.querySelectorAll('.popup-tab');
+            tabs.forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    var tabId = this.getAttribute('data-tab');
+                    document.querySelectorAll('.popup-tab, .popup-content').forEach(function(el) {
+                        el.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    }
+}
 
         function styleFeature(feature) {
             return {
