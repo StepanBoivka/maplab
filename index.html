@@ -8,6 +8,11 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css" />
     <link rel="stylesheet" href="css/area-tooltip.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet.Locate CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
+    
 
     <style>
         html, body, #map {
@@ -140,6 +145,15 @@
 .popup-content td.property-value {
     padding-left: 5px;
 }
+
+    #map { height: 400px; width: 100%; }
+    #controls, #geolocationButton { 
+        margin: 10px;
+        padding: 5px;
+        cursor: pointer;
+    }
+
+        
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -150,6 +164,12 @@
         gtag('js', new Date());
         gtag('config', 'G-CMBXL0TQLR');
     </script>
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Leaflet.Locate JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+
 </head>
 <body>
     <div id="map"></div>
@@ -704,6 +724,22 @@ function addTenantLayers() {
             }
         });
 
+
+        // Додавання контролу геолокації
+        L.control.locate({
+            position: 'topright',
+            strings: {
+                title: "Показати моє місцезнаходження"
+            },
+            locateOptions: {
+                enableHighAccuracy: true
+            }
+        }).addTo(map);
+
+        // Обробник для кнопки геолокації
+        document.getElementById('geolocationButton').addEventListener('click', function() {
+            map.locate({setView: true, maxZoom: 16});
+        });
 
         
     </script>
