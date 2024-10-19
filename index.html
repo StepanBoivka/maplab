@@ -169,6 +169,7 @@
     
     <!-- Leaflet.Locate JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+    <script src="https://unpkg.com/leaflet-editable@1.2.0/src/Leaflet.Editable.js"></script>
 
 </head>
 <body>
@@ -189,7 +190,8 @@
         const id = urlParams.get('id'); // Отримання значення параметра 'id'
 
         var map = L.map('map', {
-            zoomControl: false
+            zoomControl: false,
+            editable: true 
         }).setView([48.3794, 31.1656], 6);
 
         var googleLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
@@ -455,32 +457,38 @@ function loadFileList() {
             }
         });
         function addFieldLayer() {
-            fetch(dataPath + 'field.geojson')
-                .then(response => response.json())
+    fetch(dataPath + 'field.geojson')
+        .then(response => response.json())
         .then(data => {
             fieldLayer = L.geoJSON(data, {
                 style: styleFieldFeature,
                 onEachFeature: function (feature, layer) {
                     if (feature.properties && feature.properties.area) {
                         var area = feature.properties.area; 
-                        // Додаємо підказку лише з числом площі
                         layer.bindTooltip(area.toString(), {
-                            permanent: true,   // Постійна підказка
-                            direction: 'center', // Позиціонування в центрі полігону
-                            className: 'area-tooltip', // Додатковий клас для стилізації
-                            opacity: 0 // Спочатку підказки приховані
+                            permanent: true,
+                            direction: 'center',
+                            className: 'area-tooltip',
+                            opacity: 0
                         });
                     }
+                    
+                    // Додаємо можливість редагування для кожного полігона
+                    layer.on('click', function() {
+                        if (!this.editEnabled()) {
+                            this.enableEdit();
+                        } else {
+                            this.disableEdit();
+                        }
+                    });
                 }
             }).addTo(map);
 
-            // Оновлюємо видимість підказок відповідно до поточного рівня зуму
             updateLabelsVisibility();
-// Додаємо подію для оновлення видимості підказок при зміні зуму
-map.on('zoomend', function() {
-    updateLabelsVisibility();
-});
-            // Додаємо до меню шарів
+            map.on('zoomend', function() {
+                updateLabelsVisibility();
+            });
+
             overlays["Поля обробітку"] = fieldLayer;
             var colorBox = '<span class="color-box" style="background-color:transparent; border: 2px solid yellow"></span>';
             layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Поля обробітку</span>');
