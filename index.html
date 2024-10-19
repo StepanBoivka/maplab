@@ -8,11 +8,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css" />
     <link rel="stylesheet" href="css/area-tooltip.css">
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Leaflet.Locate CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
-    
 
     <style>
         html, body, #map {
@@ -145,15 +140,6 @@
 .popup-content td.property-value {
     padding-left: 5px;
 }
-
-    
- #geolocationButton { 
-        margin: 10px;
-        padding: 5px;
-        cursor: pointer;
-    }
-
-        
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -164,15 +150,6 @@
         gtag('js', new Date());
         gtag('config', 'G-CMBXL0TQLR');
     </script>
-    <!-- Leaflet JavaScript -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- Leaflet.Locate JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
-    <script src="https://unpkg.com/leaflet-editable@1.2.0/src/Leaflet.Editable.js"></script>
-    <button id="saveChanges" style="position: absolute; bottom: 90px; right: 10px; z-index: 1000;">Зберегти зміни</button>
-    <button id="cancelEditing" style="position: absolute; bottom: 130px; right: 10px; z-index: 1000;">Скасувати редагування</button>
-
 </head>
 <body>
     <div id="map"></div>
@@ -192,8 +169,7 @@
         const id = urlParams.get('id'); // Отримання значення параметра 'id'
 
         var map = L.map('map', {
-            zoomControl: false,
-            editable: true 
+            zoomControl: false
         }).setView([48.3794, 31.1656], 6);
 
         var googleLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
@@ -459,64 +435,38 @@ function loadFileList() {
             }
         });
         function addFieldLayer() {
-    fetch(dataPath + 'field.geojson')
-        .then(response => response.json())
+            fetch(dataPath + 'field.geojson')
+                .then(response => response.json())
         .then(data => {
             fieldLayer = L.geoJSON(data, {
                 style: styleFieldFeature,
                 onEachFeature: function (feature, layer) {
                     if (feature.properties && feature.properties.area) {
                         var area = feature.properties.area; 
+                        // Додаємо підказку лише з числом площі
                         layer.bindTooltip(area.toString(), {
-                            permanent: true,
-                            direction: 'center',
-                            className: 'area-tooltip',
-                            opacity: 0
+                            permanent: true,   // Постійна підказка
+                            direction: 'center', // Позиціонування в центрі полігону
+                            className: 'area-tooltip', // Додатковий клас для стилізації
+                            opacity: 0 // Спочатку підказки приховані
                         });
                     }
-                    
-                    // Додаємо можливість редагування для кожного полігона
-                    layer.on('click', function() {
-                        if (!this.editEnabled()) {
-                            this.enableEdit();
-                        } else {
-                            this.disableEdit();
-                        }
-                    });
                 }
             }).addTo(map);
 
+            // Оновлюємо видимість підказок відповідно до поточного рівня зуму
             updateLabelsVisibility();
-            map.on('zoomend', function() {
-                updateLabelsVisibility();
-            });
-
+// Додаємо подію для оновлення видимості підказок при зміні зуму
+map.on('zoomend', function() {
+    updateLabelsVisibility();
+});
+            // Додаємо до меню шарів
             overlays["Поля обробітку"] = fieldLayer;
             var colorBox = '<span class="color-box" style="background-color:transparent; border: 2px solid yellow"></span>';
             layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Поля обробітку</span>');
         })
         .catch(error => console.error('Error loading Field GeoJSON data:', error));
 }
-
-        document.getElementById('saveChanges').addEventListener('click', function() {
-    fieldLayer.eachLayer(function(layer) {
-        if (layer.editEnabled()) {
-            layer.disableEdit();
-        }
-    });
-    // Тут ви можете додати логіку для збереження змінених даних
-    console.log('Зміни збережено');
-});
-
-document.getElementById('cancelEditing').addEventListener('click', function() {
-    fieldLayer.eachLayer(function(layer) {
-        if (layer.editEnabled()) {
-            layer.disableEdit();
-            layer.setLatLngs(layer.getLatLngs()); // Це поверне полігон до початкового стану
-        }
-    });
-    console.log('Редагування скасовано');
-});
 
         function updateLayersControl() {
             if (layersControl) {
@@ -637,11 +587,8 @@ function addTenantLayers() {
        //     addGeoJsonLayer(dataPath + 'yourDataFile.geojson', 'Ваш шар');
        // }
 
-        addFieldLayer().then(layer => {
-    if (layer) {
-        fieldLayer = layer;
-    }
-});
+        addFieldLayer();
+
         // Обробка натискання кнопки геолокації
         document.getElementById('geolocationButton').addEventListener('click', function() {
             if (navigator.geolocation) {
@@ -757,22 +704,6 @@ function addTenantLayers() {
             }
         });
 
-
-        // Додавання контролу геолокації
-        L.control.locate({
-            position: 'topright',
-            strings: {
-                title: "Показати моє місцезнаходження"
-            },
-            locateOptions: {
-                enableHighAccuracy: true
-            }
-        }).addTo(map);
-
-        // Обробник для кнопки геолокації
-        document.getElementById('geolocationButton').addEventListener('click', function() {
-            map.locate({setView: true, maxZoom: 16});
-        });
 
         
     </script>
