@@ -170,6 +170,8 @@
     <!-- Leaflet.Locate JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
     <script src="https://unpkg.com/leaflet-editable@1.2.0/src/Leaflet.Editable.js"></script>
+    <button id="saveChanges" style="position: absolute; bottom: 90px; right: 10px; z-index: 1000;">Зберегти зміни</button>
+    <button id="cancelEditing" style="position: absolute; bottom: 130px; right: 10px; z-index: 1000;">Скасувати редагування</button>
 
 </head>
 <body>
@@ -496,6 +498,26 @@ function loadFileList() {
         .catch(error => console.error('Error loading Field GeoJSON data:', error));
 }
 
+        document.getElementById('saveChanges').addEventListener('click', function() {
+    fieldLayer.eachLayer(function(layer) {
+        if (layer.editEnabled()) {
+            layer.disableEdit();
+        }
+    });
+    // Тут ви можете додати логіку для збереження змінених даних
+    console.log('Зміни збережено');
+});
+
+document.getElementById('cancelEditing').addEventListener('click', function() {
+    fieldLayer.eachLayer(function(layer) {
+        if (layer.editEnabled()) {
+            layer.disableEdit();
+            layer.setLatLngs(layer.getLatLngs()); // Це поверне полігон до початкового стану
+        }
+    });
+    console.log('Редагування скасовано');
+});
+
         function updateLayersControl() {
             if (layersControl) {
                 map.removeControl(layersControl);
@@ -615,8 +637,11 @@ function addTenantLayers() {
        //     addGeoJsonLayer(dataPath + 'yourDataFile.geojson', 'Ваш шар');
        // }
 
-        addFieldLayer();
-
+        addFieldLayer().then(layer => {
+    if (layer) {
+        fieldLayer = layer;
+    }
+});
         // Обробка натискання кнопки геолокації
         document.getElementById('geolocationButton').addEventListener('click', function() {
             if (navigator.geolocation) {
