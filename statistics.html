@@ -115,46 +115,86 @@
             </a>
         </div>
 
-        <!-- Загальна статистика -->
-        <div class="mb-6">
-            <div class="stats-card">
-                <div class="flex justify-between gap-8">
-                    <!-- Загальна статистика (зліва) -->
-                    <div class="flex-1">
-                        <h3 class="text-sm font-semibold text-gray-900 mb-3">Загальна площа</h3>
-                        <div class="flex flex-col gap-3">
-                            <div class="flex justify-between items-baseline">
-                                <div class="stats-label">Площа:</div>
-                                <div class="stats-value text-gray-900" id="totalArea">0 га</div>
-                            </div>
-                            <div class="flex justify-between items-baseline">
-                                <div class="stats-label">Кількість ділянок:</div>
-                                <div class="stats-value text-gray-900" id="totalParcels">0</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Вертикальний роздільник -->
-                    <div class="border-l border-gray-200"></div>
-
-                    <!-- Вільні від оренди (справа) -->
-                    <div class="flex-1">
-                        <h3 class="text-sm font-semibold text-orange-500 mb-3">Вільні від оренди</h3>
-                        <div class="flex flex-col gap-3">
-                            <div class="flex justify-between items-baseline">
-                                <div class="stats-label">Площа:</div>
-                                <div class="stats-value text-orange-500" id="freeArea">0 га</div>
-                            </div>
-                            <div class="flex justify-between items-baseline">
-                                <div class="stats-label">Кількість ділянок:</div>
-                                <div class="stats-value text-orange-500" id="freeParcels">0</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+       <!-- Загальна статистика -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+    <!-- Загальна площа -->
+    <div class="stats-card flex items-start">
+        <div class="p-3 rounded-lg bg-blue-100 mr-4">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            </svg>
         </div>
+        <div class="flex-1">
+            <div class="text-sm text-gray-600">Загальна площа</div>
+            <div class="stats-value text-gray-900" id="totalArea">0 га</div>
+        </div>
+    </div>
 
+    <!-- Кількість ділянок -->
+    <div class="stats-card flex items-start">
+        <div class="p-3 rounded-lg bg-green-100 mr-4">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+        </div>
+        <div class="flex-1">
+            <div class="text-sm text-gray-600">Кількість ділянок</div>
+            <div class="stats-value text-gray-900" id="totalParcels">0</div>
+        </div>
+    </div>
+
+    <!-- Площа вільних від оренди -->
+    <div class="stats-card flex items-start">
+        <div class="p-3 rounded-lg bg-orange-100 mr-4">
+            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+        </div>
+        <div class="flex-1">
+            <div class="text-sm text-gray-600">Площа вільних від оренди</div>
+            <div class="stats-value text-orange-500" id="freeArea">0 га</div>
+        </div>
+    </div>
+
+    <!-- Кількість орендарів -->
+    <div class="stats-card flex items-start">
+        <div class="p-3 rounded-lg bg-purple-100 mr-4">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+        </div>
+        <div class="flex-1">
+            <div class="text-sm text-gray-600">Кількість орендарів</div>
+            <div class="stats-value text-gray-900" id="tenantsCount">0</div>
+        </div>
+    </div>
+
+    <!-- Кількість власників -->
+    <div class="stats-card flex items-start">
+        <div class="p-3 rounded-lg bg-indigo-100 mr-4">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+        </div>
+        <div class="flex-1">
+            <div class="text-sm text-gray-600">Кількість власників</div>
+            <div class="stats-value text-gray-900" id="ownersCount">0</div>
+        </div>
+    </div>
+
+    <!-- Середній розмір ділянки -->
+    <div class="stats-card flex items-start">
+        <div class="p-3 rounded-lg bg-pink-100 mr-4">
+            <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+        </div>
+        <div class="flex-1">
+            <div class="text-sm text-gray-600">Середній розмір ділянки</div>
+            <div class="stats-value text-gray-900" id="avgParcelSize">0 га</div>
+        </div>
+    </div>
+</div>
         <!-- Таблиця орендарів -->
         <div class="stats-card mb-4">
             <h3 class="table-title">Інформація по орендарях</h3>
@@ -329,17 +369,23 @@
         }
 
         function updateUI(stats) {
-            // Оновлення загальної статистики
-            document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
-            document.getElementById('totalParcels').textContent = stats.totalParcels;
-            document.getElementById('freeArea').textContent = `${stats.freeArea.toFixed(2)} га`;
-            document.getElementById('freeParcels').textContent = stats.freeParcels;
+    // Оновлення загальної статистики
+    document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
+    document.getElementById('totalParcels').textContent = stats.totalParcels;
+    document.getElementById('freeArea').textContent = `${stats.freeArea.toFixed(2)} га`;
+    document.getElementById('freeParcels').textContent = stats.freeParcels;
+    
+    // Нові показники
+    document.getElementById('tenantsCount').textContent = Object.keys(stats.tenants).length;
+    document.getElementById('ownersCount').textContent = Object.keys(stats.owners).length;
+    document.getElementById('avgParcelSize').textContent = 
+        `${(stats.totalArea / stats.totalParcels).toFixed(2)} га`;
 
-            // Оновлення таблиць
-            updateDetailsTable(stats.tenants, 'detailsTableBody', stats.totalArea);
-            updateDetailsTable(stats.owners, 'ownersTableBody');
-            updateMatrixTable(stats.expiryYears, stats.tenants);
-        }
+    // Оновлення таблиць
+    updateDetailsTable(stats.tenants, 'detailsTableBody', stats.totalArea);
+    updateDetailsTable(stats.owners, 'ownersTableBody');
+    updateMatrixTable(stats.expiryYears, stats.tenants);
+}
 
         function updateDetailsTable(data, tableId, totalArea = 0) {
             const tbody = document.getElementById(tableId);
