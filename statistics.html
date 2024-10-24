@@ -108,23 +108,35 @@
         let purposeChart = null;
 
         async function loadAndProcessData() {
-            if (!selectedFile) {
-                console.error('Файл не вибрано');
-                return;
-            }
+    if (!selectedFile) {
+        console.error('Файл не вибрано');
+        return;
+    }
 
-            try {
-                const response = await fetch(`data/${selectedFile}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                processData(data);
-            } catch (error) {
-                console.error('Помилка завантаження даних:', error);
-                alert('Помилка завантаження даних. Спробуйте ще раз.');
-            }
+    try {
+        const response = await fetch(`data/${selectedFile}`);
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const data = await response.json();
+        console.log('Loaded data:', data);
+        console.log('Features count:', data.features ? data.features.length : 'No features');
+        
+        // Перевірка структури першого об'єкта
+        if (data.features && data.features.length > 0) {
+            console.log('First feature properties:', data.features[0].properties);
+        }
+        
+        processData(data);
+    } catch (error) {
+        console.error('Детальна помилка завантаження даних:', error);
+        console.error('Stack trace:', error.stack);
+        alert('Помилка завантаження даних. Перевірте консоль для деталей.');
+    }
+}
 
         function processData(data) {
             if (!data.features || !Array.isArray(data.features)) {
