@@ -117,21 +117,33 @@
             </a>
         </div>
 
-        <!-- Загальна статистика -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="stats-card">
-                <div class="stats-label">Загальна площа</div>
-                <div class="stats-value text-blue-600" id="totalArea">0 га</div>
-            </div>
-            <div class="stats-card">
-                <div class="stats-label">Кількість ділянок</div>
-                <div class="stats-value text-green-600" id="totalParcels">0</div>
-            </div>
-            <div class="stats-card">
-                <div class="stats-label">Вільні ділянки</div>
-                <div class="stats-value text-orange-600" id="freeParcels">0</div>
-            </div>
-        </div>
+       <!-- Загальна статистика -->
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 mb-6">
+    <div class="stats-card">
+        <div class="stats-label">Загальна площа</div>
+        <div class="stats-value text-blue-600" id="totalArea">0 га</div>
+    </div>
+    <div class="stats-card">
+        <div class="stats-label">Кількість ділянок</div>
+        <div class="stats-value text-green-600" id="totalParcels">0</div>
+    </div>
+    <div class="stats-card">
+        <div class="stats-label">Вільні ділянки</div>
+        <div class="stats-value text-orange-600" id="freeParcels">0</div>
+    </div>
+    <div class="stats-card">
+        <div class="stats-label">Площа вільних від оренди</div>
+        <div class="stats-value text-orange-600" id="freeArea">0 га</div>
+    </div>
+    <div class="stats-card">
+        <div class="stats-label">Кількість орендарів</div>
+        <div class="stats-value text-purple-600" id="tenantsCount">0</div>
+    </div>
+    <div class="stats-card">
+        <div class="stats-label">Кількість власників</div>
+        <div class="stats-value text-indigo-600" id="ownersCount">0</div>
+    </div>
+</div>
 
         <!-- Таблиця орендарів -->
         <div class="stats-card mb-4">
@@ -300,17 +312,29 @@
             updateUI(stats);
         }
 
-        function updateUI(stats) {
-            // Оновлення загальної статистики
-            document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
-            document.getElementById('totalParcels').textContent = stats.totalParcels;
-            document.getElementById('freeParcels').textContent = stats.freeParcels;
+       function updateUI(stats) {
+    // Оновлення загальної статистики
+    document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
+    document.getElementById('totalParcels').textContent = stats.totalParcels;
+    document.getElementById('freeParcels').textContent = stats.freeParcels;
+    
+    // Додані нові показники
+    document.getElementById('freeArea').textContent = `${calculateFreeArea(stats).toFixed(2)} га`;
+    document.getElementById('tenantsCount').textContent = Object.keys(stats.tenants).length;
+    document.getElementById('ownersCount').textContent = Object.keys(stats.owners).length;
 
-            // Оновлення таблиць
-            updateDetailsTable(stats.tenants, 'detailsTableBody', stats.totalArea);
-            updateDetailsTable(stats.owners, 'ownersTableBody');
-            updateMatrixTable(stats.expiryYears, stats.tenants);
-        }
+    // Оновлення таблиць
+    updateDetailsTable(stats.tenants, 'detailsTableBody', stats.totalArea);
+    updateDetailsTable(stats.owners, 'ownersTableBody');
+    updateMatrixTable(stats.expiryYears, stats.tenants);
+}
+
+// Функція для підрахунку площі вільних ділянок
+function calculateFreeArea(stats) {
+    const totalLeasedArea = Object.values(stats.tenants)
+        .reduce((sum, tenant) => sum + tenant.area, 0);
+    return stats.totalArea - totalLeasedArea;
+}
 
         function updateDetailsTable(data, tableId, totalArea = 0) {
             const tbody = document.getElementById(tableId);
