@@ -9,31 +9,31 @@
         .stats-card {
             background: white;
             border-radius: 8px;
-            padding: 20px;
+            padding: 16px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .stats-value {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
-            margin-top: 8px;
+            margin-top: 6px;
         }
         .stats-label {
             color: #666;
-            font-size: 14px;
+            font-size: 12px;
         }
         .data-table {
             width: 100%;
-            font-size: 13px;
+            font-size: 12px;
         }
         .data-table th {
             background-color: #f3f4f6;
-            padding: 6px 12px;
+            padding: 4px 8px;
             font-weight: 600;
             text-align: left;
             border-bottom: 2px solid #e5e7eb;
         }
         .data-table td {
-            padding: 4px 12px;
+            padding: 3px 8px;
             border-bottom: 1px solid #e5e7eb;
             position: relative;
         }
@@ -41,15 +41,15 @@
             background-color: #f9fafb;
         }
         .table-title {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #374151;
         }
         .table-subtitle {
-            font-size: 12px;
+            font-size: 11px;
             color: #6b7280;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .percentage-bar {
             position: absolute;
@@ -81,8 +81,8 @@
         }
         .matrix-table th,
         .matrix-table td {
-            padding: 6px 12px;
-            min-width: 80px;
+            padding: 4px 8px;
+            min-width: 70px;
         }
         .sticky-col {
             position: sticky;
@@ -97,20 +97,27 @@
         .matrix-table .highlight {
             background-color: #f3f4f6;
         }
+        .matrix-total-row {
+            font-weight: 600;
+            background-color: #f8fafc;
+        }
+        .matrix-total-row td {
+            border-top: 2px solid #e5e7eb;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-6">
         <!-- Заголовок -->
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold text-gray-800">Статистика по раді: <span id="councilName">Не вибрано</span></h1>
-            <a href="index.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-bold text-gray-800">Статистика по раді: <span id="councilName">Не вибрано</span></h1>
+            <a href="index.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
                 Повернутися до карти
             </a>
         </div>
 
         <!-- Загальна статистика -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div class="stats-card">
                 <div class="stats-label">Загальна площа</div>
                 <div class="stats-value text-blue-600" id="totalArea">0 га</div>
@@ -126,7 +133,7 @@
         </div>
 
         <!-- Таблиця орендарів -->
-        <div class="stats-card mb-6">
+        <div class="stats-card mb-4">
             <h3 class="table-title">Інформація по орендарях</h3>
             <div class="overflow-x-auto">
                 <table class="data-table">
@@ -145,7 +152,7 @@
         </div>
 
         <!-- Таблиця власників -->
-        <div class="stats-card mb-6">
+        <div class="stats-card mb-4">
             <h3 class="table-title">Інформація по власниках</h3>
             <div class="table-subtitle">Відображаються власники, що мають більше 5 ділянок</div>
             <div class="overflow-x-auto">
@@ -342,7 +349,6 @@
         }
 
         function updateMatrixTable(expiryYears, tenants) {
-            // Отримуємо всі унікальні роки
             const years = Object.keys(expiryYears).sort((a, b) => a - b);
             const currentYear = new Date().getFullYear();
             
@@ -359,11 +365,16 @@
                 thead.innerHTML += `<th class="text-right ${yearClass}">${year}</th>`;
             });
 
-            // Створюємо матрицю даних
             const tbody = document.getElementById('matrixTableBody');
             tbody.innerHTML = '';
 
-            // Для кожного орендаря створюємо рядок
+            // Для підрахунку загальних сум по роках
+            const yearTotals = {};
+            years.forEach(year => {
+                yearTotals[year] = 0;
+            });
+
+            // Додаємо рядки для кожного орендаря
             Object.entries(tenants)
                 .sort((a, b) => b[1].area - a[1].area)
                 .forEach(([tenant, tenantData]) => {
@@ -375,6 +386,8 @@
                     // Додаємо дані по роках
                     years.forEach(year => {
                         const areaForYear = expiryYears[year]?.tenants?.[tenant]?.area || 0;
+                        yearTotals[year] += areaForYear;
+                        
                         const cell = document.createElement('td');
                         cell.className = 'text-right';
                         
@@ -391,6 +404,22 @@
                     
                     tbody.appendChild(row);
                 });
+
+            // Додаємо підсумковий рядок
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'matrix-total-row';
+            totalRow.innerHTML = `<td class="text-left sticky-col border-t-2">Всього</td>`;
+            
+            years.forEach(year => {
+                const total = yearTotals[year];
+                totalRow.innerHTML += `
+                    <td class="text-right border-t-2${total > 0 ? ' bg-blue-50' : ''}">${
+                        total > 0 ? total.toFixed(2) : '-'
+                    }</td>
+                `;
+            });
+            
+            tbody.appendChild(totalRow);
         }
 
         // Завантаження даних при завантаженні сторінки
