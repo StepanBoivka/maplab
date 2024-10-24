@@ -55,26 +55,9 @@
             </div>
         </div>
 
-        <!-- Графіки -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="stats-card">
-                <h3 class="text-lg font-semibold mb-4">Розподіл площ за орендарями</h3>
-                <div class="chart-container">
-                    <canvas id="tenantsChart"></canvas>
-                </div>
-            </div>
-            
-            <div class="stats-card">
-                <h3 class="text-lg font-semibold mb-4">Розподіл за цільовим призначенням</h3>
-                <div class="chart-container">
-                    <canvas id="purposeChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Таблиця деталей -->
+        <!-- Таблиця орендарів -->
         <div class="stats-card mt-8">
-            <h3 class="text-lg font-semibold mb-4">Детальна інформація по орендарях</h3>
+            <h3 class="text-lg font-semibold mb-4">Інформація по орендарях</h3>
             <div class="overflow-x-auto">
                 <table class="min-w-full table-auto">
                     <thead>
@@ -92,118 +75,71 @@
     </div>
 
     <script>
-        // Кольорова палітра для графіків
-        const chartColors = [
-            '#4299E1', '#48BB78', '#ED8936', '#9F7AEA', '#F56565',
-            '#38B2AC', '#ED64A6', '#ECC94B', '#667EEA', '#ED64A6'
-        ];
-
         // Отримуємо параметри з URL
         const urlParams = new URLSearchParams(window.location.search);
         const selectedFile = urlParams.get('file');
         const councilName = selectedFile ? selectedFile.replace('.geojson', '') : 'Не вибрано';
         document.getElementById('councilName').textContent = councilName;
 
-        let tenantsChart = null;
-        let purposeChart = null;
-
         async function loadAndProcessData() {
-    if (!selectedFile) {
-        console.error('Файл не вибрано');
-        return;
-    }
+            if (!selectedFile) {
+                console.error('Файл не вибрано');
+                return;
+            }
 
-    try {
-        const response = await fetch(`data/${selectedFile}`);
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            try {
+                const response = await fetch(`data/${selectedFile}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                processData(data);
+            } catch (error) {
+                console.error('Помилка завантаження даних:', error);
+                alert('Помилка завантаження даних. Спробуйте ще раз.');
+            }
         }
-        
-        const data = await response.json();
-        console.log('Loaded data:', data);
-        console.log('Features count:', data.features ? data.features.length : 'No features');
-        
-        // Перевірка структури першого об'єкта
-        if (data.features && data.features.length > 0) {
-            console.log('First feature properties:', data.features[0].properties);
-        }
-        
-        processData(data);
-    } catch (error) {
-        console.error('Детальна помилка завантаження даних:', error);
-        console.error('Stack trace:', error.stack);
-        alert('Помилка завантаження даних. Перевірте консоль для деталей.');
-    }
-}
 
         function processData(data) {
-    console.log('Starting data processing');
-    
-    if (!data.features || !Array.isArray(data.features)) {
-        console.error('Некоректний формат даних:', data);
-        return;
-    }
+            if (!data.features || !Array.isArray(data.features)) {
+                console.error('Некоректний формат даних');
+                return;
+            }
 
-    const features = data.features;
-    console.log('Processing features count:', features.length);
-    
-    // Перевірка наявності необхідних полів у перших кількох об'єктах
-    features.slice(0, 3).forEach((feature, index) => {
-        console.log(`Feature ${index} properties:`, {
-            area: feature.properties['Площа розрахована'],
-            tenant: feature.properties['Орендар'],
-            purpose: feature.properties['Цільове']
-        });
-    });
-    
-    try {
-        // Обчислення загальної статистики
-        const stats = features.reduce((acc, feature) => {
-            const area = parseFloat(feature.properties['Площа розрахована'] || 0);
-            const tenant = feature.properties['Орендар'];
-            const purpose = feature.properties['Цільове'] || 'Не вказано';
+            const features = data.features;
+            
+            // Обчислення статистики
+            const stats = features.reduce((acc, feature) => {
+                const area = parseFloat(feature.properties['Площа розрахована'] || 0);
+                const tenant = feature.properties['Орендар'];
 
-            // Загальна статистика
-            acc.totalArea += area;
-            acc.totalParcels++;
-            if (!tenant) acc.freeParcels++;
+                // Загальна статистика
+                acc.totalArea += area;
+                acc.totalParcels++;
+                if (!tenant) acc.freeParcels++;
 
-            // Статистика по орендарях
-            if (tenant) {
-                if (!acc.tenants[tenant]) {
-                    acc.tenants[tenant] = {
-                        count: 0,
-                        area: 0
-                    };
+                // Статистика по орендарях
+                if (tenant) {
+                    if (!acc.tenants[tenant]) {
+                        acc.tenants[tenant] = {
+                            count: 0,
+                            area: 0
+                        };
+                    }
+                    acc.tenants[tenant].count++;
+                    acc.tenants[tenant].area += area;
                 }
-                acc.tenants[tenant].count++;
-                acc.tenants[tenant].area += area;
-            }
 
-            // Статистика по цільовому призначенню
-            if (!acc.purposes[purpose]) {
-                acc.purposes[purpose] = 0;
-            }
-            acc.purposes[purpose] += area;
+                return acc;
+            }, {
+                totalArea: 0,
+                totalParcels: 0,
+                freeParcels: 0,
+                tenants: {}
+            });
 
-            return acc;
-        }, {
-            totalArea: 0,
-            totalParcels: 0,
-            freeParcels: 0,
-            tenants: {},
-            purposes: {}
-        });
-
-        console.log('Calculated stats:', stats); // Додаємо логування статистики
-        updateUI(stats);
-    } catch (error) {
-        console.error('Error in data processing:', error);
-        console.error('Error stack:', error.stack);
-    }
-}
+            updateUI(stats);
+        }
 
         function updateUI(stats) {
             // Оновлення загальної статистики
@@ -211,88 +147,8 @@
             document.getElementById('totalParcels').textContent = stats.totalParcels;
             document.getElementById('freeParcels').textContent = stats.freeParcels;
 
-            // Оновлення графіків
-            updateTenantsChart(stats.tenants);
-            updatePurposeChart(stats.purposes);
+            // Оновлення таблиці орендарів
             updateDetailsTable(stats.tenants);
-        }
-
-        function updateTenantsChart(tenantsData) {
-            const ctx = document.getElementById('tenantsChart').getContext('2d');
-            
-            // Сортування орендарів за площею
-            const sortedData = Object.entries(tenantsData)
-                .sort((a, b) => b[1].area - a[1].area)
-                .slice(0, 10);
-
-            if (tenantsChart) {
-                tenantsChart.destroy();
-            }
-
-            tenantsChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedData.map(([tenant]) => tenant),
-                    datasets: [{
-                        label: 'Площа (га)',
-                        data: sortedData.map(([, data]) => data.area.toFixed(2)),
-                        backgroundColor: chartColors,
-                        borderColor: chartColors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Площа (га)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function updatePurposeChart(purposeData) {
-            const ctx = document.getElementById('purposeChart').getContext('2d');
-            
-            if (purposeChart) {
-                purposeChart.destroy();
-            }
-
-            const sortedData = Object.entries(purposeData)
-                .sort((a, b) => b[1] - a[1]);
-
-            purposeChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: sortedData.map(([purpose]) => purpose),
-                    datasets: [{
-                        data: sortedData.map(([, area]) => area.toFixed(2)),
-                        backgroundColor: chartColors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right'
-                        }
-                    }
-                }
-            });
         }
 
         function updateDetailsTable(tenantsData) {
