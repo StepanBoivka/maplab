@@ -255,7 +255,7 @@
     }
 
     const features = data.features;
-    const uniqueOwners = new Set(); // Додаємо Set для унікальних власників
+    const uniqueOwners = new Set(); // Для унікальних власників
     
     const stats = features.reduce((acc, feature) => {
         const area = parseFloat(feature.properties['Площа розрахована'] || 0);
@@ -266,11 +266,14 @@
         // Загальна статистика
         acc.totalArea += area;
         acc.totalParcels++;
-        if (!tenant) acc.freeParcels++;
+        if (!tenant) {
+            acc.freeParcels++;
+            acc.freeArea += area;
+        }
 
-        // Додаємо власника до Set, якщо він є
+        // Додаємо власника до Set
         if (owner && owner.trim() !== '') {
-            uniqueOwners.add(owner); // Додаємо в Set (дублікати автоматично виключаються)
+            uniqueOwners.add(owner);
         }
 
         // Статистика по орендарях
@@ -297,20 +300,42 @@
             acc.owners[owner].area += area;
         }
 
-        // ... (решта коду залишається без змін)
+        // Статистика по роках завершення
+        if (tenant && expiryYear) {
+            const year = parseInt(expiryYear);
+            if (!isNaN(year)) {
+                if (!acc.expiryYears[year]) {
+                    acc.expiryYears[year] = {
+                        count: 0,
+                        area: 0,
+                        tenants: {}
+                    };
+                }
+                if (!acc.expiryYears[year].tenants[tenant]) {
+                    acc.expiryYears[year].tenants[tenant] = {
+                        count: 0,
+                        area: 0
+                    };
+                }
+                acc.expiryYears[year].count++;
+                acc.expiryYears[year].area += area;
+                acc.expiryYears[year].tenants[tenant].count++;
+                acc.expiryYears[year].tenants[tenant].area += area;
+            }
+        }
 
         return acc;
     }, {
         totalArea: 0,
         totalParcels: 0,
         freeParcels: 0,
+        freeArea: 0,
         tenants: {},
         owners: {},
-        expiryYears: {},
-        uniqueOwnersCount: 0 // Додаємо нове поле
+        expiryYears: {}
     });
 
-    stats.uniqueOwnersCount = uniqueOwners.size; // Зберігаємо кількість унікальних власників
+    stats.uniqueOwnersCount = uniqueOwners.size;
 
     updateUI(stats);
 }
@@ -321,11 +346,9 @@
     document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
     document.getElementById('totalParcels').textContent = stats.totalParcels;
     document.getElementById('freeParcels').textContent = stats.freeParcels;
-    
-    // Додані нові показники
-    document.getElementById('freeArea').textContent = `${calculateFreeArea(stats).toFixed(2)} га`;
+    document.getElementById('freeArea').textContent = `${stats.freeArea.toFixed(2)} га`;
     document.getElementById('tenantsCount').textContent = Object.keys(stats.tenants).length;
-    document.getElementById('ownersCount').textContent = Object.keys(stats.owners).length;
+    document.getElementById('ownersCount').textContent = stats.uniqueOwnersCount;
 
     // Оновлення таблиць
     updateDetailsTable(stats.tenants, 'detailsTableBody', stats.totalArea);
