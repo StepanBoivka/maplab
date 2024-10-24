@@ -9,48 +9,62 @@
     <style>
         .chart-container {
             position: relative;
-            height: 300px;
+            height: 400px;
             width: 100%;
+            margin-bottom: 20px;
+        }
+        .stats-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        .stats-label {
+            color: #666;
+            font-size: 14px;
         }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-50">
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold">Статистика по раді: <span id="councilName">Не вибрано</span></h1>
+            <h1 class="text-2xl font-bold text-gray-800">Статистика по раді: <span id="councilName">Не вибрано</span></h1>
             <a href="index.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                 Повернутися до карти
             </a>
         </div>
 
         <!-- Загальна статистика -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-lg font-semibold mb-2">Загальна площа</h3>
-                <p class="text-3xl font-bold text-blue-600" id="totalArea">0 га</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="stats-card">
+                <div class="stats-label">Загальна площа</div>
+                <div class="stats-value text-blue-600" id="totalArea">0 га</div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-lg font-semibold mb-2">Кількість ділянок</h3>
-                <p class="text-3xl font-bold text-green-600" id="totalParcels">0</p>
+            <div class="stats-card">
+                <div class="stats-label">Кількість ділянок</div>
+                <div class="stats-value text-green-600" id="totalParcels">0</div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-lg font-semibold mb-2">Вільні ділянки</h3>
-                <p class="text-3xl font-bold text-orange-600" id="freeParcels">0</p>
+            <div class="stats-card">
+                <div class="stats-label">Вільні ділянки</div>
+                <div class="stats-value text-orange-600" id="freeParcels">0</div>
             </div>
         </div>
 
         <!-- Графіки -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Розподіл за орендарями -->
-            <div class="bg-white p-6 rounded-lg shadow">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="stats-card">
                 <h3 class="text-lg font-semibold mb-4">Розподіл площ за орендарями</h3>
                 <div class="chart-container">
                     <canvas id="tenantsChart"></canvas>
                 </div>
             </div>
             
-            <!-- Розподіл за цільовим призначенням -->
-            <div class="bg-white p-6 rounded-lg shadow">
+            <div class="stats-card">
                 <h3 class="text-lg font-semibold mb-4">Розподіл за цільовим призначенням</h3>
                 <div class="chart-container">
                     <canvas id="purposeChart"></canvas>
@@ -59,95 +73,184 @@
         </div>
 
         <!-- Таблиця деталей -->
-        <div class="mt-8 bg-white rounded-lg shadow">
-            <div class="p-6">
-                <h3 class="text-lg font-semibold mb-4">Детальна інформація</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full table-auto" id="detailsTable">
-                        <thead>
-                            <tr class="bg-gray-100">
-                                <th class="px-4 py-2 text-left">Орендар</th>
-                                <th class="px-4 py-2 text-left">Кількість ділянок</th>
-                                <th class="px-4 py-2 text-left">Загальна площа (га)</th>
-                                <th class="px-4 py-2 text-left">Середня площа ділянки (га)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="detailsTableBody">
-                        </tbody>
-                    </table>
-                </div>
+        <div class="stats-card mt-8">
+            <h3 class="text-lg font-semibold mb-4">Детальна інформація по орендарях</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left">Орендар</th>
+                            <th class="px-4 py-2 text-right">Кількість ділянок</th>
+                            <th class="px-4 py-2 text-right">Загальна площа (га)</th>
+                            <th class="px-4 py-2 text-right">Середня площа ділянки (га)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailsTableBody"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <script>
+        // Кольорова палітра для графіків
+        const chartColors = [
+            '#4299E1', '#48BB78', '#ED8936', '#9F7AEA', '#F56565',
+            '#38B2AC', '#ED64A6', '#ECC94B', '#667EEA', '#ED64A6'
+        ];
+
         // Отримуємо параметри з URL
         const urlParams = new URLSearchParams(window.location.search);
         const selectedFile = urlParams.get('file');
         const councilName = selectedFile ? selectedFile.replace('.geojson', '') : 'Не вибрано';
         document.getElementById('councilName').textContent = councilName;
 
-        // Функція для завантаження та обробки даних
+        let tenantsChart = null;
+        let purposeChart = null;
+
         async function loadAndProcessData() {
-            if (!selectedFile) return;
+            if (!selectedFile) {
+                console.error('Файл не вибрано');
+                return;
+            }
 
             try {
                 const response = await fetch(`data/${selectedFile}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = await response.json();
                 processData(data);
             } catch (error) {
                 console.error('Помилка завантаження даних:', error);
+                alert('Помилка завантаження даних. Спробуйте ще раз.');
             }
         }
 
-        // Функція обробки даних
         function processData(data) {
+            if (!data.features || !Array.isArray(data.features)) {
+                console.error('Некоректний формат даних');
+                return;
+            }
+
             const features = data.features;
-            const totalArea = features.reduce((sum, feature) => 
-                sum + parseFloat(feature.properties['Площа розрахована'] || 0), 0);
             
-            // Збір статистики по орендарях
-            const tenantStats = {};
-            features.forEach(feature => {
-                const tenant = feature.properties['Орендар'] || 'Вільні';
+            // Обчислення загальної статистики
+            const stats = features.reduce((acc, feature) => {
                 const area = parseFloat(feature.properties['Площа розрахована'] || 0);
-                
-                if (!tenantStats[tenant]) {
-                    tenantStats[tenant] = {
-                        count: 0,
-                        totalArea: 0
-                    };
+                const tenant = feature.properties['Орендар'];
+                const purpose = feature.properties['Цільове'] || 'Не вказано';
+
+                // Загальна статистика
+                acc.totalArea += area;
+                acc.totalParcels++;
+                if (!tenant) acc.freeParcels++;
+
+                // Статистика по орендарях
+                if (tenant) {
+                    if (!acc.tenants[tenant]) {
+                        acc.tenants[tenant] = {
+                            count: 0,
+                            area: 0
+                        };
+                    }
+                    acc.tenants[tenant].count++;
+                    acc.tenants[tenant].area += area;
                 }
-                tenantStats[tenant].count++;
-                tenantStats[tenant].totalArea += area;
+
+                // Статистика по цільовому призначенню
+                if (!acc.purposes[purpose]) {
+                    acc.purposes[purpose] = 0;
+                }
+                acc.purposes[purpose] += area;
+
+                return acc;
+            }, {
+                totalArea: 0,
+                totalParcels: 0,
+                freeParcels: 0,
+                tenants: {},
+                purposes: {}
             });
 
-            // Оновлення загальної статистики
-            document.getElementById('totalArea').textContent = `${totalArea.toFixed(2)} га`;
-            document.getElementById('totalParcels').textContent = features.length;
-            document.getElementById('freeParcels').textContent = tenantStats['Вільні']?.count || 0;
-
-            // Створення графіків
-            createTenantsChart(tenantStats);
-            createPurposeChart(features);
-            updateDetailsTable(tenantStats);
+            updateUI(stats);
         }
 
-        // Створення графіка розподілу за орендарями
-        function createTenantsChart(tenantStats) {
-            const ctx = document.getElementById('tenantsChart').getContext('2d');
-            const data = Object.entries(tenantStats)
-                .sort((a, b) => b[1].totalArea - a[1].totalArea)
-                .slice(0, 10); // Топ-10 орендарів
+        function updateUI(stats) {
+            // Оновлення загальної статистики
+            document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
+            document.getElementById('totalParcels').textContent = stats.totalParcels;
+            document.getElementById('freeParcels').textContent = stats.freeParcels;
 
-            new Chart(ctx, {
+            // Оновлення графіків
+            updateTenantsChart(stats.tenants);
+            updatePurposeChart(stats.purposes);
+            updateDetailsTable(stats.tenants);
+        }
+
+        function updateTenantsChart(tenantsData) {
+            const ctx = document.getElementById('tenantsChart').getContext('2d');
+            
+            // Сортування орендарів за площею
+            const sortedData = Object.entries(tenantsData)
+                .sort((a, b) => b[1].area - a[1].area)
+                .slice(0, 10);
+
+            if (tenantsChart) {
+                tenantsChart.destroy();
+            }
+
+            tenantsChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: data.map(([tenant]) => tenant),
+                    labels: sortedData.map(([tenant]) => tenant),
                     datasets: [{
                         label: 'Площа (га)',
-                        data: data.map(([, stats]) => stats.totalArea.toFixed(2)),
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                        data: sortedData.map(([, data]) => data.area.toFixed(2)),
+                        backgroundColor: chartColors,
+                        borderColor: chartColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Площа (га)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updatePurposeChart(purposeData) {
+            const ctx = document.getElementById('purposeChart').getContext('2d');
+            
+            if (purposeChart) {
+                purposeChart.destroy();
+            }
+
+            const sortedData = Object.entries(purposeData)
+                .sort((a, b) => b[1] - a[1]);
+
+            purposeChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: sortedData.map(([purpose]) => purpose),
+                    datasets: [{
+                        data: sortedData.map(([, area]) => area.toFixed(2)),
+                        backgroundColor: chartColors,
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -155,70 +258,35 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: false
+                            position: 'right'
                         }
                     }
                 }
             });
         }
 
-        // Створення графіка розподілу за цільовим призначенням
-        function createPurposeChart(features) {
-            const purposeStats = {};
-            features.forEach(feature => {
-                const purpose = feature.properties['Цільове'] || 'Не вказано';
-                const area = parseFloat(feature.properties['Площа розрахована'] || 0);
-                
-                if (!purposeStats[purpose]) {
-                    purposeStats[purpose] = 0;
-                }
-                purposeStats[purpose] += area;
-            });
-
-            const ctx = document.getElementById('purposeChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(purposeStats),
-                    datasets: [{
-                        data: Object.values(purposeStats).map(v => v.toFixed(2)),
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.6)',
-                            'rgba(54, 162, 235, 0.6)',
-                            'rgba(255, 206, 86, 0.6)',
-                            'rgba(75, 192, 192, 0.6)',
-                            'rgba(153, 102, 255, 0.6)'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        }
-
-        // Оновлення таблиці деталей
-        function updateDetailsTable(tenantStats) {
+        function updateDetailsTable(tenantsData) {
             const tbody = document.getElementById('detailsTableBody');
             tbody.innerHTML = '';
 
-            Object.entries(tenantStats)
-                .sort((a, b) => b[1].totalArea - a[1].totalArea)
-                .forEach(([tenant, stats]) => {
+            Object.entries(tenantsData)
+                .sort((a, b) => b[1].area - a[1].area)
+                .forEach(([tenant, data]) => {
                     const row = document.createElement('tr');
+                    const avgArea = data.area / data.count;
+                    
                     row.innerHTML = `
-                        <td class="border px-4 py-2">${tenant}</td>
-                        <td class="border px-4 py-2">${stats.count}</td>
-                        <td class="border px-4 py-2">${stats.totalArea.toFixed(2)}</td>
-                        <td class="border px-4 py-2">${(stats.totalArea / stats.count).toFixed(2)}</td>
+                        <td class="px-4 py-2 border-b">${tenant}</td>
+                        <td class="px-4 py-2 border-b text-right">${data.count}</td>
+                        <td class="px-4 py-2 border-b text-right">${data.area.toFixed(2)}</td>
+                        <td class="px-4 py-2 border-b text-right">${avgArea.toFixed(2)}</td>
                     `;
                     tbody.appendChild(row);
                 });
         }
 
         // Завантаження даних при завантаженні сторінки
-        loadAndProcessData();
+        document.addEventListener('DOMContentLoaded', loadAndProcessData);
     </script>
 </body>
 </html>
