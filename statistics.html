@@ -109,6 +109,11 @@
                 const data = await response.json();
                 console.log('Features count:', data.features ? data.features.length : 'No features');
                 
+                // Перевірка структури першого об'єкта
+                if (data.features && data.features.length > 0) {
+                    console.log('First feature properties:', data.features[0].properties);
+                }
+                
                 processData(data);
             } catch (error) {
                 console.error('Детальна помилка завантаження даних:', error);
@@ -133,7 +138,7 @@
                 const stats = features.reduce((acc, feature) => {
                     const area = parseFloat(feature.properties['Площа розрахована'] || 0);
                     const tenant = feature.properties['Орендар'];
-                    const expiryDate = feature.properties['Дата завершення'];
+                    const expiryDate = feature.properties['Дата завершення:'];  // Зміна назви поля
 
                     // Загальна статистика
                     acc.totalArea += area;
@@ -150,29 +155,31 @@
                         }
                         acc.tenants[tenant].count++;
                         acc.tenants[tenant].area += area;
-                    }
 
-                    // Статистика по роках завершення
-                    if (expiryDate && tenant) {
-                        let year;
-                        if (expiryDate.includes('.')) {
-                            // Якщо дата у форматі DD.MM.YYYY
-                            const parts = expiryDate.split('.');
-                            if (parts.length === 3) {
-                                year = parseInt(parts[2]);
+                        // Статистика по роках завершення
+                        if (expiryDate) {
+                            console.log('Processing date:', expiryDate, 'for tenant:', tenant); // Діагностика
+                            let year;
+                            if (expiryDate.includes('.')) {
+                                // Якщо дата у форматі DD.MM.YYYY
+                                const parts = expiryDate.split('.');
+                                if (parts.length === 3) {
+                                    year = parseInt(parts[2]);
+                                    console.log('Parsed year:', year); // Діагностика
+                                }
+                            } else {
+                                // Спробуємо стандартний парсинг дати
+                                year = new Date(expiryDate).getFullYear();
                             }
-                        } else {
-                            // Спробуємо стандартний парсинг дати
-                            year = new Date(expiryDate).getFullYear();
-                        }
 
-                        if (!isNaN(year) && year > 2000) {
-                            if (!acc.expiryYears[year]) {
-                                acc.expiryYears[year] = 0;
+                            if (!isNaN(year) && year > 2000) {
+                                if (!acc.expiryYears[year]) {
+                                    acc.expiryYears[year] = 0;
+                                }
+                                acc.expiryYears[year] += area;
+                            } else {
+                                console.warn('Некоректний рік для дати:', expiryDate);
                             }
-                            acc.expiryYears[year] += area;
-                        } else {
-                            console.warn('Некоректний рік:', expiryDate);
                         }
                     }
 
