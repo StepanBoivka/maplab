@@ -172,7 +172,7 @@
 
         <!-- Матрична таблиця договорів -->
         <div class="stats-card">
-            <h3 class="table-title">Завершення договорів оренди</h3>
+            <h3 class="table-title">Матриця договорів оренди</h3>
             <div class="overflow-x-auto">
                 <table class="data-table matrix-table">
                     <thead>
@@ -192,8 +192,12 @@
         // Отримуємо параметри з URL
         const urlParams = new URLSearchParams(window.location.search);
         const selectedFile = urlParams.get('file');
+        const id = urlParams.get('id'); // Отримуємо id з URL
         const councilName = selectedFile ? selectedFile.replace('.geojson', '') : 'Не вибрано';
         document.getElementById('councilName').textContent = councilName;
+
+        // Формуємо базовий шлях до даних
+        const dataPath = id ? `data/${id}/` : 'data/';
 
         async function loadAndProcessData() {
             if (!selectedFile) {
@@ -202,7 +206,10 @@
             }
 
             try {
-                const response = await fetch(`data/${selectedFile}`);
+                const decodedFile = decodeURIComponent(selectedFile);
+                console.log('Loading file:', `${dataPath}${decodedFile}`);
+                
+                const response = await fetch(`${dataPath}${decodedFile}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -210,6 +217,7 @@
                 processData(data);
             } catch (error) {
                 console.error('Помилка завантаження даних:', error);
+                console.error('Шлях до файлу:', `${dataPath}${selectedFile}`);
                 alert('Помилка завантаження даних. Спробуйте ще раз.');
             }
         }
