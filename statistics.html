@@ -32,6 +32,7 @@
 </head>
 <body class="bg-gray-50">
     <div class="container mx-auto px-4 py-8">
+        <!-- Заголовок -->
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-2xl font-bold text-gray-800">Статистика по раді: <span id="councilName">Не вибрано</span></h1>
             <a href="index.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
@@ -52,6 +53,14 @@
             <div class="stats-card">
                 <div class="stats-label">Вільні ділянки</div>
                 <div class="stats-value text-orange-600" id="freeParcels">0</div>
+            </div>
+        </div>
+
+        <!-- Графік завершення договорів -->
+        <div class="stats-card mb-8">
+            <h3 class="text-lg font-semibold mb-4">Площі ділянок за роками завершення договорів</h3>
+            <div class="chart-container">
+                <canvas id="expiryChart"></canvas>
             </div>
         </div>
 
@@ -81,6 +90,8 @@
         const councilName = selectedFile ? selectedFile.replace('.geojson', '') : 'Не вибрано';
         document.getElementById('councilName').textContent = councilName;
 
+        let expiryChart = null;
+
         async function loadAndProcessData() {
             if (!selectedFile) {
                 console.error('Файл не вибрано');
@@ -89,56 +100,88 @@
 
             try {
                 const response = await fetch(`data/${selectedFile}`);
+                console.log('Response status:', response.status);
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
+                
                 const data = await response.json();
+                console.log('Features count:', data.features ? data.features.length : 'No features');
+                
                 processData(data);
             } catch (error) {
-                console.error('Помилка завантаження даних:', error);
-                alert('Помилка завантаження даних. Спробуйте ще раз.');
+                console.error('Детальна помилка завантаження даних:', error);
+                console.error('Stack trace:', error.stack);
+                alert('Помилка завантаження даних. Перевірте консоль для деталей.');
             }
         }
 
         function processData(data) {
+            console.log('Starting data processing');
+            
             if (!data.features || !Array.isArray(data.features)) {
-                console.error('Некоректний формат даних');
+                console.error('Некоректний формат даних:', data);
                 return;
             }
 
             const features = data.features;
+            console.log('Processing features count:', features.length);
             
-            // Обчислення статистики
-            const stats = features.reduce((acc, feature) => {
-                const area = parseFloat(feature.properties['Площа розрахована'] || 0);
-                const tenant = feature.properties['Орендар'];
+            try {
+                // Обчислення статистики
+                const stats = features.reduce((acc, feature) => {
+                    const area = parseFloat(feature.properties['Площа розрахована'] || 0);
+                    const tenant = feature.properties['Орендар'];
+                    const expiryDate = feature.properties['Дата завершення'];
 
-                // Загальна статистика
-                acc.totalArea += area;
-                acc.totalParcels++;
-                if (!tenant) acc.freeParcels++;
+                    // Загальна статистика
+                    acc.totalArea += area;
+                    acc.totalParcels++;
+                    if (!tenant) acc.freeParcels++;
 
-                // Статистика по орендарях
-                if (tenant) {
-                    if (!acc.tenants[tenant]) {
-                        acc.tenants[tenant] = {
-                            count: 0,
-                            area: 0
-                        };
+                    // Статистика по орендарях
+                    if (tenant) {
+                        if (!acc.tenants[tenant]) {
+                            acc.tenants[tenant] = {
+                                count: 0,
+                                area: 0
+                            };
+                        }
+                        acc.tenants[tenant].count++;
+                        acc.tenants[tenant].area += area;
                     }
-                    acc.tenants[tenant].count++;
-                    acc.tenants[tenant].area += area;
-                }
 
-                return acc;
-            }, {
-                totalArea: 0,
-                totalParcels: 0,
-                freeParcels: 0,
-                tenants: {}
-            });
+                    // Статистика по роках завершення
+                    if (expiryDate) {
+                        try {
+                            const year = new Date(expiryDate).getFullYear();
+                            if (!isNaN(year)) {
+                                if (!acc.expiryYears[year]) {
+                                    acc.expiryYears[year] = 0;
+                                }
+                                acc.expiryYears[year] += area;
+                            }
+                        } catch (e) {
+                            console.warn('Помилка обробки дати:', expiryDate);
+                        }
+                    }
 
-            updateUI(stats);
+                    return acc;
+                }, {
+                    totalArea: 0,
+                    totalParcels: 0,
+                    freeParcels: 0,
+                    tenants: {},
+                    expiryYears: {}
+                });
+
+                console.log('Calculated stats:', stats);
+                updateUI(stats);
+            } catch (error) {
+                console.error('Error in data processing:', error);
+                console.error('Error stack:', error.stack);
+            }
         }
 
         function updateUI(stats) {
@@ -147,8 +190,70 @@
             document.getElementById('totalParcels').textContent = stats.totalParcels;
             document.getElementById('freeParcels').textContent = stats.freeParcels;
 
-            // Оновлення таблиці орендарів
+            // Оновлення графіка та таблиці
+            updateExpiryChart(stats.expiryYears);
             updateDetailsTable(stats.tenants);
+        }
+
+        function updateExpiryChart(expiryData) {
+            const ctx = document.getElementById('expiryChart').getContext('2d');
+            
+            if (expiryChart) {
+                expiryChart.destroy();
+            }
+
+            const sortedYears = Object.keys(expiryData).sort();
+            const currentYear = new Date().getFullYear();
+
+            const chartData = {
+                labels: sortedYears,
+                datasets: [{
+                    label: 'Площа (га)',
+                    data: sortedYears.map(year => expiryData[year].toFixed(2)),
+                    backgroundColor: sortedYears.map(year => 
+                        parseInt(year) === currentYear ? '#EF4444' :  // Поточний рік
+                        parseInt(year) < currentYear ? '#9CA3AF' :    // Минулі роки
+                        '#3B82F6'                                     // Майбутні роки
+                    ),
+                    borderWidth: 1
+                }]
+            };
+
+            expiryChart = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Площа: ${context.raw} га`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Площа (га)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Рік завершення'
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         function updateDetailsTable(tenantsData) {
