@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Статистика земельних ділянок</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold">Статистика по раді: <span id="councilName">Не вибрано</span></h1>
+            <a href="index.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Повернутися до карти
+            </a>
+        </div>
+
+        <!-- Загальна статистика -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-2">Загальна площа</h3>
+                <p class="text-3xl font-bold text-blue-600" id="totalArea">0 га</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-2">Кількість ділянок</h3>
+                <p class="text-3xl font-bold text-green-600" id="totalParcels">0</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-2">Вільні ділянки</h3>
+                <p class="text-3xl font-bold text-orange-600" id="freeParcels">0</p>
+            </div>
+        </div>
+
+        <!-- Графіки -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Розподіл за орендарями -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Розподіл площ за орендарями</h3>
+                <div class="chart-container">
+                    <canvas id="tenantsChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Розподіл за цільовим призначенням -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Розподіл за цільовим призначенням</h3>
+                <div class="chart-container">
+                    <canvas id="purposeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Таблиця деталей -->
+        <div class="mt-8 bg-white rounded-lg shadow">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4">Детальна інформація</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto" id="detailsTable">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="px-4 py-2 text-left">Орендар</th>
+                                <th class="px-4 py-2 text-left">Кількість ділянок</th>
+                                <th class="px-4 py-2 text-left">Загальна площа (га)</th>
+                                <th class="px-4 py-2 text-left">Середня площа ділянки (га)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Отримуємо параметри з URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedFile = urlParams.get('file');
+        const councilName = selectedFile ? selectedFile.replace('.geojson', '') : 'Не вибрано';
+        document.getElementById('councilName').textContent = councilName;
+
+        // Функція для завантаження та обробки даних
+        async function loadAndProcessData() {
+            if (!selectedFile) return;
+
+            try {
+                const response = await fetch(`data/${selectedFile}`);
+                const data = await response.json();
+                processData(data);
+            } catch (error) {
+                console.error('Помилка завантаження даних:', error);
+            }
+        }
+
+        // Функція обробки даних
+        function processData(data) {
+            const features = data.features;
+            const totalArea = features.reduce((sum, feature) => 
+                sum + parseFloat(feature.properties['Площа розрахована'] || 0), 0);
+            
+            // Збір статистики по орендарях
+            const tenantStats = {};
+            features.forEach(feature => {
+                const tenant = feature.properties['Орендар'] || 'Вільні';
+                const area = parseFloat(feature.properties['Площа розрахована'] || 0);
+                
+                if (!tenantStats[tenant]) {
+                    tenantStats[tenant] = {
+                        count: 0,
+                        totalArea: 0
+                    };
+                }
+                tenantStats[tenant].count++;
+                tenantStats[tenant].totalArea += area;
+            });
+
+            // Оновлення загальної статистики
+            document.getElementById('totalArea').textContent = `${totalArea.toFixed(2)} га`;
+            document.getElementById('totalParcels').textContent = features.length;
+            document.getElementById('freeParcels').textContent = tenantStats['Вільні']?.count || 0;
+
+            // Створення графіків
+            createTenantsChart(tenantStats);
+            createPurposeChart(features);
+            updateDetailsTable(tenantStats);
+        }
+
+        // Створення графіка розподілу за орендарями
+        function createTenantsChart(tenantStats) {
+            const ctx = document.getElementById('tenantsChart').getContext('2d');
+            const data = Object.entries(tenantStats)
+                .sort((a, b) => b[1].totalArea - a[1].totalArea)
+                .slice(0, 10); // Топ-10 орендарів
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(([tenant]) => tenant),
+                    datasets: [{
+                        label: 'Площа (га)',
+                        data: data.map(([, stats]) => stats.totalArea.toFixed(2)),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Створення графіка розподілу за цільовим призначенням
+        function createPurposeChart(features) {
+            const purposeStats = {};
+            features.forEach(feature => {
+                const purpose = feature.properties['Цільове'] || 'Не вказано';
+                const area = parseFloat(feature.properties['Площа розрахована'] || 0);
+                
+                if (!purposeStats[purpose]) {
+                    purposeStats[purpose] = 0;
+                }
+                purposeStats[purpose] += area;
+            });
+
+            const ctx = document.getElementById('purposeChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(purposeStats),
+                    datasets: [{
+                        data: Object.values(purposeStats).map(v => v.toFixed(2)),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(153, 102, 255, 0.6)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Оновлення таблиці деталей
+        function updateDetailsTable(tenantStats) {
+            const tbody = document.getElementById('detailsTableBody');
+            tbody.innerHTML = '';
+
+            Object.entries(tenantStats)
+                .sort((a, b) => b[1].totalArea - a[1].totalArea)
+                .forEach(([tenant, stats]) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="border px-4 py-2">${tenant}</td>
+                        <td class="border px-4 py-2">${stats.count}</td>
+                        <td class="border px-4 py-2">${stats.totalArea.toFixed(2)}</td>
+                        <td class="border px-4 py-2">${(stats.totalArea / stats.count).toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+        }
+
+        // Завантаження даних при завантаженні сторінки
+        loadAndProcessData();
+    </script>
+</body>
+</html>
