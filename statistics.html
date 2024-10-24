@@ -21,6 +21,30 @@
             color: #666;
             font-size: 14px;
         }
+        .data-table {
+            width: 100%;
+            font-size: 13px; /* Зменшений розмір шрифту */
+        }
+        .data-table th {
+            background-color: #f3f4f6;
+            padding: 6px 12px; /* Зменшені відступи */
+            font-weight: 600;
+            text-align: left;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .data-table td {
+            padding: 4px 12px; /* Зменшені відступи */
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .data-table tr:hover {
+            background-color: #f9fafb;
+        }
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -50,16 +74,16 @@
         </div>
 
         <!-- Таблиця орендарів -->
-        <div class="stats-card mb-8">
-            <h3 class="text-lg font-semibold mb-4">Інформація по орендарях</h3>
+        <div class="stats-card mb-6">
+            <h3 class="table-title">Інформація по орендарях</h3>
             <div class="overflow-x-auto">
-                <table class="min-w-full table-auto">
+                <table class="data-table">
                     <thead>
-                        <tr class="bg-gray-50">
-                            <th class="px-4 py-2 text-left">Орендар</th>
-                            <th class="px-4 py-2 text-right">Кількість ділянок</th>
-                            <th class="px-4 py-2 text-right">Загальна площа (га)</th>
-                            <th class="px-4 py-2 text-right">Середня площа ділянки (га)</th>
+                        <tr>
+                            <th class="text-left">Орендар</th>
+                            <th class="text-right">Кількість ділянок</th>
+                            <th class="text-right">Загальна площа (га)</th>
+                            <th class="text-right">Середня площа ділянки (га)</th>
                         </tr>
                     </thead>
                     <tbody id="detailsTableBody"></tbody>
@@ -69,15 +93,15 @@
 
         <!-- Таблиця власників -->
         <div class="stats-card">
-            <h3 class="text-lg font-semibold mb-4">Інформація по власниках</h3>
+            <h3 class="table-title">Інформація по власниках</h3>
             <div class="overflow-x-auto">
-                <table class="min-w-full table-auto">
+                <table class="data-table">
                     <thead>
-                        <tr class="bg-gray-50">
-                            <th class="px-4 py-2 text-left">Власник</th>
-                            <th class="px-4 py-2 text-right">Кількість ділянок</th>
-                            <th class="px-4 py-2 text-right">Загальна площа (га)</th>
-                            <th class="px-4 py-2 text-right">Середня площа ділянки (га)</th>
+                        <tr>
+                            <th class="text-left">Власник</th>
+                            <th class="text-right">Кількість ділянок</th>
+                            <th class="text-right">Загальна площа (га)</th>
+                            <th class="text-right">Середня площа ділянки (га)</th>
                         </tr>
                     </thead>
                     <tbody id="ownersTableBody"></tbody>
@@ -120,7 +144,6 @@
 
             const features = data.features;
             
-            // Обчислення статистики
             const stats = features.reduce((acc, feature) => {
                 const area = parseFloat(feature.properties['Площа розрахована'] || 0);
                 const tenant = feature.properties['Орендар'];
@@ -189,10 +212,10 @@
                     const avgArea = data.area / data.count;
                     
                     row.innerHTML = `
-                        <td class="px-4 py-2 border-b">${name}</td>
-                        <td class="px-4 py-2 border-b text-right">${data.count}</td>
-                        <td class="px-4 py-2 border-b text-right">${data.area.toFixed(2)}</td>
-                        <td class="px-4 py-2 border-b text-right">${avgArea.toFixed(2)}</td>
+                        <td>${name}</td>
+                        <td class="text-right">${data.count}</td>
+                        <td class="text-right">${data.area.toFixed(2)}</td>
+                        <td class="text-right">${avgArea.toFixed(2)}</td>
                     `;
                     tbody.appendChild(row);
                 });
