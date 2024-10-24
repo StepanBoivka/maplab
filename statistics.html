@@ -139,53 +139,71 @@
 }
 
         function processData(data) {
-            if (!data.features || !Array.isArray(data.features)) {
-                console.error('Некоректний формат даних');
-                return;
+    console.log('Starting data processing');
+    
+    if (!data.features || !Array.isArray(data.features)) {
+        console.error('Некоректний формат даних:', data);
+        return;
+    }
+
+    const features = data.features;
+    console.log('Processing features count:', features.length);
+    
+    // Перевірка наявності необхідних полів у перших кількох об'єктах
+    features.slice(0, 3).forEach((feature, index) => {
+        console.log(`Feature ${index} properties:`, {
+            area: feature.properties['Площа розрахована'],
+            tenant: feature.properties['Орендар'],
+            purpose: feature.properties['Цільове']
+        });
+    });
+    
+    try {
+        // Обчислення загальної статистики
+        const stats = features.reduce((acc, feature) => {
+            const area = parseFloat(feature.properties['Площа розрахована'] || 0);
+            const tenant = feature.properties['Орендар'];
+            const purpose = feature.properties['Цільове'] || 'Не вказано';
+
+            // Загальна статистика
+            acc.totalArea += area;
+            acc.totalParcels++;
+            if (!tenant) acc.freeParcels++;
+
+            // Статистика по орендарях
+            if (tenant) {
+                if (!acc.tenants[tenant]) {
+                    acc.tenants[tenant] = {
+                        count: 0,
+                        area: 0
+                    };
+                }
+                acc.tenants[tenant].count++;
+                acc.tenants[tenant].area += area;
             }
 
-            const features = data.features;
-            
-            // Обчислення загальної статистики
-            const stats = features.reduce((acc, feature) => {
-                const area = parseFloat(feature.properties['Площа розрахована'] || 0);
-                const tenant = feature.properties['Орендар'];
-                const purpose = feature.properties['Цільове'] || 'Не вказано';
+            // Статистика по цільовому призначенню
+            if (!acc.purposes[purpose]) {
+                acc.purposes[purpose] = 0;
+            }
+            acc.purposes[purpose] += area;
 
-                // Загальна статистика
-                acc.totalArea += area;
-                acc.totalParcels++;
-                if (!tenant) acc.freeParcels++;
+            return acc;
+        }, {
+            totalArea: 0,
+            totalParcels: 0,
+            freeParcels: 0,
+            tenants: {},
+            purposes: {}
+        });
 
-                // Статистика по орендарях
-                if (tenant) {
-                    if (!acc.tenants[tenant]) {
-                        acc.tenants[tenant] = {
-                            count: 0,
-                            area: 0
-                        };
-                    }
-                    acc.tenants[tenant].count++;
-                    acc.tenants[tenant].area += area;
-                }
-
-                // Статистика по цільовому призначенню
-                if (!acc.purposes[purpose]) {
-                    acc.purposes[purpose] = 0;
-                }
-                acc.purposes[purpose] += area;
-
-                return acc;
-            }, {
-                totalArea: 0,
-                totalParcels: 0,
-                freeParcels: 0,
-                tenants: {},
-                purposes: {}
-            });
-
-            updateUI(stats);
-        }
+        console.log('Calculated stats:', stats); // Додаємо логування статистики
+        updateUI(stats);
+    } catch (error) {
+        console.error('Error in data processing:', error);
+        console.error('Error stack:', error.stack);
+    }
+}
 
         function updateUI(stats) {
             // Оновлення загальної статистики
