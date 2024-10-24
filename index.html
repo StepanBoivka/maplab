@@ -140,6 +140,22 @@
 .popup-content td.property-value {
     padding-left: 5px;
 }
+        #statisticsButton {
+    position: absolute;
+    bottom: 90px;
+    right: 10px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    z-index: 1000;
+    font-size: 14px;
+}
+#statisticsButton:hover {
+    background: #218838;
+}
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -160,6 +176,7 @@
     </div>
     <div id="geolocationButton">📍</div>
     <button id="exportButton">Експорт в список</button>
+    <button id="statisticsButton" class="statistics-button">Статистика</button>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
@@ -323,6 +340,14 @@
                 });
             });
         });
+        document.getElementById('statisticsButton').addEventListener('click', function() {
+    var selectedFile = document.getElementById('fileSelect').value;
+    if (selectedFile && selectedFile !== 'Виберіть файл') {
+        window.location.href = 'statistics.html?file=' + encodeURIComponent(selectedFile);
+    } else {
+        alert('Будь ласка, спочатку виберіть файл з даними.');
+    }
+});
 
         // Додаткова логіка для обробки орендарів та площ
         var tenant = feature.properties["Орендар"];
