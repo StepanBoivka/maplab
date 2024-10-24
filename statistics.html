@@ -138,7 +138,7 @@
                 const stats = features.reduce((acc, feature) => {
                     const area = parseFloat(feature.properties['Площа розрахована'] || 0);
                     const tenant = feature.properties['Орендар'];
-                    const expiryDate = feature.properties['Дата завершення:'];  // Зміна назви поля
+                    const expiryYear = feature.properties['Рік завершення'];
 
                     // Загальна статистика
                     acc.totalArea += area;
@@ -157,28 +157,16 @@
                         acc.tenants[tenant].area += area;
 
                         // Статистика по роках завершення
-                        if (expiryDate) {
-                            console.log('Processing date:', expiryDate, 'for tenant:', tenant); // Діагностика
-                            let year;
-                            if (expiryDate.includes('.')) {
-                                // Якщо дата у форматі DD.MM.YYYY
-                                const parts = expiryDate.split('.');
-                                if (parts.length === 3) {
-                                    year = parseInt(parts[2]);
-                                    console.log('Parsed year:', year); // Діагностика
-                                }
-                            } else {
-                                // Спробуємо стандартний парсинг дати
-                                year = new Date(expiryDate).getFullYear();
-                            }
-
+                        if (expiryYear) {
+                            console.log('Processing year:', expiryYear, 'for tenant:', tenant);
+                            const year = parseInt(expiryYear);
                             if (!isNaN(year) && year > 2000) {
                                 if (!acc.expiryYears[year]) {
                                     acc.expiryYears[year] = 0;
                                 }
                                 acc.expiryYears[year] += area;
                             } else {
-                                console.warn('Некоректний рік для дати:', expiryDate);
+                                console.warn('Некоректний рік:', expiryYear);
                             }
                         }
                     }
@@ -258,9 +246,9 @@
                     label: 'Площа (га)',
                     data: sortedYears.map(year => expiryData[year].toFixed(2)),
                     backgroundColor: sortedYears.map(year => 
-                        year === currentYear ? '#EF4444' :  // Поточний рік
-                        year < currentYear ? '#9CA3AF' :    // Минулі роки
-                        '#3B82F6'                          // Майбутні роки
+                        parseInt(year) === currentYear ? '#EF4444' :  // Поточний рік
+                        parseInt(year) < currentYear ? '#9CA3AF' :    // Минулі роки
+                        '#3B82F6'                                    // Майбутні роки
                     ),
                     borderWidth: 1
                 }]
