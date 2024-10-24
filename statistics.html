@@ -56,16 +56,8 @@
             </div>
         </div>
 
-        <!-- Графік завершення договорів -->
-        <div class="stats-card mb-8">
-            <h3 class="text-lg font-semibold mb-4">Площі ділянок за роками завершення договорів</h3>
-            <div class="chart-container">
-                <canvas id="expiryChart"></canvas>
-            </div>
-        </div>
-
         <!-- Таблиця орендарів -->
-        <div class="stats-card mt-8">
+        <div class="stats-card mb-8">
             <h3 class="text-lg font-semibold mb-4">Інформація по орендарях</h3>
             <div class="overflow-x-auto">
                 <table class="min-w-full table-auto">
@@ -79,6 +71,14 @@
                     </thead>
                     <tbody id="detailsTableBody"></tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Графік завершення договорів -->
+        <div class="stats-card">
+            <h3 class="text-lg font-semibold mb-4">Площі ділянок за роками завершення договорів</h3>
+            <div class="chart-container">
+                <canvas id="expiryChart"></canvas>
             </div>
         </div>
     </div>
@@ -153,17 +153,26 @@
                     }
 
                     // Статистика по роках завершення
-                    if (expiryDate) {
-                        try {
-                            const year = new Date(expiryDate).getFullYear();
-                            if (!isNaN(year)) {
-                                if (!acc.expiryYears[year]) {
-                                    acc.expiryYears[year] = 0;
-                                }
-                                acc.expiryYears[year] += area;
+                    if (expiryDate && tenant) {
+                        let year;
+                        if (expiryDate.includes('.')) {
+                            // Якщо дата у форматі DD.MM.YYYY
+                            const parts = expiryDate.split('.');
+                            if (parts.length === 3) {
+                                year = parseInt(parts[2]);
                             }
-                        } catch (e) {
-                            console.warn('Помилка обробки дати:', expiryDate);
+                        } else {
+                            // Спробуємо стандартний парсинг дати
+                            year = new Date(expiryDate).getFullYear();
+                        }
+
+                        if (!isNaN(year) && year > 2000) {
+                            if (!acc.expiryYears[year]) {
+                                acc.expiryYears[year] = 0;
+                            }
+                            acc.expiryYears[year] += area;
+                        } else {
+                            console.warn('Некоректний рік:', expiryDate);
                         }
                     }
 
@@ -177,6 +186,9 @@
                 });
 
                 console.log('Calculated stats:', stats);
+                console.log('Tenants data:', stats.tenants);
+                console.log('Expiry years data:', stats.expiryYears);
+
                 updateUI(stats);
             } catch (error) {
                 console.error('Error in data processing:', error);
@@ -190,19 +202,47 @@
             document.getElementById('totalParcels').textContent = stats.totalParcels;
             document.getElementById('freeParcels').textContent = stats.freeParcels;
 
-            // Оновлення графіка та таблиці
-            updateExpiryChart(stats.expiryYears);
+            // Оновлення таблиці та графіка
             updateDetailsTable(stats.tenants);
+            updateExpiryChart(stats.expiryYears);
+        }
+
+        function updateDetailsTable(tenantsData) {
+            const tbody = document.getElementById('detailsTableBody');
+            tbody.innerHTML = '';
+
+            Object.entries(tenantsData)
+                .sort((a, b) => b[1].area - a[1].area)
+                .forEach(([tenant, data]) => {
+                    const row = document.createElement('tr');
+                    const avgArea = data.area / data.count;
+                    
+                    row.innerHTML = `
+                        <td class="px-4 py-2 border-b">${tenant}</td>
+                        <td class="px-4 py-2 border-b text-right">${data.count}</td>
+                        <td class="px-4 py-2 border-b text-right">${data.area.toFixed(2)}</td>
+                        <td class="px-4 py-2 border-b text-right">${avgArea.toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
         }
 
         function updateExpiryChart(expiryData) {
+            console.log('Updating expiry chart with data:', expiryData);
             const ctx = document.getElementById('expiryChart').getContext('2d');
             
             if (expiryChart) {
                 expiryChart.destroy();
             }
 
-            const sortedYears = Object.keys(expiryData).sort();
+            if (Object.keys(expiryData).length === 0) {
+                console.log('No expiry data available');
+                return;
+            }
+
+            const sortedYears = Object.keys(expiryData)
+                .map(year => parseInt(year))
+                .sort((a, b) => a - b);
             const currentYear = new Date().getFullYear();
 
             const chartData = {
@@ -211,13 +251,15 @@
                     label: 'Площа (га)',
                     data: sortedYears.map(year => expiryData[year].toFixed(2)),
                     backgroundColor: sortedYears.map(year => 
-                        parseInt(year) === currentYear ? '#EF4444' :  // Поточний рік
-                        parseInt(year) < currentYear ? '#9CA3AF' :    // Минулі роки
-                        '#3B82F6'                                     // Майбутні роки
+                        year === currentYear ? '#EF4444' :  // Поточний рік
+                        year < currentYear ? '#9CA3AF' :    // Минулі роки
+                        '#3B82F6'                          // Майбутні роки
                     ),
                     borderWidth: 1
                 }]
             };
+
+            console.log('Chart data:', chartData);
 
             expiryChart = new Chart(ctx, {
                 type: 'bar',
@@ -254,26 +296,6 @@
                     }
                 }
             });
-        }
-
-        function updateDetailsTable(tenantsData) {
-            const tbody = document.getElementById('detailsTableBody');
-            tbody.innerHTML = '';
-
-            Object.entries(tenantsData)
-                .sort((a, b) => b[1].area - a[1].area)
-                .forEach(([tenant, data]) => {
-                    const row = document.createElement('tr');
-                    const avgArea = data.area / data.count;
-                    
-                    row.innerHTML = `
-                        <td class="px-4 py-2 border-b">${tenant}</td>
-                        <td class="px-4 py-2 border-b text-right">${data.count}</td>
-                        <td class="px-4 py-2 border-b text-right">${data.area.toFixed(2)}</td>
-                        <td class="px-4 py-2 border-b text-right">${avgArea.toFixed(2)}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
         }
 
         // Завантаження даних при завантаженні сторінки
