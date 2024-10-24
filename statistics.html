@@ -118,33 +118,49 @@
         </div>
 
        <!-- Загальна статистика -->
-<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 mb-6">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <!-- Група 1: Загальні показники -->
     <div class="stats-card">
-        <div class="stats-label">Загальна площа</div>
-        <div class="stats-value text-blue-600" id="totalArea">0 га</div>
+        <div class="flex flex-col gap-3">
+            <div>
+                <div class="stats-label">Загальна площа</div>
+                <div class="stats-value text-blue-600" id="totalArea">0 га</div>
+            </div>
+            <div class="border-t border-gray-200 pt-2">
+                <div class="stats-label">Кількість ділянок</div>
+                <div class="stats-value text-blue-600" id="totalParcels">0</div>
+            </div>
+        </div>
     </div>
+
+    <!-- Група 2: Вільні ділянки -->
     <div class="stats-card">
-        <div class="stats-label">Кількість ділянок</div>
-        <div class="stats-value text-green-600" id="totalParcels">0</div>
+        <div class="flex flex-col gap-3">
+            <div>
+                <div class="stats-label">Площа вільних від оренди</div>
+                <div class="stats-value text-orange-500" id="freeArea">0 га</div>
+            </div>
+            <div class="border-t border-gray-200 pt-2">
+                <div class="stats-label">Кількість вільних ділянок</div>
+                <div class="stats-value text-orange-500" id="freeParcels">0</div>
+            </div>
+        </div>
     </div>
+
+    <!-- Група 3: Кількісні показники -->
     <div class="stats-card">
-        <div class="stats-label">Вільні ділянки</div>
-        <div class="stats-value text-orange-600" id="freeParcels">0</div>
-    </div>
-    <div class="stats-card">
-        <div class="stats-label">Площа вільних від оренди</div>
-        <div class="stats-value text-orange-600" id="freeArea">0 га</div>
-    </div>
-    <div class="stats-card">
-        <div class="stats-label">Кількість орендарів</div>
-        <div class="stats-value text-purple-600" id="tenantsCount">0</div>
-    </div>
-    <div class="stats-card">
-        <div class="stats-label">Кількість власників</div>
-        <div class="stats-value text-indigo-600" id="ownersCount">0</div>
+        <div class="flex flex-col gap-3">
+            <div>
+                <div class="stats-label">Кількість орендарів</div>
+                <div class="stats-value text-purple-600" id="tenantsCount">0</div>
+            </div>
+            <div class="border-t border-gray-200 pt-2">
+                <div class="stats-label">Кількість власників</div>
+                <div class="stats-value text-purple-600" id="ownersCount">0</div>
+            </div>
+        </div>
     </div>
 </div>
-
         <!-- Таблиця орендарів -->
         <div class="stats-card mb-4">
             <h3 class="table-title">Інформація по орендарях</h3>
