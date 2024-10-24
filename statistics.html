@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -187,7 +188,6 @@
         </div>
     </div>
 
-
     <script>
         // Отримуємо параметри з URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -196,7 +196,7 @@
         const councilName = selectedFile ? selectedFile.replace('.geojson', '') : 'Не вибрано';
         document.getElementById('councilName').textContent = councilName;
 
-        // Формуємо базовий шлях до даних
+        // Формуємо базовий шлях до даних аналогічно до index.html
         const dataPath = id ? `data/${id}/` : 'data/';
 
         async function loadAndProcessData() {
@@ -206,10 +206,8 @@
             }
 
             try {
-                const decodedFile = decodeURIComponent(selectedFile);
-                console.log('Loading file:', `${dataPath}${decodedFile}`);
-                
-                const response = await fetch(`${dataPath}${decodedFile}`);
+                console.log('Loading file from path:', `${dataPath}${selectedFile}`);
+                const response = await fetch(`${dataPath}${selectedFile}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
