@@ -5,14 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Статистика земельних ділянок</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.7.0/chart.min.js"></script>
     <style>
-        .chart-container {
-            position: relative;
-            height: 400px;
-            width: 100%;
-            margin-bottom: 20px;
-        }
         .stats-card {
             background: white;
             border-radius: 8px;
@@ -74,11 +67,21 @@
             </div>
         </div>
 
-        <!-- Графік завершення договорів -->
+        <!-- Таблиця власників -->
         <div class="stats-card">
-            <h3 class="text-lg font-semibold mb-4">Площі ділянок за роками завершення договорів</h3>
-            <div class="chart-container">
-                <canvas id="expiryChart"></canvas>
+            <h3 class="text-lg font-semibold mb-4">Інформація по власниках</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left">Власник</th>
+                            <th class="px-4 py-2 text-right">Кількість ділянок</th>
+                            <th class="px-4 py-2 text-right">Загальна площа (га)</th>
+                            <th class="px-4 py-2 text-right">Середня площа ділянки (га)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ownersTableBody"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -90,8 +93,6 @@
         const councilName = selectedFile ? selectedFile.replace('.geojson', '') : 'Не вибрано';
         document.getElementById('councilName').textContent = councilName;
 
-        let expiryChart = null;
-
         async function loadAndProcessData() {
             if (!selectedFile) {
                 console.error('Файл не вибрано');
@@ -100,95 +101,70 @@
 
             try {
                 const response = await fetch(`data/${selectedFile}`);
-                console.log('Response status:', response.status);
-                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
                 const data = await response.json();
-                console.log('Features count:', data.features ? data.features.length : 'No features');
-                
-                // Перевірка структури першого об'єкта
-                if (data.features && data.features.length > 0) {
-                    console.log('First feature properties:', data.features[0].properties);
-                }
-                
                 processData(data);
             } catch (error) {
-                console.error('Детальна помилка завантаження даних:', error);
-                console.error('Stack trace:', error.stack);
-                alert('Помилка завантаження даних. Перевірте консоль для деталей.');
+                console.error('Помилка завантаження даних:', error);
+                alert('Помилка завантаження даних. Спробуйте ще раз.');
             }
         }
 
         function processData(data) {
-            console.log('Starting data processing');
-            
             if (!data.features || !Array.isArray(data.features)) {
-                console.error('Некоректний формат даних:', data);
+                console.error('Некоректний формат даних');
                 return;
             }
 
             const features = data.features;
-            console.log('Processing features count:', features.length);
             
-            try {
-                // Обчислення статистики
-                const stats = features.reduce((acc, feature) => {
-                    const area = parseFloat(feature.properties['Площа розрахована'] || 0);
-                    const tenant = feature.properties['Орендар'];
-                    const expiryYear = feature.properties['Рік завершення'];
+            // Обчислення статистики
+            const stats = features.reduce((acc, feature) => {
+                const area = parseFloat(feature.properties['Площа розрахована'] || 0);
+                const tenant = feature.properties['Орендар'];
+                const owner = feature.properties['Власник'];
 
-                    // Загальна статистика
-                    acc.totalArea += area;
-                    acc.totalParcels++;
-                    if (!tenant) acc.freeParcels++;
+                // Загальна статистика
+                acc.totalArea += area;
+                acc.totalParcels++;
+                if (!tenant) acc.freeParcels++;
 
-                    // Статистика по орендарях
-                    if (tenant) {
-                        if (!acc.tenants[tenant]) {
-                            acc.tenants[tenant] = {
-                                count: 0,
-                                area: 0
-                            };
-                        }
-                        acc.tenants[tenant].count++;
-                        acc.tenants[tenant].area += area;
-
-                        // Статистика по роках завершення
-                        if (expiryYear) {
-                            console.log('Processing year:', expiryYear, 'for tenant:', tenant);
-                            const year = parseInt(expiryYear);
-                            if (!isNaN(year) && year > 2000) {
-                                if (!acc.expiryYears[year]) {
-                                    acc.expiryYears[year] = 0;
-                                }
-                                acc.expiryYears[year] += area;
-                            } else {
-                                console.warn('Некоректний рік:', expiryYear);
-                            }
-                        }
+                // Статистика по орендарях
+                if (tenant) {
+                    if (!acc.tenants[tenant]) {
+                        acc.tenants[tenant] = {
+                            count: 0,
+                            area: 0
+                        };
                     }
+                    acc.tenants[tenant].count++;
+                    acc.tenants[tenant].area += area;
+                }
 
-                    return acc;
-                }, {
-                    totalArea: 0,
-                    totalParcels: 0,
-                    freeParcels: 0,
-                    tenants: {},
-                    expiryYears: {}
-                });
+                // Статистика по власниках
+                if (owner) {
+                    if (!acc.owners[owner]) {
+                        acc.owners[owner] = {
+                            count: 0,
+                            area: 0
+                        };
+                    }
+                    acc.owners[owner].count++;
+                    acc.owners[owner].area += area;
+                }
 
-                console.log('Calculated stats:', stats);
-                console.log('Tenants data:', stats.tenants);
-                console.log('Expiry years data:', stats.expiryYears);
+                return acc;
+            }, {
+                totalArea: 0,
+                totalParcels: 0,
+                freeParcels: 0,
+                tenants: {},
+                owners: {}
+            });
 
-                updateUI(stats);
-            } catch (error) {
-                console.error('Error in data processing:', error);
-                console.error('Error stack:', error.stack);
-            }
+            updateUI(stats);
         }
 
         function updateUI(stats) {
@@ -197,100 +173,29 @@
             document.getElementById('totalParcels').textContent = stats.totalParcels;
             document.getElementById('freeParcels').textContent = stats.freeParcels;
 
-            // Оновлення таблиці та графіка
-            updateDetailsTable(stats.tenants);
-            updateExpiryChart(stats.expiryYears);
+            // Оновлення таблиць
+            updateDetailsTable(stats.tenants, 'detailsTableBody');
+            updateDetailsTable(stats.owners, 'ownersTableBody');
         }
 
-        function updateDetailsTable(tenantsData) {
-            const tbody = document.getElementById('detailsTableBody');
+        function updateDetailsTable(data, tableId) {
+            const tbody = document.getElementById(tableId);
             tbody.innerHTML = '';
 
-            Object.entries(tenantsData)
+            Object.entries(data)
                 .sort((a, b) => b[1].area - a[1].area)
-                .forEach(([tenant, data]) => {
+                .forEach(([name, data]) => {
                     const row = document.createElement('tr');
                     const avgArea = data.area / data.count;
                     
                     row.innerHTML = `
-                        <td class="px-4 py-2 border-b">${tenant}</td>
+                        <td class="px-4 py-2 border-b">${name}</td>
                         <td class="px-4 py-2 border-b text-right">${data.count}</td>
                         <td class="px-4 py-2 border-b text-right">${data.area.toFixed(2)}</td>
                         <td class="px-4 py-2 border-b text-right">${avgArea.toFixed(2)}</td>
                     `;
                     tbody.appendChild(row);
                 });
-        }
-
-        function updateExpiryChart(expiryData) {
-            console.log('Updating expiry chart with data:', expiryData);
-            const ctx = document.getElementById('expiryChart').getContext('2d');
-            
-            if (expiryChart) {
-                expiryChart.destroy();
-            }
-
-            if (Object.keys(expiryData).length === 0) {
-                console.log('No expiry data available');
-                return;
-            }
-
-            const sortedYears = Object.keys(expiryData)
-                .map(year => parseInt(year))
-                .sort((a, b) => a - b);
-            const currentYear = new Date().getFullYear();
-
-            const chartData = {
-                labels: sortedYears,
-                datasets: [{
-                    label: 'Площа (га)',
-                    data: sortedYears.map(year => expiryData[year].toFixed(2)),
-                    backgroundColor: sortedYears.map(year => 
-                        parseInt(year) === currentYear ? '#EF4444' :  // Поточний рік
-                        parseInt(year) < currentYear ? '#9CA3AF' :    // Минулі роки
-                        '#3B82F6'                                    // Майбутні роки
-                    ),
-                    borderWidth: 1
-                }]
-            };
-
-            console.log('Chart data:', chartData);
-
-            expiryChart = new Chart(ctx, {
-                type: 'bar',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `Площа: ${context.raw} га`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Площа (га)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Рік завершення'
-                            }
-                        }
-                    }
-                }
-            });
         }
 
         // Завантаження даних при завантаженні сторінки
