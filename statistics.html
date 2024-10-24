@@ -23,17 +23,17 @@
         }
         .data-table {
             width: 100%;
-            font-size: 13px; /* Зменшений розмір шрифту */
+            font-size: 13px;
         }
         .data-table th {
             background-color: #f3f4f6;
-            padding: 6px 12px; /* Зменшені відступи */
+            padding: 6px 12px;
             font-weight: 600;
             text-align: left;
             border-bottom: 2px solid #e5e7eb;
         }
         .data-table td {
-            padding: 4px 12px; /* Зменшені відступи */
+            padding: 4px 12px;
             border-bottom: 1px solid #e5e7eb;
         }
         .data-table tr:hover {
@@ -44,6 +44,11 @@
             font-weight: 600;
             margin-bottom: 8px;
             color: #374151;
+        }
+        .table-subtitle {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
         }
     </style>
 </head>
@@ -94,6 +99,7 @@
         <!-- Таблиця власників -->
         <div class="stats-card">
             <h3 class="table-title">Інформація по власниках</h3>
+            <div class="table-subtitle">Відображаються власники, що мають більше 5 ділянок</div>
             <div class="overflow-x-auto">
                 <table class="data-table">
                     <thead>
@@ -206,6 +212,13 @@
             tbody.innerHTML = '';
 
             Object.entries(data)
+                .filter(([_, data]) => {
+                    // Фільтруємо власників за кількістю ділянок
+                    if (tableId === 'ownersTableBody') {
+                        return data.count > 5;
+                    }
+                    return true; // Для орендарів показуємо всі записи
+                })
                 .sort((a, b) => b[1].area - a[1].area)
                 .forEach(([name, data]) => {
                     const row = document.createElement('tr');
