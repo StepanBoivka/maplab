@@ -64,6 +64,30 @@
             position: relative;
             z-index: 1;
         }
+        .year-expired {
+            color: #EF4444;
+            font-weight: 500;
+        }
+        .year-current {
+            color: #F59E0B;
+            font-weight: 500;
+        }
+        .year-future {
+            color: #10B981;
+            font-weight: 500;
+        }
+        .percentage-bar.expired {
+            background-color: #FCA5A5;
+            opacity: 0.3;
+        }
+        .percentage-bar.current {
+            background-color: #FCD34D;
+            opacity: 0.3;
+        }
+        .percentage-bar.future {
+            background-color: #6EE7B7;
+            opacity: 0.3;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -112,7 +136,7 @@
         </div>
 
         <!-- Таблиця власників -->
-        <div class="stats-card">
+        <div class="stats-card mb-6">
             <h3 class="table-title">Інформація по власниках</h3>
             <div class="table-subtitle">Відображаються власники, що мають більше 5 ділянок</div>
             <div class="overflow-x-auto">
@@ -129,9 +153,27 @@
                 </table>
             </div>
         </div>
+
+        <!-- Таблиця завершення договорів -->
+        <div class="stats-card">
+            <h3 class="table-title">Завершення договорів оренди</h3>
+            <div class="overflow-x-auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="text-left">Рік завершення</th>
+                            <th class="text-right">Кількість договорів</th>
+                            <th class="text-right">Загальна площа (га)</th>
+                            <th class="text-right">% від загальної площі</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expiryTableBody"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <script>
+<script>
         // Отримуємо параметри з URL
         const urlParams = new URLSearchParams(window.location.search);
         const selectedFile = urlParams.get('file');
@@ -169,6 +211,7 @@
                 const area = parseFloat(feature.properties['Площа розрахована'] || 0);
                 const tenant = feature.properties['Орендар'];
                 const owner = feature.properties['Власник'];
+                const expiryYear = feature.properties['Рік завершення'];
 
                 // Загальна статистика
                 acc.totalArea += area;
@@ -199,13 +242,29 @@
                     acc.owners[owner].area += area;
                 }
 
+                // Статистика по роках завершення
+                if (tenant && expiryYear) {
+                    const year = parseInt(expiryYear);
+                    if (!isNaN(year)) {
+                        if (!acc.expiryYears[year]) {
+                            acc.expiryYears[year] = {
+                                count: 0,
+                                area: 0
+                            };
+                        }
+                        acc.expiryYears[year].count++;
+                        acc.expiryYears[year].area += area;
+                    }
+                }
+
                 return acc;
             }, {
                 totalArea: 0,
                 totalParcels: 0,
                 freeParcels: 0,
                 tenants: {},
-                owners: {}
+                owners: {},
+                expiryYears: {}
             });
 
             updateUI(stats);
@@ -220,6 +279,7 @@
             // Оновлення таблиць
             updateDetailsTable(stats.tenants, 'detailsTableBody', stats.totalArea);
             updateDetailsTable(stats.owners, 'ownersTableBody');
+            updateExpiryTable(stats.expiryYears, stats.totalArea);
         }
 
         function updateDetailsTable(data, tableId, totalArea = 0) {
@@ -260,6 +320,42 @@
                             <td class="text-right">${avgArea.toFixed(2)}</td>
                         `;
                     }
+                    tbody.appendChild(row);
+                });
+        }
+
+        function updateExpiryTable(data, totalArea) {
+            const tbody = document.getElementById('expiryTableBody');
+            tbody.innerHTML = '';
+            const currentYear = new Date().getFullYear();
+
+            Object.entries(data)
+                .sort((a, b) => parseInt(a[0]) - parseInt(b[0])) // Сортування за роками
+                .forEach(([year, data]) => {
+                    const row = document.createElement('tr');
+                    const yearNum = parseInt(year);
+                    const percentage = ((data.area / totalArea) * 100).toFixed(2);
+                    
+                    // Визначення класу для року
+                    let yearClass = 'year-future';
+                    let barClass = 'future';
+                    if (yearNum < currentYear) {
+                        yearClass = 'year-expired';
+                        barClass = 'expired';
+                    } else if (yearNum === currentYear) {
+                        yearClass = 'year-current';
+                        barClass = 'current';
+                    }
+
+                    row.innerHTML = `
+                        <td class="${yearClass}">${year}</td>
+                        <td class="text-right">${data.count}</td>
+                        <td class="text-right">${data.area.toFixed(2)}</td>
+                        <td class="text-right relative">
+                            <div class="percentage-bar ${barClass}" style="width: ${percentage}%"></div>
+                            <span class="percentage-text">${percentage}%</span>
+                        </td>
+                    `;
                     tbody.appendChild(row);
                 });
         }
