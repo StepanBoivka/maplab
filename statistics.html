@@ -107,29 +107,34 @@
         }
 
         @media print {
-            .stats-card {
-                break-inside: avoid;
-                page-break-inside: avoid;
-            }
-            
-            .data-table {
-                break-inside: auto;
-                page-break-inside: auto;
-            }
-            
-            .data-table tr {
-                break-inside: avoid;
-                page-break-inside: avoid;
-            }
+    @page {
+        size: A4 landscape;
+        margin: 1cm;
+    }
+    
+    .stats-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    
+    .data-table {
+        break-inside: auto;
+        page-break-inside: auto;
+    }
+    
+    .data-table tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    
+    .matrix-table {
+        font-size: 10px; /* Зменшуємо шрифт для кращого розміщення */
+    }
 
-            button {
-                display: none;
-            }
-
-            body {
-                padding: 20px;
-            }
-        }
+    button {
+        display: none;
+    }
+}
     </style>
 </head>
 <body class="bg-gray-50">
@@ -253,34 +258,37 @@
         const dataPath = id ? `data/${id}/` : 'data/';
 
         function generatePDF() {
-            // Конфігурація для PDF
-            const opt = {
-                margin: 1,
-                filename: `Статистика_${councilName}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true
-                },
-                jsPDF: { 
-                    unit: 'cm', 
-                    format: 'a4', 
-                    orientation: 'portrait' 
-                }
-            };
+    // Конфігурація для PDF
+    const opt = {
+        margin: 1,
+        filename: `Статистика_${councilName}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 2,
+            useCORS: true,
+            letterRendering: true
+        },
+        jsPDF: { 
+            unit: 'cm', 
+            format: 'a4', 
+            orientation: 'landscape'  // Змінюємо з 'portrait' на 'landscape'
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } // Додаємо налаштування розривів сторінок
+    };
 
-            // Генеруємо PDF
-            html2pdf().set(opt).from(document.body).save()
-                .then(() => {
-                    console.log('PDF generated successfully');
-                })
-                .catch(err => {
-                    console.error('Error generating PDF:', err);
-                    alert('Помилка при генерації PDF. Спробуйте ще раз.');
-                });
-        }
+    // Створюємо обгортку для контенту
+    const content = document.body;
 
+    // Генеруємо PDF
+    html2pdf().set(opt).from(content).save()
+        .then(() => {
+            console.log('PDF generated successfully');
+        })
+        .catch(err => {
+            console.error('Error generating PDF:', err);
+            alert('Помилка при генерації PDF. Спробуйте ще раз.');
+        });
+}
         async function loadAndProcessData() {
             if (!selectedFile) {
                 console.error('Файл не вибрано');
