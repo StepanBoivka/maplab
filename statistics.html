@@ -116,9 +116,9 @@
 
         @media print {
             @page {
-                size: A4 landscape;
-                margin: 1cm;
-            }
+        size: A4 landscape;
+        margin: 0.5cm; // Зменшуємо з 1cm до 0.5cm
+    }
             
             .stats-card {
                 break-inside: avoid;
@@ -271,22 +271,22 @@
         const dataPath = id ? `data/${id}/` : 'data/';
 
         function generatePDF() {
-            const opt = {
-                margin: 1,
-                filename: `Статистика_${councilName}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true
-                },
-                jsPDF: { 
-                    unit: 'cm', 
-                    format: 'a4', 
-                    orientation: 'landscape'
-                },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-            };
+    const opt = {
+        margin: 0.5, // Зменшуємо з 1 до 0.5 см
+        filename: `Статистика_${councilName}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 2,
+            useCORS: true,
+            letterRendering: true
+        },
+        jsPDF: { 
+            unit: 'cm', 
+            format: 'a4', 
+            orientation: 'landscape'
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
 
             html2pdf().set(opt).from(document.body).save()
                 .then(() => {
