@@ -80,17 +80,25 @@
         .matrix-table {
             border-collapse: collapse;
         }
-        .matrix-table th,
-        .matrix-table td {
-            padding: 4px 8px;
+        .matrix-table th:not(.sticky-col),
+        .matrix-table td:not(.sticky-col) {
+            width: 70px;
             min-width: 70px;
+            max-width: 70px;
+            padding: 4px 8px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            text-align: right;
         }
-        .sticky-col {
+        .matrix-table .sticky-col {
             position: sticky;
             left: 0;
             background-color: white;
             z-index: 10;
             border-right: 2px solid #e5e7eb;
+            min-width: 200px;
+            text-align: left;
         }
         .matrix-table thead th.sticky-col {
             background-color: #f3f4f6;
@@ -107,34 +115,34 @@
         }
 
         @media print {
-    @page {
-        size: A4 landscape;
-        margin: 1cm;
-    }
-    
-    .stats-card {
-        break-inside: avoid;
-        page-break-inside: avoid;
-    }
-    
-    .data-table {
-        break-inside: auto;
-        page-break-inside: auto;
-    }
-    
-    .data-table tr {
-        break-inside: avoid;
-        page-break-inside: avoid;
-    }
-    
-    .matrix-table {
-        font-size: 10px; /* Зменшуємо шрифт для кращого розміщення */
-    }
+            @page {
+                size: A4 landscape;
+                margin: 1cm;
+            }
+            
+            .stats-card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            
+            .data-table {
+                break-inside: auto;
+                page-break-inside: auto;
+            }
+            
+            .data-table tr {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            
+            .matrix-table {
+                font-size: 10px;
+            }
 
-    button {
-        display: none;
-    }
-}
+            button {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -258,37 +266,33 @@
         const dataPath = id ? `data/${id}/` : 'data/';
 
         function generatePDF() {
-    // Конфігурація для PDF
-    const opt = {
-        margin: 1,
-        filename: `Статистика_${councilName}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-            scale: 2,
-            useCORS: true,
-            letterRendering: true
-        },
-        jsPDF: { 
-            unit: 'cm', 
-            format: 'a4', 
-            orientation: 'landscape'  // Змінюємо з 'portrait' на 'landscape'
-        },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } // Додаємо налаштування розривів сторінок
-    };
+            const opt = {
+                margin: 1,
+                filename: `Статистика_${councilName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true
+                },
+                jsPDF: { 
+                    unit: 'cm', 
+                    format: 'a4', 
+                    orientation: 'landscape'
+                },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
 
-    // Створюємо обгортку для контенту
-    const content = document.body;
+            html2pdf().set(opt).from(document.body).save()
+                .then(() => {
+                    console.log('PDF generated successfully');
+                })
+                .catch(err => {
+                    console.error('Error generating PDF:', err);
+                    alert('Помилка при генерації PDF. Спробуйте ще раз.');
+                });
+        }
 
-    // Генеруємо PDF
-    html2pdf().set(opt).from(content).save()
-        .then(() => {
-            console.log('PDF generated successfully');
-        })
-        .catch(err => {
-            console.error('Error generating PDF:', err);
-            alert('Помилка при генерації PDF. Спробуйте ще раз.');
-        });
-}
         async function loadAndProcessData() {
             if (!selectedFile) {
                 console.error('Файл не вибрано');
@@ -304,6 +308,7 @@
                 processData(data);
             } catch (error) {
                 console.error('Помилка завантаження даних:', error);
+                console.error('Шлях до файлу:', `${dataPath}${selectedFile}`);
                 alert('Помилка завантаження даних. Спробуйте ще раз.');
             }
         }
@@ -331,7 +336,6 @@
                     acc.freeArea += area;
                 }
 
-                // Додаємо власника до Set
                 if (owner && owner.trim() !== '') {
                     uniqueOwners.add(owner);
                 }
@@ -400,7 +404,6 @@
         }
 
         function updateUI(stats) {
-            // Оновлення загальної статистики
             document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
             document.getElementById('totalParcels').textContent = stats.totalParcels;
             document.getElementById('freeParcels').textContent = stats.freeParcels;
@@ -408,7 +411,6 @@
             document.getElementById('tenantsCount').textContent = Object.keys(stats.tenants).length;
             document.getElementById('ownersCount').textContent = stats.uniqueOwnersCount;
 
-            // Оновлення таблиць
             updateDetailsTable(stats.tenants, 'detailsTableBody', stats.totalArea);
             updateDetailsTable(stats.owners, 'ownersTableBody');
             updateMatrixTable(stats.expiryYears, stats.tenants);
@@ -494,7 +496,7 @@
                         cell.className = 'text-right';
                         
                         if (areaForYear > 0) {
-                            cell.innerHTML = areaForYear.toFixed(2);
+                            cell.innerHTML = areaForYear.toFixed(1); // Змінено на один знак після коми
                             cell.style.backgroundColor = `rgba(255, 165, 0, ${areaForYear / tenantData.area * 0.5})`;
                             cell.style.color = 'black';
                         } else {
@@ -515,7 +517,7 @@
                 const total = yearTotals[year];
                 totalRow.innerHTML += `
                     <td class="text-right border-t-2${total > 0 ? ' bg-orange-50' : ''}">${
-                        total > 0 ? total.toFixed(2) : '-'
+                        total > 0 ? total.toFixed(1) : '-'
                     }</td>
                 `;
             });
@@ -523,7 +525,6 @@
             tbody.appendChild(totalRow);
         }
 
-        // Завантаження даних при завантаженні сторінки
         document.addEventListener('DOMContentLoaded', loadAndProcessData);
     </script>
 </body>
