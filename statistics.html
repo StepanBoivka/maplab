@@ -140,21 +140,26 @@
             }
 
             button {
-                display: none;
-            }
+        display: none !important;
+    }
         }
     </style>
 </head>
 <body class="bg-gray-50">
     <div class="container mx-auto px-4 py-6">
         <!-- Заголовок -->
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-bold text-gray-800">Статистика по раді: <span id="councilName">Не вибрано</span></h1>
-            <button onclick="generatePDF()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
-                Експорт в PDF
-            </button>
-        </div>
-
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-xl font-bold text-gray-800">Статистика по раді: <span id="councilName">Не вибрано</span></h1>
+    <button onclick="generatePDF()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold p-2 rounded text-sm flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <path d="M14 2v6h6"></path>
+            <path d="M16 13H8"></path>
+            <path d="M16 17H8"></path>
+            <path d="M10 9H8"></path>
+        </svg>
+    </button>
+</div>
         <!-- Загальна статистика -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <!-- Група 1: Загальні показники -->
