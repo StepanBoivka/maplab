@@ -120,29 +120,23 @@
         margin: 0.3cm;
     }
 
-    .stats-card {
-        break-inside: avoid;
-        page-break-inside: avoid;
+    .matrix-table {
+        font-size: 10px;
+        page-break-before: always; /* Завжди починати з нової сторінки */
     }
 
-    .data-table {
-        break-inside: auto;
-        page-break-inside: auto;
+    .matrix-table thead th {
+        page-break-inside: avoid; /* Уникаємо розриву всередині заголовків */
     }
 
     .data-table tr {
-        break-inside: avoid;
-        page-break-inside: avoid;
-    }
-
-    .matrix-table {
-        font-size: 10px;
-        page-break-before: always; /* Додаємо новий стиль */
+        page-break-inside: avoid; /* Уникаємо розриву всередині рядків */
     }
 
     button {
         display: none !important;
     }
+}
 }
     </style>
 </head>
