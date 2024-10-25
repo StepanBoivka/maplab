@@ -272,7 +272,7 @@
 
         function generatePDF() {
     const opt = {
-        margin: 0.5, // Зменшуємо з 1 до 0.5 см
+        margin: 0.5,
         filename: `Статистика_${councilName}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
@@ -285,18 +285,33 @@
             format: 'a4', 
             orientation: 'landscape'
         },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        pagebreak: { 
+            mode: ['avoid-all', 'css', 'legacy'],
+            avoid: ['tr', 'thead', '.matrix-table'] 
+        },
+        html2canvas: {
+            scale: 2,
+            useCORS: true,
+            letterRendering: true,
+            windowWidth: 1920 // Фіксована ширина для кращого рендерингу
+        }
     };
 
-            html2pdf().set(opt).from(document.body).save()
-                .then(() => {
-                    console.log('PDF generated successfully');
-                })
-                .catch(err => {
-                    console.error('Error generating PDF:', err);
-                    alert('Помилка при генерації PDF. Спробуйте ще раз.');
-                });
-        }
+    // Додаємо клас для збереження форматування при експорті
+    document.querySelector('.matrix-table').classList.add('avoid-break');
+
+    html2pdf().set(opt).from(document.body).save()
+        .then(() => {
+            console.log('PDF generated successfully');
+            // Видаляємо тимчасовий клас
+            document.querySelector('.matrix-table').classList.remove('avoid-break');
+        })
+        .catch(err => {
+            console.error('Error generating PDF:', err);
+            alert('Помилка при генерації PDF. Спробуйте ще раз.');
+            document.querySelector('.matrix-table').classList.remove('avoid-break');
+        });
+}
 
         async function loadAndProcessData() {
             if (!selectedFile) {
