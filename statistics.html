@@ -81,16 +81,16 @@
             border-collapse: collapse;
         }
         .matrix-table th:not(.sticky-col),
-.matrix-table td:not(.sticky-col) {
-    width: auto;
-    min-width: 50px;  /* мінімальна ширина */
-    max-width: none;
-    padding: 4px 8px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    text-align: right;
-}
+        .matrix-table td:not(.sticky-col) {
+            width: auto;
+            min-width: 50px;
+            max-width: none;
+            padding: 4px 8px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            text-align: right;
+        }
         .matrix-table .sticky-col {
             position: sticky;
             left: 0;
@@ -115,46 +115,55 @@
         }
 
         @media print {
-    @page {
-        size: A4 landscape;
-        margin: 0.3cm;
-    }
+            @page {
+                size: A4 landscape;
+                margin: 0.3cm;
+            }
 
-    .matrix-table {
-        font-size: 10px;
-        page-break-before: always; /* Завжди починати з нової сторінки */
-    }
+            body {
+                margin: 0;
+                padding: 0;
+            }
 
-    .matrix-table thead th {
-        page-break-inside: avoid; /* Уникаємо розриву всередині заголовків */
-    }
+            .page-break {
+                page-break-before: always;
+                break-before: page;
+            }
 
-    .data-table tr {
-        page-break-inside: avoid; /* Уникаємо розриву всередині рядків */
-    }
+            .matrix-table {
+                font-size: 10px;
+            }
 
-    button {
-        display: none !important;
-    }
-}
-}
+            .matrix-table thead th {
+                page-break-inside: avoid;
+            }
+
+            .data-table tr {
+                page-break-inside: avoid;
+            }
+
+            button {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     <div class="container mx-auto px-4 py-6">
         <!-- Заголовок -->
-<div class="flex justify-between items-center mb-6">
-    <h1 class="text-xl font-bold text-gray-800">Статистика по раді: <span id="councilName">Не вибрано</span></h1>
-    <button onclick="generatePDF()" class="bg-white hover:bg-gray-100 text-gray-800 font-bold p-2 rounded text-sm flex items-center gap-2 border border-gray-300">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <path d="M14 2v6h6"></path>
-            <path d="M16 13H8"></path>
-            <path d="M16 17H8"></path>
-            <path d="M10 9H8"></path>
-        </svg>
-    </button>
-</div>
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-bold text-gray-800">Статистика по раді: <span id="councilName">Не вибрано</span></h1>
+            <button onclick="generatePDF()" class="bg-white hover:bg-gray-100 text-gray-800 font-bold p-2 rounded text-sm flex items-center gap-2 border border-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <path d="M14 2v6h6"></path>
+                    <path d="M16 13H8"></path>
+                    <path d="M16 17H8"></path>
+                    <path d="M10 9H8"></path>
+                </svg>
+            </button>
+        </div>
+
         <!-- Загальна статистика -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <!-- Група 1: Загальні показники -->
@@ -201,7 +210,7 @@
         </div>
 
         <!-- Таблиця орендарів -->
-        <div class="stats-card mb-4">
+        <div class="stats-card mb-4 page-break">
             <h3 class="table-title">Інформація по орендарях</h3>
             <div class="overflow-x-auto">
                 <table class="data-table">
@@ -220,7 +229,7 @@
         </div>
 
         <!-- Таблиця власників -->
-        <div class="stats-card mb-4">
+        <div class="stats-card mb-4 page-break">
             <h3 class="table-title">Інформація по власниках</h3>
             <div class="table-subtitle">Відображаються власники, що мають більше 5 ділянок</div>
             <div class="overflow-x-auto">
@@ -239,7 +248,7 @@
         </div>
 
         <!-- Матрична таблиця договорів -->
-        <div class="stats-card">
+        <div class="stats-card page-break">
             <h3 class="table-title">Матриця договорів оренди</h3>
             <div class="overflow-x-auto">
                 <table class="data-table matrix-table">
@@ -266,30 +275,51 @@
         const dataPath = id ? `data/${id}/` : 'data/';
 
         function generatePDF() {
-    const opt = {
-        margin: 0.5, // Зменшуємо з 1 до 0.5 см
-        filename: `Статистика_${councilName}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-            scale: 2,
-            useCORS: true,
-            letterRendering: true
-        },
-        jsPDF: { 
-            unit: 'cm', 
-            format: 'a4', 
-            orientation: 'landscape'
-        },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-    };
+            const opt = {
+                margin: 0.5,
+                filename: `Статистика_${councilName}.pdf`,
+                image: { 
+                    type: 'jpeg', 
+                    quality: 0.98 
+                },
+                html2canvas: { 
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true,
+                    scrollY: -window.scrollY,
+                    windowWidth: document.documentElement.clientWidth
+                },
+                jsPDF: { 
+                    unit: 'cm', 
+                    format: 'a4', 
+                    orientation: 'landscape'
+                },
+                pagebreak: { 
+                    mode: ['avoid-all', 'css', 'legacy'],
+                    before: '.page-break'
+                }
+            };
+
+            // Додаємо класи для кращого контролю розривів сторінок
+            document.querySelectorAll('.page-break').forEach(el => {
+                el.style.pageBreakBefore = 'always';
+            });
 
             html2pdf().set(opt).from(document.body).save()
                 .then(() => {
                     console.log('PDF generated successfully');
+                    // Видаляємо тимчасові стилі
+                    document.querySelectorAll('.page-break').forEach(el => {
+                        el.style.pageBreakBefore = '';
+                    });
                 })
                 .catch(err => {
                     console.error('Error generating PDF:', err);
                     alert('Помилка при генерації PDF. Спробуйте ще раз.');
+                    // Видаляємо тимчасові стилі у випадку помилки
+                    document.querySelectorAll('.page-break').forEach(el => {
+                        el.style.pageBreakBefore = '';
+                    });
                 });
         }
 
@@ -496,7 +526,7 @@
                         cell.className = 'text-right';
                         
                         if (areaForYear > 0) {
-                            cell.innerHTML = areaForYear.toFixed(1); // Змінено на один знак після коми
+                            cell.innerHTML = areaForYear.toFixed(1);
                             cell.style.backgroundColor = `rgba(255, 165, 0, ${areaForYear / tenantData.area * 0.5})`;
                             cell.style.color = 'black';
                         } else {
