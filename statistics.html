@@ -131,13 +131,33 @@
             }
 
             .matrix-table {
-                font-size: 10px;
-            }
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
 
-            .matrix-table thead th {
-                page-break-inside: avoid;
-            }
+    .matrix-table thead {
+        display: table-header-group !important;
+    }
 
+    .matrix-table tbody {
+        display: table-row-group !important;
+    }
+
+    .matrix-table tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* Прибираємо попередній page-break для контейнера матриці */
+    .matrix-container {
+        page-break-before: always;
+    }
+
+    /* Переконуємося, що матриця тримається разом */
+    .matrix-wrapper {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
             .data-table tr {
                 page-break-inside: avoid;
             }
@@ -248,20 +268,21 @@
         </div>
 
         <!-- Матрична таблиця договорів -->
-        <div class="stats-card page-break">
-            <h3 class="table-title">Матриця договорів оренди</h3>
-            <div class="overflow-x-auto">
-                <table class="data-table matrix-table">
-                    <thead>
-                        <tr>
-                            <th class="text-left sticky-col">Орендар</th>
-                        </tr>
-                    </thead>
-                    <tbody id="matrixTableBody"></tbody>
-                </table>
-            </div>
+<div class="stats-card matrix-container page-break">
+    <h3 class="table-title">Матриця договорів оренди</h3>
+    <div class="matrix-wrapper">
+        <div class="overflow-x-auto">
+            <table class="data-table matrix-table">
+                <thead>
+                    <tr>
+                        <th class="text-left sticky-col">Орендар</th>
+                    </tr>
+                </thead>
+                <tbody id="matrixTableBody"></tbody>
+            </table>
         </div>
     </div>
+</div>
 
     <script>
         // Отримуємо параметри з URL
@@ -275,53 +296,57 @@
         const dataPath = id ? `data/${id}/` : 'data/';
 
         function generatePDF() {
-            const opt = {
-                margin: 0.5,
-                filename: `Статистика_${councilName}.pdf`,
-                image: { 
-                    type: 'jpeg', 
-                    quality: 0.98 
-                },
-                html2canvas: { 
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true,
-                    scrollY: -window.scrollY,
-                    windowWidth: document.documentElement.clientWidth
-                },
-                jsPDF: { 
-                    unit: 'cm', 
-                    format: 'a4', 
-                    orientation: 'landscape'
-                },
-                pagebreak: { 
-                    mode: ['avoid-all', 'css', 'legacy'],
-                    before: '.page-break'
-                }
-            };
-
-            // Додаємо класи для кращого контролю розривів сторінок
-            document.querySelectorAll('.page-break').forEach(el => {
-                el.style.pageBreakBefore = 'always';
-            });
-
-            html2pdf().set(opt).from(document.body).save()
-                .then(() => {
-                    console.log('PDF generated successfully');
-                    // Видаляємо тимчасові стилі
-                    document.querySelectorAll('.page-break').forEach(el => {
-                        el.style.pageBreakBefore = '';
-                    });
-                })
-                .catch(err => {
-                    console.error('Error generating PDF:', err);
-                    alert('Помилка при генерації PDF. Спробуйте ще раз.');
-                    // Видаляємо тимчасові стилі у випадку помилки
-                    document.querySelectorAll('.page-break').forEach(el => {
-                        el.style.pageBreakBefore = '';
-                    });
-                });
+    const opt = {
+        margin: 0.5,
+        filename: `Статистика_${councilName}.pdf`,
+        image: { 
+            type: 'jpeg', 
+            quality: 0.98 
+        },
+        html2canvas: { 
+            scale: 2,
+            useCORS: true,
+            letterRendering: true,
+            scrollY: -window.scrollY,
+            windowWidth: document.documentElement.clientWidth,
+            windowHeight: document.documentElement.clientHeight,
+            logging: true // Для діагностики
+        },
+        jsPDF: { 
+            unit: 'cm', 
+            format: 'a4', 
+            orientation: 'landscape'
+        },
+        pagebreak: { 
+            mode: ['avoid-all', 'css', 'legacy'],
+            before: '.page-break',
+            avoid: ['.matrix-table', '.matrix-table thead', '.matrix-table tbody', '.matrix-wrapper']
         }
+    };
+
+    // Додаємо тимчасові стилі для кращого контролю розривів
+    const style = document.createElement('style');
+    style.textContent = `
+        @media print {
+            .matrix-table { page-break-inside: avoid !important; }
+            .matrix-wrapper { page-break-inside: avoid !important; }
+            .matrix-table thead { display: table-header-group !important; }
+            .matrix-table tbody { display: table-row-group !important; }
+        }
+    `;
+    document.head.appendChild(style);
+
+    html2pdf().set(opt).from(document.body).save()
+        .then(() => {
+            console.log('PDF generated successfully');
+            document.head.removeChild(style);
+        })
+        .catch(err => {
+            console.error('Error generating PDF:', err);
+            alert('Помилка при генерації PDF. Спробуйте ще раз.');
+            document.head.removeChild(style);
+        });
+}
 
         async function loadAndProcessData() {
             if (!selectedFile) {
