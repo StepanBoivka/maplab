@@ -136,8 +136,22 @@
             }
             
             .matrix-table {
-                font-size: 10px;
-            }
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    
+    .matrix-table thead {
+        display: table-header-group;
+    }
+    
+    .matrix-table tbody {
+        display: table-row-group;
+    }
+    
+    .matrix-table tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
 
             button {
         display: none !important;
