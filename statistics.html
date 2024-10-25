@@ -115,34 +115,35 @@
         }
 
         @media print {
-            @page {
+    @page {
         size: A4 landscape;
-        margin: 0.3cm; // Зменшуємо з 1cm до 0.5cm
+        margin: 0.3cm;
     }
-            
-            .stats-card {
-                break-inside: avoid;
-                page-break-inside: avoid;
-            }
-            
-            .data-table {
-                break-inside: auto;
-                page-break-inside: auto;
-            }
-            
-            .data-table tr {
-                break-inside: avoid;
-                page-break-inside: avoid;
-            }
-            
-            .matrix-table {
-                font-size: 10px;
-            }
 
-            button {
+    .stats-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .data-table {
+        break-inside: auto;
+        page-break-inside: auto;
+    }
+
+    .data-table tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .matrix-table {
+        font-size: 10px;
+        page-break-before: always; /* Додаємо новий стиль */
+    }
+
+    button {
         display: none !important;
     }
-        }
+}
     </style>
 </head>
 <body class="bg-gray-50">
