@@ -81,16 +81,16 @@
             border-collapse: collapse;
         }
         .matrix-table th:not(.sticky-col),
-        .matrix-table td:not(.sticky-col) {
-            width: 70px;
-            min-width: 70px;
-            max-width: 70px;
-            padding: 4px 8px;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            text-align: right;
-        }
+.matrix-table td:not(.sticky-col) {
+    width: auto;
+    min-width: auto;
+    max-width: none;
+    padding: 4px 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: right;
+}
         .matrix-table .sticky-col {
             position: sticky;
             left: 0;
