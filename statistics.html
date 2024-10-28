@@ -525,41 +525,78 @@
         }
 
         function updateRegistrationTable(registrationYears) {
-            const tbody = document.getElementById('registrationTableBody');
-            tbody.innerHTML = '';
+    const tbody = document.getElementById('registrationTableBody');
+    tbody.innerHTML = '';
 
-            const years = Object.keys(registrationYears).sort((a, b) => a - b);
-            let totalRegistered = 0;
+    // Підрахунок загальних сум
+    const years = Object.keys(registrationYears).sort((a, b) => a - b);
+    let totalRegistered = 0;
+    let totalActive = 0;
+    let totalInactive = 0;
 
-            years.forEach(year => {
-                totalRegistered += registrationYears[year];
-            });
+    years.forEach(year => {
+        const yearData = registrationYears[year];
+        totalRegistered += yearData.total;
+        totalActive += yearData.active;
+        totalInactive += yearData.inactive;
+    });
 
-            years.forEach(year => {
-                const count = registrationYears[year];
-                const percentage = ((count / totalRegistered) * 100).toFixed(2);
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${year}</td>
-                    <td class="text-right">${count}</td>
-                    <td class="text-right relative">
-                        <div class="percentage-bar" style="width: ${percentage}%"></div>
-                        <span class="percentage-text">${percentage}%</span>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
+    // Створення рядків таблиці для кожного року
+    years.forEach(year => {
+        const yearData = registrationYears[year];
+        const activePercentage = ((yearData.active / yearData.total) * 100).toFixed(1);
+        const inactivePercentage = ((yearData.inactive / yearData.total) * 100).toFixed(1);
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${year}</td>
+            <td class="text-right">${yearData.total}</td>
+            <td class="text-right">${yearData.active}</td>
+            <td class="text-right">${yearData.inactive}</td>
+            <td class="text-right relative" style="height: 24px;">
+                <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
+                    ${yearData.active > 0 ? `
+                        <div style="width: ${activePercentage}%; background-color: #10B981; opacity: 0.3;"></div>
+                    ` : ''}
+                    ${yearData.inactive > 0 ? `
+                        <div style="width: ${inactivePercentage}%; background-color: #EF4444; opacity: 0.3;"></div>
+                    ` : ''}
+                </div>
+                <span class="percentage-text">
+                    ${activePercentage}% / ${inactivePercentage}%
+                </span>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
 
-            const totalRow = document.createElement('tr');
-            totalRow.className = 'matrix-total-row';
-            totalRow.innerHTML = `
-                <td class="border-t-2">Всього</td>
-                <td class="text-right border-t-2">${totalRegistered}</td>
-                <td class="text-right border-t-2">100%</td>
-            `;
-            tbody.appendChild(totalRow);
-        }
+    // Додавання підсумкового рядка
+    const totalActivePercentage = ((totalActive / totalRegistered) * 100).toFixed(1);
+    const totalInactivePercentage = ((totalInactive / totalRegistered) * 100).toFixed(1);
+    
+    const totalRow = document.createElement('tr');
+    totalRow.className = 'matrix-total-row';
+    totalRow.innerHTML = `
+        <td class="border-t-2">Всього</td>
+        <td class="text-right border-t-2">${totalRegistered}</td>
+        <td class="text-right border-t-2">${totalActive}</td>
+        <td class="text-right border-t-2">${totalInactive}</td>
+        <td class="text-right relative border-t-2" style="height: 24px;">
+            <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
+                ${totalActive > 0 ? `
+                    <div style="width: ${totalActivePercentage}%; background-color: #10B981; opacity: 0.3;"></div>
+                ` : ''}
+                ${totalInactive > 0 ? `
+                    <div style="width: ${totalInactivePercentage}%; background-color: #EF4444; opacity: 0.3;"></div>
+                ` : ''}
+            </div>
+            <span class="percentage-text">
+                ${totalActivePercentage}% / ${totalInactivePercentage}%
+            </span>
+        </td>
+    `;
+    tbody.appendChild(totalRow);
+}
 
         function updateDetailsTable(data, tableId, totalArea = 0) {
             const tbody = document.getElementById(tableId);
