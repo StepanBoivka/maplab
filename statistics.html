@@ -228,22 +228,24 @@
             </div>
         </div>
 
-        <!-- Статистика реєстрації -->
-        <div class="stats-card mb-4">
-            <h3 class="table-title">Статистика реєстрації договорів по роках</h3>
-            <div class="overflow-x-auto">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th class="text-left">Рік</th>
-                            <th class="text-right">Кількість договорів</th>
-                            <th class="text-right">% від загальної кількості</th>
-                        </tr>
-                    </thead>
-                    <tbody id="registrationTableBody"></tbody>
-                </table>
-            </div>
-        </div>
+        <!-- Оновлена статистика реєстрації -->
+<div class="stats-card mb-4">
+    <h3 class="table-title">Статистика реєстрації договорів по роках</h3>
+    <div class="overflow-x-auto">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="text-left">Рік</th>
+                    <th class="text-right">Всього договорів</th>
+                    <th class="text-right">Активні договори</th>
+                    <th class="text-right">Неактивні договори</th>
+                    <th class="text-right" style="width: 30%;">Розподіл</th>
+                </tr>
+            </thead>
+            <tbody id="registrationTableBody"></tbody>
+        </table>
+    </div>
+</div>
 
         <!-- Таблиця орендарів -->
         <div class="stats-card mb-4 page-break">
@@ -384,120 +386,129 @@
         }
 
         function processData(data) {
-            if (!data.features || !Array.isArray(data.features)) {
-                console.error('Некоректний формат даних');
-                return;
-            }
+   if (!data.features || !Array.isArray(data.features)) {
+       console.error('Некоректний формат даних');
+       return;
+   }
 
-            const features = data.features;
-            const uniqueOwners = new Set();
-            
-            const stats = features.reduce((acc, feature) => {
-                const area = parseFloat(feature.properties['Площа розрахована'] || 0);
-                const tenant = feature.properties['Орендар'];
-                const owner = feature.properties['Власник'];
-                const expiryYear = feature.properties['Рік завершення'];
-                const registrationDate = feature.properties['Дата реєстрації'];
+   const features = data.features;
+   const uniqueOwners = new Set();
+   
+   const stats = features.reduce((acc, feature) => {
+       const area = parseFloat(feature.properties['Площа розрахована'] || 0);
+       const tenant = feature.properties['Орендар'];
+       const owner = feature.properties['Власник'];
+       const expiryYear = feature.properties['Рік завершення'];
+       const registrationDate = feature.properties['Дата реєстрації'];
 
-                // Загальна статистика
-                acc.totalArea += area;
-                acc.totalParcels++;
-                if (!tenant) {
-                    acc.freeParcels++;
-                    acc.freeArea += area;
-                }
+       // Загальна статистика
+       acc.totalArea += area;
+       acc.totalParcels++;
+       if (!tenant) {
+           acc.freeParcels++;
+           acc.freeArea += area;
+       }
 
-                if (owner && owner.trim() !== '') {
-                    uniqueOwners.add(owner);
-                }
+       if (owner && owner.trim() !== '') {
+           uniqueOwners.add(owner);
+       }
 
-                // Статистика реєстрації договорів
-                if (registrationDate && tenant) {
-                    let year;
-                    if (registrationDate.includes('.')) {
-                        year = parseInt(registrationDate.split('.')[2]);
-                    } else if (registrationDate.includes('/')) {
-                        year = parseInt(registrationDate.split('/')[2]);
-                    } else if (registrationDate.length === 4) {
-                        year = parseInt(registrationDate);
-                    } else {
-                        const match = registrationDate.match(/\d{4}/);
-                        if (match) {
-                            year = parseInt(match[0]);
-                        }
-                    }
+       // Оновлена статистика реєстрації договорів
+       if (registrationDate) {
+           let year;
+           if (registrationDate.includes('.')) {
+               year = parseInt(registrationDate.split('.')[2]);
+           } else if (registrationDate.includes('/')) {
+               year = parseInt(registrationDate.split('/')[2]);
+           } else if (registrationDate.length === 4) {
+               year = parseInt(registrationDate);
+           } else {
+               const match = registrationDate.match(/\d{4}/);
+               if (match) {
+                   year = parseInt(match[0]);
+               }
+           }
 
-                    if (!isNaN(year) && year > 1990 && year <= new Date().getFullYear()) {
-                        if (!acc.registrationYears[year]) {
-                            acc.registrationYears[year] = 0;
-                        }
-                        acc.registrationYears[year]++;
-                    }
-                }
+           if (!isNaN(year) && year > 1990 && year <= new Date().getFullYear()) {
+               if (!acc.registrationYears[year]) {
+                   acc.registrationYears[year] = {
+                       total: 0,
+                       active: 0,
+                       inactive: 0
+                   };
+               }
+               acc.registrationYears[year].total++;
+               if (tenant) {
+                   acc.registrationYears[year].active++;
+               } else {
+                   acc.registrationYears[year].inactive++;
+               }
+           }
+       }
 
-                // Статистика по орендарях
-                if (tenant) {
-                    if (!acc.tenants[tenant]) {
-                        acc.tenants[tenant] = {
-                            count: 0,
-                            area: 0
-                        };
-                    }
-                    acc.tenants[tenant].count++;
-                    acc.tenants[tenant].area += area;
-                }
+       // Статистика по орендарях
+       if (tenant) {
+           if (!acc.tenants[tenant]) {
+               acc.tenants[tenant] = {
+                   count: 0,
+                   area: 0
+               };
+           }
+           acc.tenants[tenant].count++;
+           acc.tenants[tenant].area += area;
+       }
 
-                // Статистика по власниках
-                if (owner) {
-                    if (!acc.owners[owner]) {
-                        acc.owners[owner] = {
-                            count: 0,
-                            area: 0
-                        };
-                    }
-                    acc.owners[owner].count++;
-                    acc.owners[owner].area += area;
-                }
+       // Статистика по власниках
+       if (owner) {
+           if (!acc.owners[owner]) {
+               acc.owners[owner] = {
+                   count: 0,
+                   area: 0
+               };
+           }
+           acc.owners[owner].count++;
+           acc.owners[owner].area += area;
+       }
 
-                // Статистика по роках завершення
-                if (tenant && expiryYear) {
-                    const year = parseInt(expiryYear);
-                    if (!isNaN(year)) {
-                        if (!acc.expiryYears[year]) {
-                            acc.expiryYears[year] = {
-                                count: 0,
-                                area: 0,
-                                tenants: {}
-                            };
-                        }
-                        if (!acc.expiryYears[year].tenants[tenant]) {
-                            acc.expiryYears[year].tenants[tenant] = {
-                                count: 0,
-                                area: 0
-                            };
-                        }
-                        acc.expiryYears[year].count++;
-                        acc.expiryYears[year].area += area;
-                        acc.expiryYears[year].tenants[tenant].count++;
-                        acc.expiryYears[year].tenants[tenant].area += area;
-                    }
-                }
+       // Статистика по роках завершення
+       if (tenant && expiryYear) {
+           const year = parseInt(expiryYear);
+           if (!isNaN(year)) {
+               if (!acc.expiryYears[year]) {
+                   acc.expiryYears[year] = {
+                       count: 0,
+                       area: 0,
+                       tenants: {}
+                   };
+               }
+               if (!acc.expiryYears[year].tenants[tenant]) {
+                   acc.expiryYears[year].tenants[tenant] = {
+                       count: 0,
+                       area: 0
+                   };
+               }
+               acc.expiryYears[year].count++;
+               acc.expiryYears[year].area += area;
+               acc.expiryYears[year].tenants[tenant].count++;
+               acc.expiryYears[year].tenants[tenant].area += area;
+           }
+       }
 
-                return acc;
-            }, {
-                totalArea: 0,
-                totalParcels: 0,
-                freeParcels: 0,
-                freeArea: 0,
-                tenants: {},
-                owners: {},
-                expiryYears: {},
-                registrationYears: {}
-            });
+       return acc;
+   }, {
+       totalArea: 0,
+       totalParcels: 0,
+       freeParcels: 0,
+       freeArea: 0,
+       tenants: {},
+       owners: {},
+       expiryYears: {},
+       registrationYears: {}
+   });
 
-            stats.uniqueOwnersCount = uniqueOwners.size;
-            updateUI(stats);
-        }
+   stats.uniqueOwnersCount = uniqueOwners.size;
+   updateUI(stats);
+}
 
         function updateUI(stats) {
             document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
