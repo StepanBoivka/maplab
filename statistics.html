@@ -470,43 +470,46 @@
                 }
 
                 // Оновлена статистика реєстрації договорів
-                if (registrationDate) {
-                    let year;
-                    if (registrationDate.includes('.')) {
-                        year = parseInt(registrationDate.split('.')[2]);
-                    } else if (registrationDate.includes('/')) {
-                        year = parseInt(registrationDate.split('/')[2]);
-                    } else if (registrationDate.length === 4) {
-                        year = parseInt(registrationDate);
-                    } else {
-                        const match = registrationDate.match(/\d{4}/);
-                        if (match) {
-                            year = parseInt(match[0]);
-                        }
-                    }
+                // В функції processData:
+if (registrationDate) {
+    let year;
+    if (registrationDate.includes('.')) {
+        year = parseInt(registrationDate.split('.')[2]);
+    } else if (registrationDate.includes('/')) {
+        year = parseInt(registrationDate.split('/')[2]);
+    } else if (registrationDate.length === 4) {
+        year = parseInt(registrationDate);
+    } else {
+        const match = registrationDate.match(/\d{4}/);
+        if (match) {
+            year = parseInt(match[0]);
+        }
+    }
 
-                    if (!isNaN(year) && year > 1990 && year <= new Date().getFullYear()) {
-                        if (!acc.registrationYears[year]) {
-                            acc.registrationYears[year] = {
-                                total: 0,
-                                totalArea: 0,
-                                active: 0,
-                                activeArea: 0,
-                                inactive: 0,
-                                inactiveArea: 0
-                            };
-                        }
-                        acc.registrationYears[year].total++;
-                        acc.registrationYears[year].totalArea += area;
-                        if (tenant) {
-                            acc.registrationYears[year].active++;
-                            acc.registrationYears[year].activeArea += area;
-                        } else {
-                            acc.registrationYears[year].inactive++;
-                            acc.registrationYears[year].inactiveArea += area;
-                        }
-                    }
-                }
+    if (!isNaN(year) && year > 1990 && year <= new Date().getFullYear()) {
+        if (!acc.registrationYears[year]) {
+            acc.registrationYears[year] = {
+                total: 0,
+                totalArea: 0,
+                active: 0,
+                activeArea: 0,
+                inactive: 0,
+                inactiveArea: 0
+            };
+        }
+        acc.registrationYears[year].total++;
+        acc.registrationYears[year].totalArea += area;
+
+        // Простий критерій активності - наявність орендаря в полі "Орендар"
+        if (tenant) {
+            acc.registrationYears[year].active++;
+            acc.registrationYears[year].activeArea += area;
+        } else {
+            acc.registrationYears[year].inactive++;
+            acc.registrationYears[year].inactiveArea += area;
+        }
+    }
+}
 
                 // Статистика по орендарях
                 if (tenant) {
