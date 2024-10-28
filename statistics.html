@@ -6,6 +6,10 @@
     <title>Статистика земельних ділянок</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.7.2/Recharts.min.js"></script>
+
     <style>
         .stats-card {
             background: white;
@@ -283,6 +287,11 @@
         </div>
     </div>
 </div>
+        <!-- Графік реєстрації договорів -->
+<div class="stats-card mb-4">
+    <h3 class="table-title">Статистика реєстрації договорів по роках</h3>
+    <div id="registrationChart"></div>
+</div>
 
     <script>
         // Отримуємо параметри з URL
@@ -369,216 +378,244 @@
         }
 
         function processData(data) {
-            if (!data.features || !Array.isArray(data.features)) {
-                console.error('Некоректний формат даних');
-                return;
-            }
+    if (!data.features || !Array.isArray(data.features)) {
+        console.error('Некоректний формат даних');
+        return;
+    }
 
-            const features = data.features;
-            const uniqueOwners = new Set();
-            
-            const stats = features.reduce((acc, feature) => {
-                const area = parseFloat(feature.properties['Площа розрахована'] || 0);
-                const tenant = feature.properties['Орендар'];
-                const owner = feature.properties['Власник'];
-                const expiryYear = feature.properties['Рік завершення'];
+    const features = data.features;
+    const uniqueOwners = new Set();
+    const registrationYears = {};
+    
+    const stats = features.reduce((acc, feature) => {
+        const area = parseFloat(feature.properties['Площа розрахована'] || 0);
+        const tenant = feature.properties['Орендар'];
+        const owner = feature.properties['Власник'];
+        const expiryYear = feature.properties['Рік завершення'];
+        const registrationDate = feature.properties['Дата реєстрації'];
 
-                // Загальна статистика
-                acc.totalArea += area;
-                acc.totalParcels++;
-                if (!tenant) {
-                    acc.freeParcels++;
-                    acc.freeArea += area;
-                }
-
-                if (owner && owner.trim() !== '') {
-                    uniqueOwners.add(owner);
-                }
-
-                // Статистика по орендарях
-                if (tenant) {
-                    if (!acc.tenants[tenant]) {
-                        acc.tenants[tenant] = {
-                            count: 0,
-                            area: 0
-                        };
-                    }
-                    acc.tenants[tenant].count++;
-                    acc.tenants[tenant].area += area;
-                }
-
-                // Статистика по власниках
-                if (owner) {
-                    if (!acc.owners[owner]) {
-                        acc.owners[owner] = {
-                            count: 0,
-                            area: 0
-                        };
-                    }
-                    acc.owners[owner].count++;
-                    acc.owners[owner].area += area;
-                }
-
-                // Статистика по роках завершення
-                if (tenant && expiryYear) {
-                    const year = parseInt(expiryYear);
-                    if (!isNaN(year)) {
-                        if (!acc.expiryYears[year]) {
-                            acc.expiryYears[year] = {
-                                count: 0,
-                                area: 0,
-                                tenants: {}
-                            };
-                        }
-                        if (!acc.expiryYears[year].tenants[tenant]) {
-                            acc.expiryYears[year].tenants[tenant] = {
-                                count: 0,
-                                area: 0
-                            };
-                        }
-                        acc.expiryYears[year].count++;
-                        acc.expiryYears[year].area += area;
-                        acc.expiryYears[year].tenants[tenant].count++;
-                        acc.expiryYears[year].tenants[tenant].area += area;
-                    }
-                }
-
-                return acc;
-            }, {
-                totalArea: 0,
-                totalParcels: 0,
-                freeParcels: 0,
-                freeArea: 0,
-                tenants: {},
-                owners: {},
-                expiryYears: {}
-            });
-
-            stats.uniqueOwnersCount = uniqueOwners.size;
-            updateUI(stats);
+        // Загальна статистика
+        acc.totalArea += area;
+        acc.totalParcels++;
+        if (!tenant) {
+            acc.freeParcels++;
+            acc.freeArea += area;
         }
+
+        if (owner && owner.trim() !== '') {
+            uniqueOwners.add(owner);
+        }
+
+        // Статистика реєстрації договорів
+        if (registrationDate && tenant) {
+            const year = new Date(registrationDate).getFullYear();
+            if (!isNaN(year)) {
+                if (!acc.registrationYears[year]) {
+                    acc.registrationYears[year] = 0;
+                }
+                acc.registrationYears[year]++;
+            }
+        }
+
+        // Статистика по орендарях
+        if (tenant) {
+            if (!acc.tenants[tenant]) {
+                acc.tenants[tenant] = {
+                    count: 0,
+                    area: 0
+                };
+            }
+            acc.tenants[tenant].count++;
+            acc.tenants[tenant].area += area;
+        }
+
+        // Статистика по власниках
+        if (owner) {
+            if (!acc.owners[owner]) {
+                acc.owners[owner] = {
+                    count: 0,
+                    area: 0
+                };
+            }
+            acc.owners[owner].count++;
+            acc.owners[owner].area += area;
+        }
+
+        // Статистика по роках завершення
+        if (tenant && expiryYear) {
+            const year = parseInt(expiryYear);
+            if (!isNaN(year)) {
+                if (!acc.expiryYears[year]) {
+                    acc.expiryYears[year] = {
+                        count: 0,
+                        area: 0,
+                        tenants: {}
+                    };
+                }
+                if (!acc.expiryYears[year].tenants[tenant]) {
+                    acc.expiryYears[year].tenants[tenant] = {
+                        count: 0,
+                        area: 0
+                    };
+                }
+                acc.expiryYears[year].count++;
+                acc.expiryYears[year].area += area;
+                acc.expiryYears[year].tenants[tenant].count++;
+                acc.expiryYears[year].tenants[tenant].area += area;
+            }
+        }
+
+        return acc;
+    }, {
+        totalArea: 0,
+        totalParcels: 0,
+        freeParcels: 0,
+        freeArea: 0,
+        tenants: {},
+        owners: {},
+        expiryYears: {},
+        registrationYears: {}
+    });
+
+    stats.uniqueOwnersCount = uniqueOwners.size;
+    updateUI(stats);
+}
 
         function updateUI(stats) {
-            document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
-            document.getElementById('totalParcels').textContent = stats.totalParcels;
-            document.getElementById('freeParcels').textContent = stats.freeParcels;
-            document.getElementById('freeArea').textContent = `${stats.freeArea.toFixed(2)} га`;
-            document.getElementById('tenantsCount').textContent = Object.keys(stats.tenants).length;
-            document.getElementById('ownersCount').textContent = stats.uniqueOwnersCount;
+    // Оновлення основних статистичних показників
+    document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
+    document.getElementById('totalParcels').textContent = stats.totalParcels;
+    document.getElementById('freeParcels').textContent = stats.freeParcels;
+    document.getElementById('freeArea').textContent = `${stats.freeArea.toFixed(2)} га`;
+    document.getElementById('tenantsCount').textContent = Object.keys(stats.tenants).length;
+    document.getElementById('ownersCount').textContent = stats.uniqueOwnersCount;
 
-            updateDetailsTable(stats.tenants, 'detailsTableBody', stats.totalArea);
-            updateDetailsTable(stats.owners, 'ownersTableBody');
-            updateMatrixTable(stats.expiryYears, stats.tenants);
-        }
+    // Оновлення таблиць з деталями
+    updateDetailsTable(stats.tenants, 'detailsTableBody', stats.totalArea);
+    updateDetailsTable(stats.owners, 'ownersTableBody');
+    updateMatrixTable(stats.expiryYears, stats.tenants);
 
-        function updateDetailsTable(data, tableId, totalArea = 0) {
-            const tbody = document.getElementById(tableId);
-            tbody.innerHTML = '';
+    // Підготовка даних для графіка реєстрації
+    const chartData = Object.entries(stats.registrationYears)
+        .map(([year, count]) => ({
+            year: parseInt(year),
+            count: count
+        }))
+        .sort((a, b) => a.year - b.year);
+    
+    // Рендер графіка реєстрації
+    const root = ReactDOM.createRoot(document.getElementById('registrationChart'));
+    root.render(React.createElement(RegistrationYearChart, { data: chartData }));
+}
 
-            Object.entries(data)
-                .filter(([_, data]) => {
-                    if (tableId === 'ownersTableBody') {
-                        return data.count > 5;
-                    }
-                    return true;
-                })
-                .sort((a, b) => b[1].area - a[1].area)
-                .forEach(([name, data]) => {
-                    const row = document.createElement('tr');
-                    const avgArea = data.area / data.count;
-                    const percentage = tableId === 'detailsTableBody'
-                        ? ((data.area / totalArea) * 100).toFixed(2)
-                        : null;
-                    
-                    if (tableId === 'detailsTableBody') {
-                        row.innerHTML = `
-                            <td>${name}</td>
-                            <td class="text-right">${data.count}</td>
-                            <td class="text-right">${data.area.toFixed(2)}</td>
-                            <td class="text-right relative">
-                                <div class="percentage-bar" style="width: ${percentage}%"></div>
-                                <span class="percentage-text">${percentage}%</span>
-                            </td>
-                            <td class="text-right">${avgArea.toFixed(2)}</td>
-                        `;
-                    } else {
-                        row.innerHTML = `
-                            <td>${name}</td>
-                            <td class="text-right">${data.count}</td>
-                            <td class="text-right">${data.area.toFixed(2)}</td>
-                            <td class="text-right">${avgArea.toFixed(2)}</td>
-                        `;
-                    }
-                    tbody.appendChild(row);
-                });
-        }
+function updateDetailsTable(data, tableId, totalArea = 0) {
+    const tbody = document.getElementById(tableId);
+    tbody.innerHTML = '';
 
-        function updateMatrixTable(expiryYears, tenants) {
-            const years = Object.keys(expiryYears).sort((a, b) => a - b);
-            const currentYear = new Date().getFullYear();
+    Object.entries(data)
+        .filter(([_, data]) => {
+            if (tableId === 'ownersTableBody') {
+                return data.count > 5;
+            }
+            return true;
+        })
+        .sort((a, b) => b[1].area - a[1].area)
+        .forEach(([name, data]) => {
+            const row = document.createElement('tr');
+            const avgArea = data.area / data.count;
+            const percentage = tableId === 'detailsTableBody'
+                ? ((data.area / totalArea) * 100).toFixed(2)
+                : null;
             
-            const thead = document.querySelector('.matrix-table thead tr');
-            thead.innerHTML = '<th class="text-left sticky-col">Орендар</th>';
-            years.forEach(year => {
-                let yearClass = 'year-future';
-                if (parseInt(year) < currentYear) {
-                    yearClass = 'year-expired';
-                } else if (parseInt(year) === currentYear) {
-                    yearClass = 'year-current';
-                }
-                thead.innerHTML += `<th class="text-right ${yearClass}">${year}</th>`;
-            });
-
-            const tbody = document.getElementById('matrixTableBody');
-            tbody.innerHTML = '';
-
-            const yearTotals = {};
-            years.forEach(year => {
-                yearTotals[year] = 0;
-            });
-
-            Object.entries(tenants)
-                .sort((a, b) => b[1].area - a[1].area)
-                .forEach(([tenant, tenantData]) => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `<td class="text-left sticky-col font-medium">${tenant}</td>`;
-                    
-                    years.forEach(year => {
-                        const areaForYear = expiryYears[year]?.tenants?.[tenant]?.area || 0;
-                        yearTotals[year] += areaForYear;
-                        
-                        const cell = document.createElement('td');
-                        cell.className = 'text-right';
-                        
-                        if (areaForYear > 0) {
-                            cell.innerHTML = areaForYear.toFixed(1);
-                            cell.style.backgroundColor = `rgba(255, 165, 0, ${areaForYear / tenantData.area * 0.5})`;
-                            cell.style.color = 'black';
-                        } else {
-                            cell.innerHTML = '-';
-                        }
-                        
-                        row.appendChild(cell);
-                    });
-                    
-                    tbody.appendChild(row);
-                });
-
-            const totalRow = document.createElement('tr');
-            totalRow.className = 'matrix-total-row';
-            totalRow.innerHTML = `<td class="text-left sticky-col border-t-2">Всього</td>`;
-            
-            years.forEach(year => {
-                const total = yearTotals[year];
-                totalRow.innerHTML += `
-                    <td class="text-right border-t-2${total > 0 ? ' bg-orange-50' : ''}">${
-                        total > 0 ? total.toFixed(1) : '-'
-                    }</td>
+            if (tableId === 'detailsTableBody') {
+                row.innerHTML = `
+                    <td>${name}</td>
+                    <td class="text-right">${data.count}</td>
+                    <td class="text-right">${data.area.toFixed(2)}</td>
+                    <td class="text-right relative">
+                        <div class="percentage-bar" style="width: ${percentage}%"></div>
+                        <span class="percentage-text">${percentage}%</span>
+                    </td>
+                    <td class="text-right">${avgArea.toFixed(2)}</td>
                 `;
+            } else {
+                row.innerHTML = `
+                    <td>${name}</td>
+                    <td class="text-right">${data.count}</td>
+                    <td class="text-right">${data.area.toFixed(2)}</td>
+                    <td class="text-right">${avgArea.toFixed(2)}</td>
+                `;
+            }
+            tbody.appendChild(row);
+        });
+}
+
+function updateMatrixTable(expiryYears, tenants) {
+    const years = Object.keys(expiryYears).sort((a, b) => a - b);
+    const currentYear = new Date().getFullYear();
+    
+    const thead = document.querySelector('.matrix-table thead tr');
+    thead.innerHTML = '<th class="text-left sticky-col">Орендар</th>';
+    years.forEach(year => {
+        let yearClass = 'year-future';
+        if (parseInt(year) < currentYear) {
+            yearClass = 'year-expired';
+        } else if (parseInt(year) === currentYear) {
+            yearClass = 'year-current';
+        }
+        thead.innerHTML += `<th class="text-right ${yearClass}">${year}</th>`;
+    });
+
+    const tbody = document.getElementById('matrixTableBody');
+    tbody.innerHTML = '';
+
+    const yearTotals = {};
+    years.forEach(year => {
+        yearTotals[year] = 0;
+    });
+
+    Object.entries(tenants)
+        .sort((a, b) => b[1].area - a[1].area)
+        .forEach(([tenant, tenantData]) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td class="text-left sticky-col font-medium">${tenant}</td>`;
+            
+            years.forEach(year => {
+                const areaForYear = expiryYears[year]?.tenants?.[tenant]?.area || 0;
+                yearTotals[year] += areaForYear;
+                
+                const cell = document.createElement('td');
+                cell.className = 'text-right';
+                
+                if (areaForYear > 0) {
+                    cell.innerHTML = areaForYear.toFixed(1);
+                    cell.style.backgroundColor = `rgba(255, 165, 0, ${areaForYear / tenantData.area * 0.5})`;
+                    cell.style.color = 'black';
+                } else {
+                    cell.innerHTML = '-';
+                }
+                
+                row.appendChild(cell);
             });
             
-            tbody.appendChild(totalRow);
-        }
+            tbody.appendChild(row);
+        });
+
+    const totalRow = document.createElement('tr');
+    totalRow.className = 'matrix-total-row';
+    totalRow.innerHTML = `<td class="text-left sticky-col border-t-2">Всього</td>`;
+    
+    years.forEach(year => {
+        const total = yearTotals[year];
+        totalRow.innerHTML += `
+            <td class="text-right border-t-2${total > 0 ? ' bg-orange-50' : ''}">${
+                total > 0 ? total.toFixed(1) : '-'
+            }</td>
+        `;
+    });
+    
+    tbody.appendChild(totalRow);
+}
 
         document.addEventListener('DOMContentLoaded', loadAndProcessData);
     </script>
