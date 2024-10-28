@@ -474,16 +474,37 @@
                 }
 
                 // Статистика реєстрації договорів
-                if (registrationDate && tenant) {
-                    const year = new Date(registrationDate).getFullYear();
-                    if (!isNaN(year)) {
-                        if (!acc.registrationYears[year]) {
-                            acc.registrationYears[year] = 0;
-                        }
-                        acc.registrationYears[year]++;
-                    }
-                }
+if (registrationDate && tenant) {
+    // Виводимо в консоль для перевірки формату
+    console.log('Raw registration date:', registrationDate);
+    
+    let year;
+    // Перевіряємо різні можливі формати
+    if (registrationDate.includes('.')) {
+        // Якщо дата у форматі DD.MM.YYYY
+        year = parseInt(registrationDate.split('.')[2]);
+    } else if (registrationDate.includes('/')) {
+        // Якщо дата у форматі DD/MM/YYYY
+        year = parseInt(registrationDate.split('/')[2]);
+    } else if (registrationDate.length === 4) {
+        // Якщо просто рік
+        year = parseInt(registrationDate);
+    } else {
+        // Якщо інший формат, спробуємо витягнути рік
+        const match = registrationDate.match(/\d{4}/);
+        if (match) {
+            year = parseInt(match[0]);
+        }
+    }
 
+    if (!isNaN(year) && year > 1990 && year <= new Date().getFullYear()) {
+        if (!acc.registrationYears[year]) {
+            acc.registrationYears[year] = 0;
+        }
+        acc.registrationYears[year]++;
+        console.log(`Added contract to year ${year}`);
+    }
+}
                 // Статистика по орендарях
                 if (tenant) {
                     if (!acc.tenants[tenant]) {
