@@ -477,100 +477,114 @@
         }
 
         function updateFieldsContainer(fields) {
-            const container = document.getElementById('fieldsContainer');
-            container.innerHTML = '';
+    const container = document.getElementById('fieldsContainer');
+    container.innerHTML = '';
 
-            const sortedFields = Object.entries(fields)
-                .sort((a, b) => b[1].totalArea - a[1].totalArea);
+    const sortedFields = Object.entries(fields)
+        .sort((a, b) => b[1].totalArea - a[1].totalArea);
 
-            sortedFields.forEach(([fieldId, field]) => {
-                const fieldDiv = document.createElement('div');
-                fieldDiv.className = 'field-card';
+    sortedFields.forEach(([fieldId, field]) => {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'field-card';
 
-                const sortedTenants = Object.entries(field.tenants)
-                    .sort((a, b) => b[1] - a[1]);
+        // Сортуємо всіх орендарів за загальною площею (оброблювана + необроблювана)
+        const allTenants = new Set([
+            ...Object.keys(field.tenants),
+            ...Object.keys(field.uncultivatedAreas)
+        ]);
 
-                const tenantsHtml = sortedTenants
-                    .map(([tenant, area]) => {
-                        const tenantColor = stringToColor(tenant);
-                        const percentage = (area / field.totalArea * 100).toFixed(1);
-                        const uncultivatedArea = field.uncultivatedAreas?.[tenant] || 0;
-                        const uncultivatedPercentage = ((uncultivatedArea / field.totalArea) * 100).toFixed(1);
-                        
-                        return `
-                            <tr>
-                                <td>${tenant}</td>
-                                <td class="text-right">${area.toFixed(2)} га</td>
-                                <td class="text-right">${uncultivatedArea.toFixed(2)} га</td>
-                                <td class="text-right">${percentage}%</td>
-                                <td class="text-right relative" style="height: 24px;">
-                                    <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
-                                        <div style="width: ${percentage}%; background-color: ${tenantColor}; opacity: 0.3;"></div>
-                                        <div style="width: ${uncultivatedPercentage}%; background-color: ${tenantColor}; opacity: 0.1;"></div>
-                                    </div>
-                                    <span class="percentage-text">
-                                        ${percentage}% / ${uncultivatedPercentage}%
-                                    </span>
-                                </td>
-                            </tr>
-                        `;
-                    })
-                    .join('');
+        const tenantTotalAreas = {};
+        allTenants.forEach(tenant => {
+            const cultivatedArea = field.tenants[tenant] || 0;
+            const uncultivatedArea = field.uncultivatedAreas[tenant] || 0;
+            tenantTotalAreas[tenant] = cultivatedArea + uncultivatedArea;
+        });
 
-                fieldDiv.innerHTML = `
-                    <div class="field-header">
-                        <div class="font-bold">${field.name}</div>
-                    </div>
-                    <div class="field-content">
-                        <div class="field-info">
-                            <div class="field-stats">
-                                <div class="field-stat-item">
-                                    <div class="field-stat-label">Загальна площа</div>
-                                    <div class="field-stat-value">${field.totalArea.toFixed(2)} га</div>
-                                </div>
-                                <div class="field-stat-item">
-                                    <div class="field-stat-label">Площа що обробляється</div>
-                                    <div class="field-stat-value">${field.cultivatedArea.toFixed(2)} га</div>
-                                </div>
-                                <div class="field-stat-item">
-                                    <div class="field-stat-label">Площа що не обробляється</div>
-                                
-                                    <div class="field-stat-value">${field.uncultivatedArea.toFixed(2)} га</div>
-                                </div>
-                                <div class="field-stat-item">
-                                    <div class="field-stat-label">Кількість ділянок</div>
-                                    <div class="field-stat-value">${field.parcelsCount}</div>
-                                </div>
-                                <div class="field-stat-item">
-                                    <div class="field-stat-label">Кількість орендарів</div>
-                                    <div class="field-stat-value">${Object.keys(field.tenants).length}</div>
-                                </div>
+        const sortedTenants = [...allTenants]
+            .sort((a, b) => tenantTotalAreas[b] - tenantTotalAreas[a]);
+
+        const tenantsHtml = sortedTenants
+            .map(tenant => {
+                const tenantColor = stringToColor(tenant);
+                const cultivatedArea = field.tenants[tenant] || 0;
+                const uncultivatedArea = field.uncultivatedAreas[tenant] || 0;
+                const totalArea = cultivatedArea + uncultivatedArea;
+                const percentage = (cultivatedArea / field.totalArea * 100).toFixed(1);
+                const uncultivatedPercentage = (uncultivatedArea / field.totalArea * 100).toFixed(1);
+                
+                return `
+                    <tr>
+                        <td>${tenant}</td>
+                        <td class="text-right">${cultivatedArea.toFixed(2)} га</td>
+                        <td class="text-right">${uncultivatedArea.toFixed(2)} га</td>
+                        <td class="text-right">${percentage}%</td>
+                        <td class="text-right relative" style="height: 24px;">
+                            <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
+                                <div style="width: ${percentage}%; background-color: ${tenantColor}; opacity: 0.3;"></div>
+                                <div style="width: ${uncultivatedPercentage}%; background-color: ${tenantColor}; opacity: 0.1;"></div>
                             </div>
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Орендар</th>
-                                        <th class="text-right">Площа що обробляється (га)</th>
-                                        <th class="text-right">Площа що не обробляється (га)</th>
-                                        <th class="text-right">% від площі поля</th>
-                                        <th class="text-right" style="width: 30%;">Розподіл</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${tenantsHtml}
-                                </tbody>
-                            </table>
+                            <span class="percentage-text">
+                                ${percentage}% / ${uncultivatedPercentage}%
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            })
+            .join('');
+
+        fieldDiv.innerHTML = `
+            <div class="field-header">
+                <div class="font-bold">${field.name}</div>
+            </div>
+            <div class="field-content">
+                <div class="field-info">
+                    <div class="field-stats">
+                        <div class="field-stat-item">
+                            <div class="field-stat-label">Загальна площа</div>
+                            <div class="field-stat-value">${field.totalArea.toFixed(2)} га</div>
                         </div>
-                        <div>
-                            <div id="map-${fieldId}" class="field-map"></div>
+                        <div class="field-stat-item">
+                            <div class="field-stat-label">Площа що обробляється</div>
+                            <div class="field-stat-value">${field.cultivatedArea.toFixed(2)} га</div>
+                        </div>
+                        <div class="field-stat-item">
+                            <div class="field-stat-label">Площа що не обробляється</div>
+                            <div class="field-stat-value">${field.uncultivatedArea.toFixed(2)} га</div>
+                        </div>
+                        <div class="field-stat-item">
+                            <div class="field-stat-label">Кількість ділянок</div>
+                            <div class="field-stat-value">${field.parcelsCount}</div>
+                        </div>
+                        <div class="field-stat-item">
+                            <div class="field-stat-label">Кількість орендарів</div>
+                            <div class="field-stat-value">${allTenants.size}</div>
                         </div>
                     </div>
-                `;
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Орендар</th>
+                                <th class="text-right">Площа що обробляється (га)</th>
+                                <th class="text-right">Площа що не обробляється (га)</th>
+                                <th class="text-right">% від площі поля</th>
+                                <th class="text-right" style="width: 30%;">Розподіл</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tenantsHtml}
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <div id="map-${fieldId}" class="field-map"></div>
+                </div>
+            </div>
+        `;
 
-                container.appendChild(fieldDiv);
-                initializeFieldMap(fieldId, field);
-            });
-        }
+        container.appendChild(fieldDiv);
+        initializeFieldMap(fieldId, field);
+    });
+}
 
         document.addEventListener('DOMContentLoaded', loadAndProcessData);
     </script>
