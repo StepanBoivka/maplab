@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Аналіз обробітку земель</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Додаємо Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-    <!-- Додаємо Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <style>
         .stats-card {
@@ -127,19 +125,23 @@
             padding: 8px;
             background: white;
             border-radius: 4px;
-            margin-bottom: 8px;
-            font-size: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
         }
         .map-legend-item {
             display: flex;
             align-items: center;
             margin: 4px 0;
+            font-size: 11px;
         }
         .legend-color {
             width: 16px;
             height: 16px;
             margin-right: 8px;
             border-radius: 2px;
+            border: 1px solid rgba(0,0,0,0.1);
         }
         @media (max-width: 1024px) {
             .field-content {
@@ -164,6 +166,18 @@
             .field-map {
                 height: 300px;
             }
+        }
+
+        /* Стилі для попапу Leaflet */
+        .leaflet-popup-content {
+            margin: 8px 12px;
+            font-family: inherit;
+        }
+        .leaflet-popup-content-wrapper {
+            border-radius: 4px;
+        }
+        .leaflet-popup-content strong {
+            color: #374151;
         }
     </style>
 </head>
@@ -234,6 +248,108 @@
     </div>
 
     <script>
+        function stringToColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            
+            const colors = [
+                '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+                '#FFEEAD', '#D4A5A5', '#9FA8DA', '#FFD93D',
+                '#6C5B7B', '#77DD77', '#836953', '#89B9AD'
+            ];
+            
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        function initializeFieldMap(fieldId, field) {
+            const map = L.map(`map-${fieldId}`);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Створюємо легенду для орендарів
+            const legendContent = document.createElement('div');
+            legendContent.className = 'map-legend';
+            
+            // Додаємо заголовок легенди
+            legendContent.innerHTML = '<div class="font-bold mb-2">Орендарі:</div>';
+            
+            // Створюємо унікальний список орендарів для цього поля
+            const tenants = new Set();
+            field.geometry.features.forEach(feature => {
+                if (feature.properties.tenant) {
+                    tenants.add(feature.properties.tenant);
+                }
+            });
+
+            // Додаємо елементи легенди для кожного орендаря
+            tenants.forEach(tenant => {
+                const color = stringToColor(tenant);
+                legendContent.innerHTML += `
+                    <div class="map-legend-item">
+                        <div class="legend-color" style="background-color: ${color};"></div>
+                        <div class="text-xs">${tenant}</div>
+                    </div>
+                `;
+            });
+
+            // Додаємо статуси обробки в легенду
+            legendContent.innerHTML += `
+                <div class="font-bold mt-2 mb-2">Статус обробки:</div>
+                <div class="map-legend-item">
+                    <div class="legend-color opacity-30" style="background-color: #10B981;"></div>
+                    <div class="text-xs">Обробляється</div>
+                </div>
+                <div class="map-legend-item">
+                    <div class="legend-color opacity-30" style="background-color: #EF4444;"></div>
+                    <div class="text-xs">Не обробляється</div>
+                </div>
+            `;
+
+            const legend = L.control({position: 'bottomright'});
+            legend.onAdd = function() {
+                return legendContent;
+            };
+            legend.addTo(map);
+
+            // Додаємо геометрію поля на карту
+            if (field.geometry) {
+                const fieldLayer = L.geoJSON(field.geometry, {
+                    style: function(feature) {
+                        const tenant = feature.properties.tenant;
+                        const status = feature.properties.status;
+                        const baseColor = tenant ? stringToColor(tenant) : '#808080';
+                        
+                        return {
+                            color: baseColor,
+                            weight: 1,
+                            opacity: 1,
+                            fillColor: baseColor,
+                            fillOpacity: status === 'Обробляється' ? 0.3 : 0.1,
+                            dashArray: status === 'Не обробляється' ? '3' : null
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        const status = feature.properties.status;
+                        const tenant = feature.properties.tenant || 'Не вказано';
+                        const area = feature.properties.area.toFixed(2);
+                        layer.bindPopup(`
+                            <div class="text-sm">
+                                <div><strong>Статус:</strong> ${status}</div>
+                                <div><strong>Орендар:</strong> ${tenant}</div>
+                                <div><strong>Площа:</strong> ${area} га</div>
+                            </div>
+                        `);
+                    }
+                }).addTo(map);
+                map.fitBounds(fieldLayer.getBounds());
+            }
+            
+            return map;
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         const selectedFile = urlParams.get('file');
         const id = urlParams.get('id');
@@ -246,7 +362,8 @@
             const opt = {
                 margin: 1,
                 filename: `Аналіз_обробітку_${councilName}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
+              
+                    image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { 
                     scale: 2,
                     useCORS: true,
@@ -293,7 +410,7 @@
             data.features.forEach(feature => {
                 const props = feature.properties;
                 const area = parseFloat(props['Площа частини'] || 0);
-                const status = props['Статус'];
+                const status = props['Статус'] || 'Не обробляється';
                 const tenant = props['Орендар'];
                 const fieldId = props['Номер поля'];
                 const fieldName = props['Назва поля'];
@@ -382,8 +499,7 @@
         }
 
         function updateUI(stats) {
-          
-        // Оновлення загальної статистики
+            // Оновлення загальної статистики
             document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
             document.getElementById('cultivatedArea').textContent = `${stats.cultivatedArea.toFixed(2)} га`;
             document.getElementById('uncultivatedArea').textContent = `${stats.uncultivatedArea.toFixed(2)} га`;
@@ -538,55 +654,13 @@
                             </table>
                         </div>
                         <div>
-                            <div class="map-legend">
-                                <div class="map-legend-item">
-                                    <div class="legend-color" style="background-color: #10B981;"></div>
-                                    <div>Обробляється</div>
-                                </div>
-                                <div class="map-legend-item">
-                                    <div class="legend-color" style="background-color: #EF4444;"></div>
-                                    <div>Не обробляється</div>
-                                </div>
-                            </div>
                             <div id="map-${fieldId}" class="field-map"></div>
                         </div>
                     </div>
                 `;
 
                 container.appendChild(fieldDiv);
-
-                // Ініціалізація карти для поля
-                const map = L.map(`map-${fieldId}`);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
-                }).addTo(map);
-
-                // Додаємо геометрію поля на карту
-                if (field.geometry) {
-                    const fieldLayer = L.geoJSON(field.geometry, {
-                        style: function(feature) {
-                            return {
-                                color: feature.properties.status === 'Обробляється' ? '#10B981' : '#EF4444',
-                                weight: 2,
-                                opacity: 1,
-                                fillOpacity: 0.3
-                            };
-                        },
-                        onEachFeature: function(feature, layer) {
-                            const status = feature.properties.status;
-                            const tenant = feature.properties.tenant;
-                            const area = feature.properties.area.toFixed(2);
-                            layer.bindPopup(`
-                                <div class="text-sm">
-                                    <div><strong>Статус:</strong> ${status}</div>
-                                    <div><strong>Орендар:</strong> ${tenant || 'Не вказано'}</div>
-                                    <div><strong>Площа:</strong> ${area} га</div>
-                                </div>
-                            `);
-                        }
-                    }).addTo(map);
-                    map.fitBounds(fieldLayer.getBounds());
-                }
+                initializeFieldMap(fieldId, field);
             });
         }
 
