@@ -206,275 +206,265 @@
             </div>
         </div>
     </div>
-
     <script>
-        function stringToColor(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            
-            const colors = [
-                "#E44754", "#1B9688", "#ff9947", "#FAC1FA", "#9BBFF8",
-                "#95F1FA", "#C6F8BD", "#F7FAB2", "#FFD7A6", "#FDABAB",
-                "#A569BD", "#FF5733", "#4A235A", "#7DCEA0", "#E74C3C",
-                "#F5B041", "#2471A3", "#AF7AC5", "#58D68D", "#5DADE2"
-            ];
-            
-            return colors[Math.abs(hash) % colors.length];
-        }
+       function stringToColor(str) {
+           let hash = 0;
+           for (let i = 0; i < str.length; i++) {
+               hash = str.charCodeAt(i) + ((hash << 5) - hash);
+           }
+           
+           const colors = [
+               "#E44754", "#1B9688", "#ff9947", "#FAC1FA", "#9BBFF8",
+               "#95F1FA", "#C6F8BD", "#F7FAB2", "#FFD7A6", "#FDABAB",
+               "#A569BD", "#FF5733", "#4A235A", "#7DCEA0", "#E74C3C",
+               "#F5B041", "#2471A3", "#AF7AC5", "#58D68D", "#5DADE2"
+           ];
+           
+           return colors[Math.abs(hash) % colors.length];
+       }
 
-        function initializeFieldMap(fieldId, field) {
-            const map = L.map(`map-${fieldId}`);
-            L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-                attribution: '&copy; <a href="https://www.google.com/maps">Google</a>'
-            }).addTo(map);
+       function initializeFieldMap(fieldId, field) {
+           const map = L.map(`map-${fieldId}`);
+           L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+               attribution: '&copy; <a href="https://www.google.com/maps">Google</a>'
+           }).addTo(map);
 
-            if (field.geometry) {
-                const fieldLayer = L.geoJSON(field.geometry, {
-                    style: function(feature) {
-                        const tenant = feature.properties.tenant;
-                        const status = feature.properties.status;
-                        const baseColor = tenant ? stringToColor(tenant) : '#808080';
-                        
-                        return {
-                            color: baseColor,
-                            weight: 1,
-                            opacity: 1,
-                            fillColor: baseColor,
-                            fillOpacity: status === 'Обробляється' ? 0.3 : 0.1,
-                            dashArray: status === 'Не обробляється' ? '3' : null
-                        };
-                    },
-                    onEachFeature: function(feature, layer) {
-                        const status = feature.properties.status;
-                        const tenant = feature.properties.tenant || 'Не вказано';
-                        const area = feature.properties.area.toFixed(2);
-                        layer.bindPopup(`
-                            <div class="text-sm">
-                                <div><strong>Статус:</strong> ${status}</div>
-                                <div><strong>Орендар:</strong> ${tenant}</div>
-                                <div><strong>Площа:</strong> ${area} га</div>
-                            </div>
-                        `);
-                    }
-                }).addTo(map);
-                map.fitBounds(fieldLayer.getBounds());
-            }
-            return map;
-        }
+           if (field.geometry) {
+               const fieldLayer = L.geoJSON(field.geometry, {
+                   style: function(feature) {
+                       const tenant = feature.properties.tenant;
+                       const status = feature.properties.status;
+                       const baseColor = tenant ? stringToColor(tenant) : '#808080';
+                       
+                       return {
+                           color: baseColor,
+                           weight: 1,
+                           opacity: 1,
+                           fillColor: baseColor,
+                           fillOpacity: status === 'Обробляється' ? 0.3 : 0.1,
+                           dashArray: status === 'Не обробляється' ? '3' : null
+                       };
+                   },
+                   onEachFeature: function(feature, layer) {
+                       const status = feature.properties.status;
+                       const tenant = feature.properties.tenant || 'Не вказано';
+                       const area = feature.properties.area.toFixed(2);
+                       layer.bindPopup(`
+                           <div class="text-sm">
+                               <div><strong>Статус:</strong> ${status}</div>
+                               <div><strong>Орендар:</strong> ${tenant}</div>
+                               <div><strong>Площа:</strong> ${area} га</div>
+                           </div>
+                       `);
+                   }
+               }).addTo(map);
+               map.fitBounds(fieldLayer.getBounds());
+           }
+           return map;
+       }
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const selectedFile = urlParams.get('file');
-        const id = urlParams.get('id');
-        const councilName = selectedFile ? selectedFile.replace('.geojson', '') : 'Не вибрано';
-        document.getElementById('councilName').textContent = councilName;
+       const urlParams = new URLSearchParams(window.location.search);
+       const selectedFile = urlParams.get('file');
+       const id = urlParams.get('id');
+       const councilName = selectedFile ? selectedFile.replace('.geojson', '') : 'Не вибрано';
+       document.getElementById('councilName').textContent = councilName;
 
-        const dataPath = id ? `data/${id}/` : 'data/';
+       const dataPath = id ? `data/${id}/` : 'data/';
 
-        function generatePDF() {
-            const opt = {
-                margin: 1,
-                filename: `Аналіз_обробітку_${councilName}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true
-                },
-                jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
-            };
+       function generatePDF() {
+           const opt = {
+               margin: 1,
+               filename: `Аналіз_обробітку_${councilName}.pdf`,
+               image: { type: 'jpeg', quality: 0.98 },
+               html2canvas: { 
+                   scale: 2,
+                   useCORS: true,
+                   letterRendering: true
+               },
+               jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
+           };
 
-            html2pdf().set(opt).from(document.body).save();
-        }
+           html2pdf().set(opt).from(document.body).save();
+       }
 
-        async function loadAndProcessData() {
-            if (!selectedFile) {
-                console.error('Файл не вибрано');
-                return;
-            }
+       async function loadAndProcessData() {
+           if (!selectedFile) {
+               console.error('Файл не вибрано');
+               return;
+           }
 
-            try {
-                const response = await fetch(`${dataPath}${selectedFile}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                data.features = data.features.filter(f => f.properties.type === 'split');
-                processData(data);
-            } catch (error) {
-                console.error('Помилка завантаження даних:', error);
-                alert('Помилка завантаження даних. Спробуйте ще раз.');
-            }
-        }
+           try {
+               const response = await fetch(`${dataPath}${selectedFile}`);
+               if (!response.ok) {
+                   throw new Error(`HTTP error! status: ${response.status}`);
+               }
+               const data = await response.json();
+               data.features = data.features.filter(f => f.properties.type === 'split');
+               processData(data);
+           } catch (error) {
+               console.error('Помилка завантаження даних:', error);
+               alert('Помилка завантаження даних. Спробуйте ще раз.');
+           }
+       }
 
-        function processData(data) {
-            const stats = {
-                totalArea: 0,
-                cultivatedArea: 0,
-                uncultivatedArea: 0,
-                noFieldArea: 0,
-                tenants: {},
-                fields: {}
-            };
+       function processData(data) {
+           const stats = {
+               totalArea: 0,
+               cultivatedArea: 0,
+               uncultivatedArea: 0,
+               noFieldArea: 0,
+               tenants: {},
+               fields: {}
+           };
 
-            data.features.forEach(feature => {
-                const props = feature.properties;
-                const area = parseFloat(props['Площа частини'] || 0);
-                const status = props['Статус'] || 'Не обробляється';
-                const tenant = props['Орендар'];
-                const fieldId = props['Номер поля'];
-                const fieldName = props['Назва поля'];
+           data.features.forEach(feature => {
+               const props = feature.properties;
+               const area = parseFloat(props['Площа частини'] || 0);
+               const status = props['Статус'] || 'Не обробляється';
+               const tenant = props['Орендар'];
+               const fieldId = props['Номер поля'];
+               const fieldName = props['Назва поля'];
+               const fieldTotalArea = parseFloat(props['Площа поля'] || 0);
 
-                stats.totalArea += area;
+               stats.totalArea += area;
 
-                if (status === 'Обробляється') {
-                    stats.cultivatedArea += area;
-                } else if (status === 'Не обробляється') {
-                    stats.uncultivatedArea += area;
-                } else if (status === 'Відсутнє поле') {
-                    stats.noFieldArea += area;
-                }
+               if (status === 'Обробляється') {
+                   stats.cultivatedArea += area;
+               } else if (status === 'Не обробляється') {
+                   stats.uncultivatedArea += area;
+               } else if (status === 'Відсутнє поле') {
+                   stats.noFieldArea += area;
+               }
 
-                if (tenant) {
-                    if (!stats.tenants[tenant]) {
-                        stats.tenants[tenant] = {
-                            totalArea: 0,
-                            cultivatedArea: 0,
-                            uncultivatedArea: 0
-                        };
-                    }
-                    stats.tenants[tenant].totalArea += area;
-                    if (status === 'Обробляється') {
-                        stats.tenants[tenant].cultivatedArea += area;
-                    } else if (status === 'Не обробляється') {
-                        stats.tenants[tenant].uncultivatedArea += area;
-                    }
-                }
+               if (tenant) {
+                   if (!stats.tenants[tenant]) {
+                       stats.tenants[tenant] = {
+                           totalArea: 0,
+                           cultivatedArea: 0,
+                           uncultivatedArea: 0
+                       };
+                   }
+                   stats.tenants[tenant].totalArea += area;
+                   if (status === 'Обробляється') {
+                       stats.tenants[tenant].cultivatedArea += area;
+                   } else if (status === 'Не обробляється') {
+                       stats.tenants[tenant].uncultivatedArea += area;
+                   }
+               }
 
-                if (fieldId) {
-                    if (!stats.fields[fieldId]) {
-                        stats.fields[fieldId] = {
-                            name: fieldName || `Поле ${fieldId}`,
-                            totalArea: 0,
-                            cultivatedArea: 0,
-                            uncultivatedArea: 0,
-                            parcelsCount: 0,
-                            tenants: {},
-                            uncultivatedAreas: {},
-                            geometry: {
-                                type: 'FeatureCollection',
-                                features: []
-                                    }
-                        };
-                    }
-                    
-                    stats.fields[fieldId].totalArea += area;
-                    stats.fields[fieldId].parcelsCount++;
-                    
-                    stats.fields[fieldId].geometry.features.push({
-                        type: 'Feature',
-                        properties: {
-                            status: status,
-                            tenant: tenant,
-                            area: area
-                        },
-                        geometry: feature.geometry
-                    });
-                    
-                    if (status === 'Обробляється') {
-                        stats.fields[fieldId].cultivatedArea += area;
-                        if (tenant) {
-                            if (!stats.fields[fieldId].tenants[tenant]) {
-                                stats.fields[fieldId].tenants[tenant] = 0;
-                            }
-                            stats.fields[fieldId].tenants[tenant] += area;
-                        }
-                    } else if (status === 'Не обробляється') {
-                        stats.fields[fieldId].uncultivatedArea += area;
-                        if (tenant) {
-                            if (!stats.fields[fieldId].uncultivatedAreas[tenant]) {
-                                stats.fields[fieldId].uncultivatedAreas[tenant] = 0;
-                            }
-                            stats.fields[fieldId].uncultivatedAreas[tenant] += area;
-                        }
-                    }
-                }
-            });
+               if (fieldId) {
+                   if (!stats.fields[fieldId]) {
+                       stats.fields[fieldId] = {
+                           name: fieldName || `Поле ${fieldId}`,
+                           totalArea: fieldTotalArea,
+                           cultivatedArea: 0,
+                           uncultivatedArea: 0,
+                           parcelsCount: 0,
+                           tenants: {},
+                           uncultivatedAreas: {},
+                           geometry: {
+                               type: 'FeatureCollection',
+                               features: []
+                           }
+                       };
+                   }
+                   
+                   stats.fields[fieldId].parcelsCount++;
+                   
+                   stats.fields[fieldId].geometry.features.push({
+                       type: 'Feature',
+                       properties: {
+                           status: status,
+                           tenant: tenant,
+                           area: area
+                       },
+                       geometry: feature.geometry
+                   });
+                   
+                   if (status === 'Обробляється') {
+                       if (tenant) {
+                           if (!stats.fields[fieldId].tenants[tenant]) {
+                               stats.fields[fieldId].tenants[tenant] = 0;
+                           }
+                           stats.fields[fieldId].tenants[tenant] += area;
+                       }
+                   }
+               }
+           });
 
-            updateUI(stats);
-        }
+           updateUI(stats);
+       }
 
-        function updateUI(stats) {
-            document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
-            document.getElementById('cultivatedArea').textContent = `${stats.cultivatedArea.toFixed(2)} га`;
-            document.getElementById('uncultivatedArea').textContent = `${stats.uncultivatedArea.toFixed(2)} га`;
-            document.getElementById('noFieldArea').textContent = `${stats.noFieldArea.toFixed(2)} га`;
+       function updateUI(stats) {
+           document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
+           document.getElementById('cultivatedArea').textContent = `${stats.cultivatedArea.toFixed(2)} га`;
+           document.getElementById('uncultivatedArea').textContent = `${stats.uncultivatedArea.toFixed(2)} га`;
+           document.getElementById('noFieldArea').textContent = `${stats.noFieldArea.toFixed(2)} га`;
 
-            updateTenantsTable(stats.tenants);
-            updateFieldsContainer(stats.fields);
-        }
+           updateTenantsTable(stats.tenants);
+           updateFieldsContainer(stats.fields);
+       }
 
-        function updateTenantsTable(tenants) {
-            const tbody = document.getElementById('tenantsTableBody');
-            tbody.innerHTML = '';
+       function updateTenantsTable(tenants) {
+           const tbody = document.getElementById('tenantsTableBody');
+           tbody.innerHTML = '';
 
-            const sortedTenants = Object.entries(tenants)
-                .sort((a, b) => b[1].totalArea - a[1].totalArea);
+           const sortedTenants = Object.entries(tenants)
+               .sort((a, b) => b[1].totalArea - a[1].totalArea);
 
-            sortedTenants.forEach(([tenant, data]) => {
-                const tenantColor = stringToColor(tenant);
-                const cultivationPercentage = (data.cultivatedArea / data.totalArea * 100).toFixed(1);
-                const uncultivationPercentage = (data.uncultivatedArea / data.totalArea * 100).toFixed(1);
+           sortedTenants.forEach(([tenant, data]) => {
+               const tenantColor = stringToColor(tenant);
+               const cultivationPercentage = (data.cultivatedArea / data.totalArea * 100).toFixed(1);
+               const uncultivationPercentage = (data.uncultivatedArea / data.totalArea * 100).toFixed(1);
 
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${tenant}</td>
-                    <td class="text-right">${data.totalArea.toFixed(2)}</td>
-                    <td class="text-right">${data.cultivatedArea.toFixed(2)}</td>
-                    <td class="text-right">${data.uncultivatedArea.toFixed(2)}</td>
-                    <td class="text-right">${cultivationPercentage}%</td>
-                    <td class="text-right relative" style="height: 24px;">
-                        <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
-                            <div style="width: ${cultivationPercentage}%; background-color: ${tenantColor}; opacity: 0.3;"></div>
-                            <div style="width: ${uncultivationPercentage}%; background-color: ${tenantColor}; opacity: 0.1;"></div>
-                        </div>
-                        <span class="percentage-text">
-                            ${cultivationPercentage}% / ${uncultivationPercentage}%
-                        </span>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
+               const row = document.createElement('tr');
+               row.innerHTML = `
+                   <td>${tenant}</td>
+                   <td class="text-right">${data.totalArea.toFixed(2)}</td>
+                   <td class="text-right">${data.cultivatedArea.toFixed(2)}</td>
+                   <td class="text-right">${data.uncultivatedArea.toFixed(2)}</td>
+                   <td class="text-right">${cultivationPercentage}%</td>
+                   <td class="text-right relative" style="height: 24px;">
+                       <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
+                           <div style="width: ${cultivationPercentage}%; background-color: ${tenantColor}; opacity: 0.3;"></div>
+                           <div style="width: ${uncultivationPercentage}%; background-color: ${tenantColor}; opacity: 0.1;"></div>
+                       </div>
+                       <span class="percentage-text">
+                           ${cultivationPercentage}% / ${uncultivationPercentage}%
+                       </span>
+                   </td>
+               `;
+               tbody.appendChild(row);
+           });
 
-            const totalArea = sortedTenants.reduce((sum, [_, data]) => sum + data.totalArea, 0);
-            const totalCultivated = sortedTenants.reduce((sum, [_, data]) => sum + data.cultivatedArea, 0);
-            const totalUncultivated = sortedTenants.reduce((sum, [_, data]) => sum + data.uncultivatedArea, 0);
-            const totalCultivationPercentage = (totalCultivated / totalArea * 100).toFixed(1);
-            const totalUncultivationPercentage = (totalUncultivated / totalArea * 100).toFixed(1);
+           const totalArea = sortedTenants.reduce((sum, [_, data]) => sum + data.totalArea, 0);
+           const totalCultivated = sortedTenants.reduce((sum, [_, data]) => sum + data.cultivatedArea, 0);
+           const totalUncultivated = sortedTenants.reduce((sum, [_, data]) => sum + data.uncultivatedArea, 0);
+           const totalCultivationPercentage = (totalCultivated / totalArea * 100).toFixed(1);
+           const totalUncultivationPercentage = (totalUncultivated / totalArea * 100).toFixed(1);
 
-            const totalRow = document.createElement('tr');
-            totalRow.className = 'font-bold bg-gray-50';
-            totalRow.innerHTML = `
-                <td>Всього</td>
-                <td class="text-right">${totalArea.toFixed(2)}</td>
-                <td class="text-right">${totalCultivated.toFixed(2)}</td>
-                <td class="text-right">${totalUncultivated.toFixed(2)}</td>
-                <td class="text-right">${totalCultivationPercentage}%</td>
-                <td class="text-right relative" style="height: 24px;">
-                    <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
-                        <div style="width: ${totalCultivationPercentage}%; background-color: #10B981; opacity: 0.3;"></div>
-                        <div style="width: ${totalUncultivationPercentage}%; background-color: #EF4444; opacity: 0.3;"></div>
-                    </div>
-                    <span class="percentage-text">
-                        ${totalCultivationPercentage}% / ${totalUncultivationPercentage}%
-                    </span>
-                </td>
-            `;
-            tbody.appendChild(totalRow);
-        }
+           const totalRow = document.createElement('tr');
+           totalRow.className = 'font-bold bg-gray-50';
+           totalRow.innerHTML = `
+               <td>Всього</td>
+               <td class="text-right">${totalArea.toFixed(2)}</td>
+               <td class="text-right">${totalCultivated.toFixed(2)}</td>
+               <td class="text-right">${totalUncultivated.toFixed(2)}</td>
+               <td class="text-right">${totalCultivationPercentage}%</td>
+               <td class="text-right relative" style="height: 24px;">
+                   <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
+                       <div style="width: ${totalCultivationPercentage}%; background-color: #10B981; opacity: 0.3;"></div>
+                       <div style="width: ${totalUncultivationPercentage}%; background-color: #EF4444; opacity: 0.3;"></div>
+                   </div>
+                   <span class="percentage-text">
+                       ${totalCultivationPercentage}% / ${totalUncultivationPercentage}%
+                   </span>
+               </td>
+           `;
+           tbody.appendChild(totalRow);
+       }
 
-        function updateFieldsContainer(fields) {
+       function updateFieldsContainer(fields) {
    const container = document.getElementById('fieldsContainer');
    container.innerHTML = '';
 
@@ -492,6 +482,13 @@
            .filter(f => !f.properties.tenant && f.properties.status === 'Обробляється')
            .reduce((sum, f) => sum + f.properties.area, 0);
        let unauthorizedArea = totalFieldArea - rentedArea - unrentedArea;
+
+       console.log(`Поле ${fieldId}:`, {
+           totalFieldArea,
+           rentedArea,
+           unrentedArea,
+           unauthorizedArea
+       });
 
        // Sort tenants by area
        const sortedTenants = Object.entries(field.tenants)
@@ -516,7 +513,6 @@
            })
            .join('');
 
-       // Add unrented areas row if exists
        let finalTenantsHtml = tenantsHtml;
        if (unrentedArea > 0) {
            const percentage = (unrentedArea / field.totalArea * 100).toFixed(1);
@@ -544,72 +540,73 @@
                            <div class="flex items-center gap-2">
                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                               </svg>
-                               <div class="field-stat-label">Площа поля</div>
-                           </div>
-                           <div class="field-stat-value text-gray-900">${field.totalArea.toFixed(2)} га</div>
-                       </div>
-                       <div class="field-stat-item">
-                           <div class="flex items-center gap-2">
-                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                   <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                               </svg>
-                               <div class="field-stat-label">Площа оренди в обробітку</div>
-                           </div>
-                           <div class="field-stat-value text-green-600">${rentedArea.toFixed(2)} га</div>
-                       </div>
-                       <div class="field-stat-item">
-                           <div class="flex items-center gap-2">
-                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                   <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                               </svg>
-                               <div class="field-stat-label">Вільні від оренди в обробітку</div>
-                           </div>
-                           <div class="field-stat-value text-yellow-500">${unrentedArea.toFixed(2)} га</div>
-                       </div>
-                       <div class="field-stat-item">
-                           <div class="flex items-center gap-2">
-                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                   <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                               </svg>
-                               <div class="field-stat-label">Самовільний обробіток</div>
-                           </div>
-                           <div class="field-stat-value text-red-600">${unauthorizedArea.toFixed(2)} га</div>
-                       </div>
-                       <div class="field-stat-item">
-                           <div class="flex items-center gap-2">
-                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                   <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                               </svg>
-                               <div class="field-stat-label">Кількість орендарів</div>
-                           </div>
-                           <div class="field-stat-value">${Object.keys(field.tenants).length}</div>
-                       </div>
-                   </div>
-                   <table class="data-table">
-                       <thead>
-                           <tr>
-                               <th>Орендар</th>
-                               <th class="text-right">Площа оренди в обробітку (га)</th>
-                               <th class="text-right">% від площі поля</th>
-                               <th class="text-right" style="width: 30%;">Розподіл</th>
-                           </tr>
-                       </thead>
-                       <tbody>
-                           ${finalTenantsHtml}
-                       </tbody>
-                   </table>
-               </div>
-               <div>
-                   <div id="map-${fieldId}" class="field-map"></div>
-               </div>
-           </div>
-       `;
+                                   </svg>
+                                <div class="field-stat-label">Площа поля</div>
+                            </div>
+                            <div class="field-stat-value text-gray-900">${totalFieldArea.toFixed(2)} га</div>
+                        </div>
+                        <div class="field-stat-item">
+                            <div class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div class="field-stat-label">Площа оренди в обробітку</div>
+                            </div>
+                            <div class="field-stat-value text-green-600">${rentedArea.toFixed(2)} га</div>
+                        </div>
+                        <div class="field-stat-item">
+                            <div class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <div class="field-stat-label">Вільні від оренди в обробітку</div>
+                            </div>
+                            <div class="field-stat-value text-yellow-500">${unrentedArea.toFixed(2)} га</div>
+                        </div>
+                        <div class="field-stat-item">
+                            <div class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <div class="field-stat-label">Самовільний обробіток</div>
+                            </div>
+                            <div class="field-stat-value text-red-600">${unauthorizedArea.toFixed(2)} га</div>
+                        </div>
+                        <div class="field-stat-item">
+                            <div class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                <div class="field-stat-label">Кількість орендарів</div>
+                            </div>
+                            <div class="field-stat-value">${Object.keys(field.tenants).length}</div>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Орендар</th>
+                                <th class="text-right">Площа оренди в обробітку (га)</th>
+                                <th class="text-right">% від площі поля</th>
+                                <th class="text-right" style="width: 30%;">Розподіл</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${finalTenantsHtml}
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <div id="map-${fieldId}" class="field-map"></div>
+                </div>
+            </div>
+        `;
 
-       container.appendChild(fieldDiv);
-       initializeFieldMap(fieldId, field);
-   });
+        container.appendChild(fieldDiv);
+        initializeFieldMap(fieldId, field);
+    });
 }
+
         document.addEventListener('DOMContentLoaded', loadAndProcessData);
     </script>
 </body>
