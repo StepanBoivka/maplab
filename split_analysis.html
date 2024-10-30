@@ -136,6 +136,7 @@
                     <path d="M16 17H8"></path>
                     <path d="M10 9H8"></path>
                 </svg>
+                Зберегти PDF
             </button>
         </div>
 
@@ -185,7 +186,10 @@
             <div id="fieldsContainer" class="space-y-4">
                 <!-- Поля будуть додані через JavaScript -->
             </div>
-          <script>
+        </div>
+    </div>
+
+    <script>
         const urlParams = new URLSearchParams(window.location.search);
         const selectedFile = urlParams.get('file');
         const id = urlParams.get('id');
@@ -279,22 +283,38 @@
                 }
 
                 // Статистика по полях
-                if (fieldId && status === 'Обробляється') {
+                if (fieldId) {
                     if (!stats.fields[fieldId]) {
                         stats.fields[fieldId] = {
                             name: fieldName || `Поле ${fieldId}`,
                             totalArea: 0,
+                            cultivatedArea: 0,
+                            uncultivatedArea: 0,
                             parcelsCount: 0,
-                            tenants: {}
+                            tenants: {},
+                            uncultivatedAreas: {}
                         };
                     }
+                    
                     stats.fields[fieldId].totalArea += area;
                     stats.fields[fieldId].parcelsCount++;
-                    if (tenant) {
-                        if (!stats.fields[fieldId].tenants[tenant]) {
-                            stats.fields[fieldId].tenants[tenant] = 0;
+                    
+                    if (status === 'Обробляється') {
+                        stats.fields[fieldId].cultivatedArea += area;
+                        if (tenant) {
+                            if (!stats.fields[fieldId].tenants[tenant]) {
+                                stats.fields[fieldId].tenants[tenant] = 0;
+                            }
+                            stats.fields[fieldId].tenants[tenant] += area;
                         }
-                        stats.fields[fieldId].tenants[tenant] += area;
+                    } else if (status === 'Не обробляється') {
+                        stats.fields[fieldId].uncultivatedArea += area;
+                        if (tenant) {
+                            if (!stats.fields[fieldId].uncultivatedAreas[tenant]) {
+                                stats.fields[fieldId].uncultivatedAreas[tenant] = 0;
+                            }
+                            stats.fields[fieldId].uncultivatedAreas[tenant] += area;
+                        }
                     }
                 }
             });
@@ -334,7 +354,7 @@
                     <td class="text-right">${cultivationPercentage}%</td>
                     <td class="text-right relative" style="height: 24px;">
                         <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
-                            <div style="width: ${cultivationPercentage}%; background-color: #10B981; opacity: 0.3;"></div>
+                       <div style="width: ${cultivationPercentage}%; background-color: #10B981; opacity: 0.3;"></div>
                             <div style="width: ${uncultivationPercentage}%; background-color: #EF4444; opacity: 0.3;"></div>
                         </div>
                         <span class="percentage-text">
@@ -392,14 +412,23 @@
                 const tenantsHtml = sortedTenants
                     .map(([tenant, area]) => {
                         const percentage = (area / field.totalArea * 100).toFixed(1);
+                        const uncultivatedArea = field.uncultivatedAreas?.[tenant] || 0;
+                        const uncultivatedPercentage = ((uncultivatedArea / field.totalArea) * 100).toFixed(1);
+                        
                         return `
                             <tr>
                                 <td>${tenant}</td>
                                 <td class="text-right">${area.toFixed(2)} га</td>
+                                <td class="text-right">${uncultivatedArea.toFixed(2)} га</td>
                                 <td class="text-right">${percentage}%</td>
-                                <td class="text-right relative">
-                                    <div class="percentage-bar cultivated" style="width: ${percentage}%"></div>
-                                    <span class="percentage-text">${percentage}%</span>
+                                <td class="text-right relative" style="height: 24px;">
+                                    <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
+                                        <div style="width: ${percentage}%; background-color: #10B981; opacity: 0.3;"></div>
+                                        <div style="width: ${uncultivatedPercentage}%; background-color: #EF4444; opacity: 0.3;"></div>
+                                    </div>
+                                    <span class="percentage-text">
+                                        ${percentage}% / ${uncultivatedPercentage}%
+                                    </span>
                                 </td>
                             </tr>
                         `;
@@ -417,6 +446,14 @@
                                 <div class="field-stat-value">${field.totalArea.toFixed(2)} га</div>
                             </div>
                             <div class="field-stat-item">
+                                <div class="field-stat-label">Площа що обробляється</div>
+                                <div class="field-stat-value">${field.cultivatedArea.toFixed(2)} га</div>
+                            </div>
+                            <div class="field-stat-item">
+                                <div class="field-stat-label">Площа що не обробляється</div>
+                                <div class="field-stat-value">${field.uncultivatedArea.toFixed(2)} га</div>
+                            </div>
+                            <div class="field-stat-item">
                                 <div class="field-stat-label">Кількість ділянок</div>
                                 <div class="field-stat-value">${field.parcelsCount}</div>
                             </div>
@@ -429,7 +466,8 @@
                             <thead>
                                 <tr>
                                     <th>Орендар</th>
-                                    <th class="text-right">Площа (га)</th>
+                                    <th class="text-right">Площа що обробляється (га)</th>
+                                    <th class="text-right">Площа що не обробляється (га)</th>
                                     <th class="text-right">% від площі поля</th>
                                     <th class="text-right" style="width: 30%;">Розподіл</th>
                                 </tr>
@@ -449,6 +487,3 @@
     </script>
 </body>
 </html>
-        </div>
-    </div>
-
