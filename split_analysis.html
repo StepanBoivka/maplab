@@ -62,12 +62,6 @@
             opacity: 0.3;
             z-index: 0;
         }
-        .percentage-bar.cultivated {
-            background-color: #10B981;
-        }
-        .percentage-bar.uncultivated {
-            background-color: #EF4444;
-        }
         .percentage-text {
             position: relative;
             z-index: 1;
@@ -121,28 +115,6 @@
             border-radius: 4px;
             overflow: hidden;
         }
-        .map-legend {
-            padding: 8px;
-            background: white;
-            border-radius: 4px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            max-width: 300px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        .map-legend-item {
-            display: flex;
-            align-items: center;
-            margin: 4px 0;
-            font-size: 11px;
-        }
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            margin-right: 8px;
-            border-radius: 2px;
-            border: 1px solid rgba(0,0,0,0.1);
-        }
         @media (max-width: 1024px) {
             .field-content {
                 grid-template-columns: 1fr;
@@ -166,18 +138,6 @@
             .field-map {
                 height: 300px;
             }
-        }
-
-        /* Стилі для попапу Leaflet */
-        .leaflet-popup-content {
-            margin: 8px 12px;
-            font-family: inherit;
-        }
-        .leaflet-popup-content-wrapper {
-            border-radius: 4px;
-        }
-        .leaflet-popup-content strong {
-            color: #374151;
         }
     </style>
 </head>
@@ -248,6 +208,7 @@
     </div>
 
     <script>
+        <script>
         function stringToColor(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
@@ -268,51 +229,6 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
-
-            // Створюємо легенду для орендарів
-            const legendContent = document.createElement('div');
-            legendContent.className = 'map-legend';
-            
-            // Додаємо заголовок легенди
-            legendContent.innerHTML = '<div class="font-bold mb-2">Орендарі:</div>';
-            
-            // Створюємо унікальний список орендарів для цього поля
-            const tenants = new Set();
-            field.geometry.features.forEach(feature => {
-                if (feature.properties.tenant) {
-                    tenants.add(feature.properties.tenant);
-                }
-            });
-
-            // Додаємо елементи легенди для кожного орендаря
-            tenants.forEach(tenant => {
-                const color = stringToColor(tenant);
-                legendContent.innerHTML += `
-                    <div class="map-legend-item">
-                        <div class="legend-color" style="background-color: ${color};"></div>
-                        <div class="text-xs">${tenant}</div>
-                    </div>
-                `;
-            });
-
-            // Додаємо статуси обробки в легенду
-            legendContent.innerHTML += `
-                <div class="font-bold mt-2 mb-2">Статус обробки:</div>
-                <div class="map-legend-item">
-                    <div class="legend-color opacity-30" style="background-color: #10B981;"></div>
-                    <div class="text-xs">Обробляється</div>
-                </div>
-                <div class="map-legend-item">
-                    <div class="legend-color opacity-30" style="background-color: #EF4444;"></div>
-                    <div class="text-xs">Не обробляється</div>
-                </div>
-            `;
-
-            const legend = L.control({position: 'bottomright'});
-            legend.onAdd = function() {
-                return legendContent;
-            };
-            legend.addTo(map);
 
             // Додаємо геометрію поля на карту
             if (field.geometry) {
@@ -346,7 +262,6 @@
                 }).addTo(map);
                 map.fitBounds(fieldLayer.getBounds());
             }
-            
             return map;
         }
 
@@ -362,8 +277,7 @@
             const opt = {
                 margin: 1,
                 filename: `Аналіз_обробітку_${councilName}.pdf`,
-              
-                    image: { type: 'jpeg', quality: 0.98 },
+                image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { 
                     scale: 2,
                     useCORS: true,
@@ -387,7 +301,6 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
-                // Фільтруємо тільки розділені ділянки
                 data.features = data.features.filter(f => f.properties.type === 'split');
                 processData(data);
             } catch (error) {
@@ -406,7 +319,6 @@
                 fields: {}
             };
 
-            // Обробка даних
             data.features.forEach(feature => {
                 const props = feature.properties;
                 const area = parseFloat(props['Площа частини'] || 0);
@@ -415,7 +327,6 @@
                 const fieldId = props['Номер поля'];
                 const fieldName = props['Назва поля'];
 
-                // Загальна статистика
                 stats.totalArea += area;
 
                 if (status === 'Обробляється') {
@@ -426,7 +337,6 @@
                     stats.noFieldArea += area;
                 }
 
-                // Статистика по орендарях
                 if (tenant) {
                     if (!stats.tenants[tenant]) {
                         stats.tenants[tenant] = {
@@ -443,7 +353,6 @@
                     }
                 }
 
-                // Статистика по полях
                 if (fieldId) {
                     if (!stats.fields[fieldId]) {
                         stats.fields[fieldId] = {
@@ -464,7 +373,6 @@
                     stats.fields[fieldId].totalArea += area;
                     stats.fields[fieldId].parcelsCount++;
                     
-                    // Додаємо геометрію ділянки до колекції поля
                     stats.fields[fieldId].geometry.features.push({
                         type: 'Feature',
                         properties: {
@@ -499,7 +407,6 @@
         }
 
         function updateUI(stats) {
-            // Оновлення загальної статистики
             document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
             document.getElementById('cultivatedArea').textContent = `${stats.cultivatedArea.toFixed(2)} га`;
             document.getElementById('uncultivatedArea').textContent = `${stats.uncultivatedArea.toFixed(2)} га`;
@@ -513,11 +420,11 @@
             const tbody = document.getElementById('tenantsTableBody');
             tbody.innerHTML = '';
 
-            // Сортування орендарів за загальною площею
             const sortedTenants = Object.entries(tenants)
                 .sort((a, b) => b[1].totalArea - a[1].totalArea);
 
             sortedTenants.forEach(([tenant, data]) => {
+                const tenantColor = stringToColor(tenant);
                 const cultivationPercentage = (data.cultivatedArea / data.totalArea * 100).toFixed(1);
                 const uncultivationPercentage = (data.uncultivatedArea / data.totalArea * 100).toFixed(1);
 
@@ -530,8 +437,8 @@
                     <td class="text-right">${cultivationPercentage}%</td>
                     <td class="text-right relative" style="height: 24px;">
                         <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
-                            <div style="width: ${cultivationPercentage}%; background-color: #10B981; opacity: 0.3;"></div>
-                            <div style="width: ${uncultivationPercentage}%; background-color: #EF4444; opacity: 0.3;"></div>
+                            <div style="width: ${cultivationPercentage}%; background-color: ${tenantColor}; opacity: 0.3;"></div>
+                            <div style="width: ${uncultivationPercentage}%; background-color: ${tenantColor}; opacity: 0.1;"></div>
                         </div>
                         <span class="percentage-text">
                             ${cultivationPercentage}% / ${uncultivationPercentage}%
@@ -541,7 +448,6 @@
                 tbody.appendChild(row);
             });
 
-            // Додавання підсумкового рядка
             const totalArea = sortedTenants.reduce((sum, [_, data]) => sum + data.totalArea, 0);
             const totalCultivated = sortedTenants.reduce((sum, [_, data]) => sum + data.cultivatedArea, 0);
             const totalUncultivated = sortedTenants.reduce((sum, [_, data]) => sum + data.uncultivatedArea, 0);
@@ -573,7 +479,6 @@
             const container = document.getElementById('fieldsContainer');
             container.innerHTML = '';
 
-            // Сортування полів за площею
             const sortedFields = Object.entries(fields)
                 .sort((a, b) => b[1].totalArea - a[1].totalArea);
 
@@ -586,6 +491,7 @@
 
                 const tenantsHtml = sortedTenants
                     .map(([tenant, area]) => {
+                        const tenantColor = stringToColor(tenant);
                         const percentage = (area / field.totalArea * 100).toFixed(1);
                         const uncultivatedArea = field.uncultivatedAreas?.[tenant] || 0;
                         const uncultivatedPercentage = ((uncultivatedArea / field.totalArea) * 100).toFixed(1);
@@ -598,8 +504,8 @@
                                 <td class="text-right">${percentage}%</td>
                                 <td class="text-right relative" style="height: 24px;">
                                     <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
-                                        <div style="width: ${percentage}%; background-color: #10B981; opacity: 0.3;"></div>
-                                        <div style="width: ${uncultivatedPercentage}%; background-color: #EF4444; opacity: 0.3;"></div>
+                                        <div style="width: ${percentage}%; background-color: ${tenantColor}; opacity: 0.3;"></div>
+                                        <div style="width: ${uncultivatedPercentage}%; background-color: ${tenantColor}; opacity: 0.1;"></div>
                                     </div>
                                     <span class="percentage-text">
                                         ${percentage}% / ${uncultivatedPercentage}%
@@ -627,6 +533,7 @@
                                 </div>
                                 <div class="field-stat-item">
                                     <div class="field-stat-label">Площа що не обробляється</div>
+                                
                                     <div class="field-stat-value">${field.uncultivatedArea.toFixed(2)} га</div>
                                 </div>
                                 <div class="field-stat-item">
