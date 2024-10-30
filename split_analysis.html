@@ -6,6 +6,10 @@
     <title>Аналіз обробітку земель</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Додаємо Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <!-- Додаємо Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <style>
         .stats-card {
             background: white;
@@ -74,6 +78,7 @@
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             margin-bottom: 16px;
+            background: white;
         }
         .field-header {
             background-color: #f9fafb;
@@ -83,7 +88,14 @@
             border-bottom: 1px solid #e5e7eb;
         }
         .field-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
             padding: 12px;
+        }
+        .field-info {
+            display: flex;
+            flex-direction: column;
         }
         .field-stats {
             display: grid;
@@ -105,6 +117,35 @@
             font-weight: 600;
             color: #374151;
         }
+        .field-map {
+            height: 400px;
+            width: 100%;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .map-legend {
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        .map-legend-item {
+            display: flex;
+            align-items: center;
+            margin: 4px 0;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+        @media (max-width: 1024px) {
+            .field-content {
+                grid-template-columns: 1fr;
+            }
+        }
         @media print {
             @page {
                 size: A4;
@@ -119,6 +160,9 @@
             }
             .field-card {
                 page-break-inside: avoid;
+            }
+            .field-map {
+                height: 300px;
             }
         }
     </style>
@@ -292,12 +336,27 @@
                             uncultivatedArea: 0,
                             parcelsCount: 0,
                             tenants: {},
-                            uncultivatedAreas: {}
+                            uncultivatedAreas: {},
+                            geometry: {
+                                type: 'FeatureCollection',
+                                features: []
+                            }
                         };
                     }
                     
                     stats.fields[fieldId].totalArea += area;
                     stats.fields[fieldId].parcelsCount++;
+                    
+                    // Додаємо геометрію ділянки до колекції поля
+                    stats.fields[fieldId].geometry.features.push({
+                        type: 'Feature',
+                        properties: {
+                            status: status,
+                            tenant: tenant,
+                            area: area
+                        },
+                        geometry: feature.geometry
+                    });
                     
                     if (status === 'Обробляється') {
                         stats.fields[fieldId].cultivatedArea += area;
@@ -323,7 +382,8 @@
         }
 
         function updateUI(stats) {
-            // Оновлення загальної статистики
+          
+        // Оновлення загальної статистики
             document.getElementById('totalArea').textContent = `${stats.totalArea.toFixed(2)} га`;
             document.getElementById('cultivatedArea').textContent = `${stats.cultivatedArea.toFixed(2)} га`;
             document.getElementById('uncultivatedArea').textContent = `${stats.uncultivatedArea.toFixed(2)} га`;
@@ -354,7 +414,7 @@
                     <td class="text-right">${cultivationPercentage}%</td>
                     <td class="text-right relative" style="height: 24px;">
                         <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
-                       <div style="width: ${cultivationPercentage}%; background-color: #10B981; opacity: 0.3;"></div>
+                            <div style="width: ${cultivationPercentage}%; background-color: #10B981; opacity: 0.3;"></div>
                             <div style="width: ${uncultivationPercentage}%; background-color: #EF4444; opacity: 0.3;"></div>
                         </div>
                         <span class="percentage-text">
@@ -405,7 +465,6 @@
                 const fieldDiv = document.createElement('div');
                 fieldDiv.className = 'field-card';
 
-                // Сортування орендарів поля за площею
                 const sortedTenants = Object.entries(field.tenants)
                     .sort((a, b) => b[1] - a[1]);
 
@@ -440,46 +499,94 @@
                         <div class="font-bold">${field.name}</div>
                     </div>
                     <div class="field-content">
-                        <div class="field-stats">
-                            <div class="field-stat-item">
-                                <div class="field-stat-label">Загальна площа</div>
-                                <div class="field-stat-value">${field.totalArea.toFixed(2)} га</div>
+                        <div class="field-info">
+                            <div class="field-stats">
+                                <div class="field-stat-item">
+                                    <div class="field-stat-label">Загальна площа</div>
+                                    <div class="field-stat-value">${field.totalArea.toFixed(2)} га</div>
+                                </div>
+                                <div class="field-stat-item">
+                                    <div class="field-stat-label">Площа що обробляється</div>
+                                    <div class="field-stat-value">${field.cultivatedArea.toFixed(2)} га</div>
+                                </div>
+                                <div class="field-stat-item">
+                                    <div class="field-stat-label">Площа що не обробляється</div>
+                                    <div class="field-stat-value">${field.uncultivatedArea.toFixed(2)} га</div>
+                                </div>
+                                <div class="field-stat-item">
+                                    <div class="field-stat-label">Кількість ділянок</div>
+                                    <div class="field-stat-value">${field.parcelsCount}</div>
+                                </div>
+                                <div class="field-stat-item">
+                                    <div class="field-stat-label">Кількість орендарів</div>
+                                    <div class="field-stat-value">${Object.keys(field.tenants).length}</div>
+                                </div>
                             </div>
-                            <div class="field-stat-item">
-                                <div class="field-stat-label">Площа що обробляється</div>
-                                <div class="field-stat-value">${field.cultivatedArea.toFixed(2)} га</div>
-                            </div>
-                            <div class="field-stat-item">
-                                <div class="field-stat-label">Площа що не обробляється</div>
-                                <div class="field-stat-value">${field.uncultivatedArea.toFixed(2)} га</div>
-                            </div>
-                            <div class="field-stat-item">
-                                <div class="field-stat-label">Кількість ділянок</div>
-                                <div class="field-stat-value">${field.parcelsCount}</div>
-                            </div>
-                            <div class="field-stat-item">
-                                <div class="field-stat-label">Кількість орендарів</div>
-                                <div class="field-stat-value">${Object.keys(field.tenants).length}</div>
-                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Орендар</th>
+                                        <th class="text-right">Площа що обробляється (га)</th>
+                                        <th class="text-right">Площа що не обробляється (га)</th>
+                                        <th class="text-right">% від площі поля</th>
+                                        <th class="text-right" style="width: 30%;">Розподіл</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tenantsHtml}
+                                </tbody>
+                            </table>
                         </div>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Орендар</th>
-                                    <th class="text-right">Площа що обробляється (га)</th>
-                                    <th class="text-right">Площа що не обробляється (га)</th>
-                                    <th class="text-right">% від площі поля</th>
-                                    <th class="text-right" style="width: 30%;">Розподіл</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${tenantsHtml}
-                            </tbody>
-                        </table>
+                        <div>
+                            <div class="map-legend">
+                                <div class="map-legend-item">
+                                    <div class="legend-color" style="background-color: #10B981;"></div>
+                                    <div>Обробляється</div>
+                                </div>
+                                <div class="map-legend-item">
+                                    <div class="legend-color" style="background-color: #EF4444;"></div>
+                                    <div>Не обробляється</div>
+                                </div>
+                            </div>
+                            <div id="map-${fieldId}" class="field-map"></div>
+                        </div>
                     </div>
                 `;
 
                 container.appendChild(fieldDiv);
+
+                // Ініціалізація карти для поля
+                const map = L.map(`map-${fieldId}`);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                // Додаємо геометрію поля на карту
+                if (field.geometry) {
+                    const fieldLayer = L.geoJSON(field.geometry, {
+                        style: function(feature) {
+                            return {
+                                color: feature.properties.status === 'Обробляється' ? '#10B981' : '#EF4444',
+                                weight: 2,
+                                opacity: 1,
+                                fillOpacity: 0.3
+                            };
+                        },
+                        onEachFeature: function(feature, layer) {
+                            const status = feature.properties.status;
+                            const tenant = feature.properties.tenant;
+                            const area = feature.properties.area.toFixed(2);
+                            layer.bindPopup(`
+                                <div class="text-sm">
+                                    <div><strong>Статус:</strong> ${status}</div>
+                                    <div><strong>Орендар:</strong> ${tenant || 'Не вказано'}</div>
+                                    <div><strong>Площа:</strong> ${area} га</div>
+                                </div>
+                            `);
+                        }
+                    }).addTo(map);
+                    map.fitBounds(fieldLayer.getBounds());
+                }
             });
         }
 
