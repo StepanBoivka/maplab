@@ -7,8 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css" />
-    <link rel="stylesheet" href="css/area-tooltip.css">
-
+    
     <style>
         html, body, #map {
             width: 100%;
@@ -151,16 +150,15 @@
         #statisticsButton:hover {
             background: #218838;
         }
+        .area-tooltip {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            padding: 4px 8px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
     </style>
     <title>Карта земельних ділянок</title>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMBXL0TQLR"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-CMBXL0TQLR');
-    </script>
 </head>
 <body>
     <div id="map"></div>
@@ -176,7 +174,6 @@
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
     <script>
-
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id');
 
@@ -184,14 +181,14 @@
             zoomControl: false
         }).setView([48.3794, 31.1656], 6);
 
-        var googleLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        var googleSatLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
             maxZoom: 20,
             attribution: '&copy; <a href="https://www.google.com/maps">Google</a>'
         }).addTo(map);
 
-        var openStreetMapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        var googleLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            attribution: '&copy; <a href="https://www.google.com/maps">Google</a>'
         });
 
         var dataPath = 'data/';
@@ -205,8 +202,8 @@
         });
 
         var baseMaps = {
+            "Супутник": googleSatLayer,
             "Google Maps": googleLayer,
-            "OpenStreetMap": openStreetMapLayer,
             "Актуальні растри": rasterLayer
         };
 
@@ -261,7 +258,6 @@
                     "Дата оновлення"
                 ];
 
-                // Додаємо всі інші ключі, які не вказані в orderedKeys
                 for (var key in feature.properties) {
                     if (orderedKeys.indexOf(key) === -1 && key !== 'type' && key !== 'Статус') {
                         orderedKeys.push(key);
@@ -352,6 +348,17 @@
             };
         }
 
+        function styleFieldFeature(feature) {
+            const status = feature.properties?.status;
+            return {
+                color: status === 'Не обробляється' ? '#EF4444' : '#10B981',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.1,
+                dashArray: status === 'Не обробляється' ? '3' : null
+            };
+        }
+
         function clearOverlays() {
             for (var layerName in overlays) {
                 if (overlays.hasOwnProperty(layerName) && layerName !== "Поля обробітку") {
@@ -370,7 +377,6 @@
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    // Фільтруємо тільки оригінальні ділянки
                     const originalData = {
                         type: "FeatureCollection",
                         features: data.features.filter(f => f.properties.type === 'original')
@@ -393,45 +399,6 @@
         var layersControl;
         var searchControl;
         var fieldLayer;
-        var currentZoom = map.getZoom();
-        var minZoomForLabels = 15;
-        var maxZoomForLabels = 18;
-
-        function styleFieldFeature(feature) {
-            return {
-                color: 'yellow',
-                weight: 3,
-                opacity: 1,
-                fillOpacity: 0
-            };
-        }
-
-        function updateLabelsVisibility() {
-            currentZoom = map.getZoom();
-            fieldLayer.eachLayer(function (layer) {
-                if (currentZoom >= minZoomForLabels && currentZoom <= maxZoomForLabels) {
-                    layer.getTooltip().setOpacity(1);
-                } else {
-                    layer.getTooltip().setOpacity(0);
-                }
-            });
-        }
-
-        function loadFileList() {
-            fetch(dataPath + 'file_list.json')
-                .then(response => response.json())
-                .then(data => {
-                    var select = document.getElementById('fileSelect');
-                    select.innerHTML = '<option>Виберіть раду</option>';
-                    data.files.forEach(file => {
-                        var option = document.createElement('option');
-                        option.value = file;
-                        option.textContent = file;
-                        select.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error loading file list:', error));
-        }
 
         function addFieldLayer() {
             fetch(dataPath + 'field.geojson')
@@ -440,28 +407,21 @@
                     fieldLayer = L.geoJSON(data, {
                         style: styleFieldFeature,
                         onEachFeature: function (feature, layer) {
-                            if (feature.properties && feature.properties.area) {
-                                var area = feature.properties.area;
-                                layer.bindTooltip(area.toString(), {
-                                    permanent: true,
+                            if (feature.properties) {
+                                const status = feature.properties.status || 'Невідомо';
+                                const area = feature.properties.area || 'Не вказано';
+                                layer.bindTooltip(`Площа: ${area} га<br>Статус: ${status}`, {
+                                    permanent: false,
                                     direction: 'center',
-                                    className: 'area-tooltip',
-                                    opacity: 0
+                                    className: 'area-tooltip'
                                 });
                             }
                         }
                     }).addTo(map);
 
-                    updateLabelsVisibility();
-                    
-                    map.on('zoomend', function() {
-                        updateLabelsVisibility();
-                    });
-
                     overlays["Поля обробітку"] = fieldLayer;
                     if (layersControl) {
-                        var colorBox = '<span class="color-box" style="background-color:transparent; border: 2px solid yellow"></span>';
-                        layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Поля обробітку</span>');
+                        layersControl.addOverlay(fieldLayer, '<span class="layer-name">Поля обробітку</span>');
                     }
                 })
                 .catch(error => console.error('Error loading Field GeoJSON data:', error));
@@ -581,6 +541,22 @@
             });
         }
 
+        function loadFileList() {
+            fetch(dataPath + 'file_list.json')
+                .then(response => response.json())
+                .then(data => {
+                    var select = document.getElementById('fileSelect');
+                    select.innerHTML = '<option>Виберіть раду</option>';
+                    data.files.forEach(file => {
+                        var option = document.createElement('option');
+                        option.value = file;
+                        option.textContent = file;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading file list:', error));
+        }
+
         function collectMapData() {
             var data = [];
             var activeLayer = null;
@@ -632,17 +608,11 @@
                                     value = numValue.toFixed(4);
                                 }
                             }
-                        } else if (key === "Дата НГО") {
-                            value = value.toString();
                         } else if (typeof value === 'string') {
                             value = value.replace(/"/g, '""');
                             value = '"' + value + '"';
-                        } else if (typeof value === 'object') {
-                            value = JSON.stringify(value).replace(/"/g, '""');
-                            value = '"' + value + '"';
                         }
                     }
-                    
                     line += value;
                 }
                 str += line + '\r\n';
@@ -676,7 +646,7 @@
 
         document.getElementById('statisticsButton').addEventListener('click', function() {
             var selectedFile = document.getElementById('fileSelect').value;
-            if (selectedFile && selectedFile !== 'Виберіть файл') {
+            if (selectedFile && selectedFile !== 'Виберіть раду') {
                 const urlParams = new URLSearchParams(window.location.search);
                 const id = urlParams.get('id');
                 const statisticsUrl = `statistics.html?file=${encodeURIComponent(selectedFile)}${id ? `&id=${id}` : ''}`;
@@ -688,11 +658,7 @@
 
         document.getElementById('fileSelect').addEventListener('change', function() {
             var selectedFile = this.value;
-            if (selectedFile !== 'Виберіть файл') {
-                gtag('event', 'select_content', {
-                    'content_type': 'file',
-                    'item_id': selectedFile
-                });
+            if (selectedFile !== 'Виберіть раду') {
                 addGeoJsonLayer(dataPath + selectedFile, selectedFile);
             }
         });
