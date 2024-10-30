@@ -486,12 +486,9 @@
        fieldDiv.className = 'field-card';
 
        // Calculate areas
-let totalFieldArea = field.totalArea;
-let rentedArea = Object.values(field.tenants).reduce((sum, area) => sum + area, 0);
-let unrentedArea = field.geometry.features
-    .filter(f => !f.properties.tenant && f.properties.status === 'Обробляється')
-    .reduce((sum, f) => sum + f.properties.area, 0);
-let unauthorizedArea = totalFieldArea - rentedArea - unrentedArea;
+       let totalFieldArea = field.totalArea;
+       let rentedArea = Object.values(field.tenants).reduce((sum, area) => sum + area, 0);
+       let unrentedArea = field.geometry.features
            .filter(f => !f.properties.tenant && f.properties.status === 'Обробляється')
            .reduce((sum, f) => sum + f.properties.area, 0);
        let unauthorizedArea = totalFieldArea - rentedArea - unrentedArea;
@@ -520,9 +517,10 @@ let unauthorizedArea = totalFieldArea - rentedArea - unrentedArea;
            .join('');
 
        // Add unrented areas row if exists
+       let finalTenantsHtml = tenantsHtml;
        if (unrentedArea > 0) {
            const percentage = (unrentedArea / field.totalArea * 100).toFixed(1);
-           tenantsHtml += `
+           finalTenantsHtml += `
                <tr>
                    <td>Вільні від оренди в обробітку</td>
                    <td class="text-right">${unrentedArea.toFixed(2)} га</td>
@@ -598,7 +596,7 @@ let unauthorizedArea = totalFieldArea - rentedArea - unrentedArea;
                            </tr>
                        </thead>
                        <tbody>
-                           ${tenantsHtml}
+                           ${finalTenantsHtml}
                        </tbody>
                    </table>
                </div>
