@@ -493,7 +493,7 @@
         const fieldDiv = document.createElement('div');
         fieldDiv.className = 'field-card';
 
-        // Сортуємо всіх орендарів за загальною площею (оброблювана + необроблювана)
+        // Сортуємо всіх орендарів за загальною площею
         const allTenants = new Set([
             ...Object.keys(field.tenants),
             ...Object.keys(field.uncultivatedAreas)
@@ -509,54 +509,57 @@
         const sortedTenants = [...allTenants]
             .sort((a, b) => tenantTotalAreas[b] - tenantTotalAreas[a]);
 
-        const tenantsHtml = sortedTenants
-    .map(tenant => {
-        const tenantColor = stringToColor(tenant);
-        const cultivatedArea = field.tenants[tenant] || 0;
-        const uncultivatedArea = field.uncultivatedAreas[tenant] || 0;
-        const totalArea = cultivatedArea + uncultivatedArea;
-        const percentage = (cultivatedArea / field.totalArea * 100).toFixed(1);
-        const uncultivatedPercentage = (uncultivatedArea / field.totalArea * 100).toFixed(1);
-        
-        return `
-            <tr>
-                <td>${tenant}</td>
-                <td class="text-right">${cultivatedArea.toFixed(2)} га</td>
-                <td class="text-right">${uncultivatedArea.toFixed(2)} га</td>
-                <td class="text-right">${percentage}%</td>
-                <td class="text-right relative" style="height: 24px;">
-                    <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
-                        <div style="width: ${percentage}%; background-color: ${tenantColor}; opacity: 0.3;"></div>
-                        <div style="width: ${uncultivatedPercentage}%; background-color: ${tenantColor}; opacity: 0.1;"></div>
-                    </div>
-                    <span class="percentage-text">
-                        ${percentage}% / ${uncultivatedPercentage}%
-                    </span>
-                </td>
-            </tr>
-        `;
-    });
+        let tenantsHtml = sortedTenants
+            .map(tenant => {
+                const tenantColor = stringToColor(tenant);
+                const cultivatedArea = field.tenants[tenant] || 0;
+                const uncultivatedArea = field.uncultivatedAreas[tenant] || 0;
+                const totalArea = cultivatedArea + uncultivatedArea;
+                const percentage = (cultivatedArea / field.totalArea * 100).toFixed(1);
+                const uncultivatedPercentage = (uncultivatedArea / field.totalArea * 100).toFixed(1);
+                
+                return `
+                    <tr>
+                        <td>${tenant}</td>
+                        <td class="text-right">${cultivatedArea.toFixed(2)} га</td>
+                        <td class="text-right">${uncultivatedArea.toFixed(2)} га</td>
+                        <td class="text-right">${percentage}%</td>
+                        <td class="text-right relative" style="height: 24px;">
+                            <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
+                                <div style="width: ${percentage}%; background-color: ${tenantColor}; opacity: 0.3;"></div>
+                                <div style="width: ${uncultivatedPercentage}%; background-color: ${tenantColor}; opacity: 0.1;"></div>
+                            </div>
+                            <span class="percentage-text">
+                                ${percentage}% / ${uncultivatedPercentage}%
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            })
+            .join('');
 
-// Додаємо рядок для вільних ділянок, якщо вони є
-if (field.freeArea > 0) {
-    const freePercentage = (field.freeArea / field.totalArea * 100).toFixed(1);
-    tenantsHtml += `
-        <tr>
-            <td>Вільні від оренди</td>
-            <td class="text-right">0.00 га</td>
-            <td class="text-right">${field.freeArea.toFixed(2)} га</td>
-            <td class="text-right">${freePercentage}%</td>
-            <td class="text-right relative" style="height: 24px;">
-                <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
-                    <div style="width: ${freePercentage}%; background-color: #808080; opacity: 0.1;"></div>
-                </div>
-                <span class="percentage-text">
-                    0% / ${freePercentage}%
-                </span>
-            </td>
-        </tr>
-    `;
-}
+        // Додаємо рядок для вільних ділянок, якщо вони є
+        if (field.freeArea > 0) {
+            const freePercentage = (field.freeArea / field.totalArea * 100).toFixed(1);
+            tenantsHtml += `
+                <tr>
+                    <td>Вільні від оренди</td>
+                    <td class="text-right">0.00 га</td>
+                    <td class="text-right">${field.freeArea.toFixed(2)} га</td>
+                    <td class="text-right">${freePercentage}%</td>
+                    <td class="text-right relative" style="height: 24px;">
+                        <div style="display: flex; height: 100%; width: 100%; position: absolute; left: 0; top: 0;">
+                            <div style="width: ${freePercentage}%; background-color: #808080; opacity: 0.1;"></div>
+                        </div>
+                        <span class="percentage-text">
+                            0% / ${freePercentage}%
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Далі йде той самий код...
             .join('');
 
         fieldDiv.innerHTML = `
