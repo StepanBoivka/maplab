@@ -493,7 +493,6 @@
         const fieldDiv = document.createElement('div');
         fieldDiv.className = 'field-card';
 
-        // Сортуємо всіх орендарів за загальною площею
         const allTenants = new Set([
             ...Object.keys(field.tenants),
             ...Object.keys(field.uncultivatedAreas)
@@ -538,7 +537,6 @@
             })
             .join('');
 
-        // Додаємо рядок для вільних ділянок, якщо вони є
         if (field.freeArea > 0) {
             const freePercentage = (field.freeArea / field.totalArea * 100).toFixed(1);
             tenantsHtml += `
@@ -558,9 +556,6 @@
                 </tr>
             `;
         }
-
-        // Далі йде той самий код...
-            .join('');
 
         fieldDiv.innerHTML = `
             <div class="field-header">
