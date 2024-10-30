@@ -355,54 +355,58 @@
                 }
 
                 if (fieldId) {
-                    if (!stats.fields[fieldId]) {
-                        stats.fields[fieldId] = {
-                            name: fieldName || `Поле ${fieldId}`,
-                            totalArea: 0,
-                            cultivatedArea: 0,
-                            uncultivatedArea: 0,
-                            parcelsCount: 0,
-                            tenants: {},
-                            uncultivatedAreas: {},
-                            geometry: {
-                                type: 'FeatureCollection',
-                                features: []
-                            }
-                        };
-                    }
-                    
-                    stats.fields[fieldId].totalArea += area;
-                    stats.fields[fieldId].parcelsCount++;
-                    
-                    stats.fields[fieldId].geometry.features.push({
-                        type: 'Feature',
-                        properties: {
-                            status: status,
-                            tenant: tenant,
-                            area: area
-                        },
-                        geometry: feature.geometry
-                    });
-                    
-                    if (status === 'Обробляється') {
-                        stats.fields[fieldId].cultivatedArea += area;
-                        if (tenant) {
-                            if (!stats.fields[fieldId].tenants[tenant]) {
-                                stats.fields[fieldId].tenants[tenant] = 0;
-                            }
-                            stats.fields[fieldId].tenants[tenant] += area;
-                        }
-                    } else if (status === 'Не обробляється') {
-                        stats.fields[fieldId].uncultivatedArea += area;
-                        if (tenant) {
-                            if (!stats.fields[fieldId].uncultivatedAreas[tenant]) {
-                                stats.fields[fieldId].uncultivatedAreas[tenant] = 0;
-                            }
-                            stats.fields[fieldId].uncultivatedAreas[tenant] += area;
-                        }
-                    }
-                }
-            });
+    if (!stats.fields[fieldId]) {
+        stats.fields[fieldId] = {
+            name: fieldName || `Поле ${fieldId}`,
+            totalArea: 0,
+            cultivatedArea: 0,
+            uncultivatedArea: 0,
+            parcelsCount: 0,
+            tenants: {},
+            uncultivatedAreas: {},
+            geometry: {
+                type: 'FeatureCollection',
+                features: []
+            }
+        };
+    }
+    
+    // Додаємо загальну площу та кількість ділянок
+    stats.fields[fieldId].totalArea += area;
+    stats.fields[fieldId].parcelsCount++;
+    
+    // Додаємо геометрію
+    stats.fields[fieldId].geometry.features.push({
+        type: 'Feature',
+        properties: {
+            status: status,
+            tenant: tenant,
+            area: area
+        },
+        geometry: feature.geometry
+    });
+    
+    // Тепер розподіляємо площі за статусом
+    if (status === 'Обробляється') {
+        stats.fields[fieldId].cultivatedArea += area;
+        if (tenant) {
+            if (!stats.fields[fieldId].tenants[tenant]) {
+                stats.fields[fieldId].tenants[tenant] = 0;
+            }
+            stats.fields[fieldId].tenants[tenant] += area;
+        }
+    } 
+    else if (status === 'Не обробляється') {
+        stats.fields[fieldId].uncultivatedArea += area;
+        if (tenant) {
+            // Тут була помилка - оновлюємо також і загальну статистику
+            if (!stats.fields[fieldId].uncultivatedAreas[tenant]) {
+                stats.fields[fieldId].uncultivatedAreas[tenant] = 0;
+            }
+            stats.fields[fieldId].uncultivatedAreas[tenant] += area;
+        }
+    }
+}
 
             updateUI(stats);
         }
