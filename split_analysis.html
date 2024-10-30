@@ -208,7 +208,6 @@
     </div>
 
     <script>
-        
         function stringToColor(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
@@ -216,10 +215,10 @@
             }
             
             const colors = [
-    "#E44754", "#1B9688", "#ff9947", "#FAC1FA", "#9BBFF8",
-    "#95F1FA", "#C6F8BD", "#F7FAB2", "#FFD7A6", "#FDABAB",
-    "#A569BD", "#FF5733", "#4A235A", "#7DCEA0", "#E74C3C",
-    "#F5B041", "#2471A3", "#AF7AC5", "#58D68D", "#5DADE2"
+                "#E44754", "#1B9688", "#ff9947", "#FAC1FA", "#9BBFF8",
+                "#95F1FA", "#C6F8BD", "#F7FAB2", "#FFD7A6", "#FDABAB",
+                "#A569BD", "#FF5733", "#4A235A", "#7DCEA0", "#E74C3C",
+                "#F5B041", "#2471A3", "#AF7AC5", "#58D68D", "#5DADE2"
             ];
             
             return colors[Math.abs(hash) % colors.length];
@@ -231,7 +230,6 @@
                 attribution: '&copy; <a href="https://www.google.com/maps">Google</a>'
             }).addTo(map);
 
-            // Додаємо геометрію поля на карту
             if (field.geometry) {
                 const fieldLayer = L.geoJSON(field.geometry, {
                     style: function(feature) {
@@ -367,7 +365,7 @@
                             geometry: {
                                 type: 'FeatureCollection',
                                 features: []
-                            }
+                                    }
                         };
                     }
                     
@@ -477,140 +475,141 @@
         }
 
         function updateFieldsContainer(fields) {
-    const container = document.getElementById('fieldsContainer');
-    container.innerHTML = '';
+            const container = document.getElementById('fieldsContainer');
+            container.innerHTML = '';
 
-    const sortedFields = Object.entries(fields)
-        .sort((a, b) => b[1].totalArea - a[1].totalArea);
+            const sortedFields = Object.entries(fields)
+                .sort((a, b) => b[1].totalArea - a[1].totalArea);
 
-    sortedFields.forEach(([fieldId, field]) => {
-        const fieldDiv = document.createElement('div');
-        fieldDiv.className = 'field-card';
+            sortedFields.forEach(([fieldId, field]) => {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'field-card';
 
-        // Calculate areas
-        const totalFieldArea = field.totalArea;
-        const rentedArea = Object.values(field.tenants).reduce((sum, area) => sum + area, 0);
-        const unrentedArea = field.geometry.features
-            .filter(f => !f.properties.tenant && f.properties.status === 'Обробляється')
-            .reduce((sum, f) => sum + f.properties.area, 0);
-        const unauthorizedArea = totalFieldArea - rentedArea - unrentedArea;
+                // Calculate areas
+                const totalFieldArea = field.totalArea;
+                const rentedArea = Object.values(field.tenants).reduce((sum, area) => sum + area, 0);
+                const unrentedArea = field.geometry.features
+                    .filter(f => !f.properties.tenant && f.properties.status === 'Обробляється')
+                    .reduce((sum, f) => sum + f.properties.area, 0);
+                const unauthorizedArea = totalFieldArea - rentedArea - unrentedArea;
 
-        // Sort tenants by area
-        const sortedTenants = Object.entries(field.tenants)
-            .sort(([, a], [, b]) => b - a);
+                // Sort tenants by area
+                const sortedTenants = Object.entries(field.tenants)
+                    .sort(([, a], [, b]) => b - a);
 
-        const tenantsHtml = sortedTenants
-            .map(([tenant, area]) => {
-                const tenantColor = stringToColor(tenant);
-                const percentage = (area / field.totalArea * 100).toFixed(1);
-                
-                return `
-                    <tr>
-                        <td>${tenant}</td>
-                        <td class="text-right">${area.toFixed(2)} га</td>
-                        <td class="text-right">${percentage}%</td>
-                        <td class="text-right relative" style="height: 24px;">
-                            <div style="width: ${percentage}%; background-color: ${tenantColor}; opacity: 0.3;" class="percentage-bar"></div>
-                            <span class="percentage-text">${percentage}%</span>
-                        </td>
-                    </tr>
-                `;
-            })
-            .join('');
+                const tenantsHtml = sortedTenants
+                    .map(([tenant, area]) => {
+                        const tenantColor = stringToColor(tenant);
+                        const percentage = (area / field.totalArea * 100).toFixed(1);
+                        
+                        return `
+                            <tr>
+                                <td>${tenant}</td>
+                                <td class="text-right">${area.toFixed(2)} га</td>
+                                <td class="text-right">${percentage}%</td>
+                                <td class="text-right relative" style="height: 24px;">
+                                    <div style="width: ${percentage}%; background-color: ${tenantColor}; opacity: 0.3;" class="percentage-bar"></div>
+                                    <span class="percentage-text">${percentage}%</span>
+                                </td>
+                            </tr>
+                        `;
+                    })
+                    .join('');
 
-        // Add unrented areas row if exists
-        if (unrentedArea > 0) {
-            const percentage = (unrentedArea / field.totalArea * 100).toFixed(1);
-            tenantsHtml += `
-                <tr>
-                    <td>Вільні від оренди в обробітку</td>
-                    <td class="text-right">${unrentedArea.toFixed(2)} га</td>
-                    <td class="text-right">${percentage}%</td>
-                    <td class="text-right relative" style="height: 24px;">
-                        <div style="width: ${percentage}%; background-color: #EAB308; opacity: 0.3;" class="percentage-bar"></div>
-                        <span class="percentage-text">${percentage}%</span>
-                    </td>
-                </tr>
-            `;
-        }
+                // Add unrented areas row if exists
+                if (unrentedArea > 0) {
+                    const percentage = (unrentedArea / field.totalArea * 100).toFixed(1);
+                    tenantsHtml += `
+                        <tr>
+                            <td>Вільні від оренди в обробітку</td>
+                            <td class="text-right">${unrentedArea.toFixed(2)} га</td>
+                            <td class="text-right">${percentage}%</td>
+                            <td class="text-right relative" style="height: 24px;">
+                                <div style="width: ${percentage}%; background-color: #EAB308; opacity: 0.3;" class="percentage-bar"></div>
+                                <span class="percentage-text">${percentage}%</span>
+                            </td>
+                        </tr>
+                    `;
+                }
 
-        fieldDiv.innerHTML = `
-            <div class="field-header">
-                <div class="font-bold">${field.name}</div>
-            </div>
-            <div class="field-content">
-                <div class="field-info">
-                    <div class="field-stats">
-                        <div class="field-stat-item">
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                                <div class="field-stat-label">Площа поля</div>
+                fieldDiv.innerHTML = `
+                    <div class="field-header">
+                        <div class="font-bold">${field.name}</div>
+                    </div>
+                    <div class="field-content">
+                        <div class="field-info">
+                            <div class="field-stats">
+                                <div class="field-stat-item">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        <div class="field-stat-label">Площа поля</div>
+                                    </div>
+                                    <div class="field-stat-value text-gray-900">${field.totalArea.toFixed(2)} га</div>
+                                </div>
+                                <div class="field-stat-item">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <div class="field-stat-label">Площа оренди в обробітку</div>
+                                    </div>
+                                    <div class="field-stat-value text-green-600">${rentedArea.toFixed(2)} га</div>
+                                </div>
+                                <div class="field-stat-item">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                        <div class="field-stat-label">Вільні від оренди в обробітку</div>
+                                    </div>
+                                    <div class="field-stat-value text-yellow-500">${unrentedArea.toFixed(2)} га</div>
+                                </div>
+                                <div class="field-stat-item">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                        <div class="field-stat-label">Самовільний обробіток</div>
+                                    </div>
+                                    <div class="field-stat-value text-red-600">${unauthorizedArea.toFixed(2)} га</div>
+                                </div>
+                                <div class="field-stat-item">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                        <div class="field-stat-label">Кількість орендарів</div>
+                                    </div>
+                                    <div class="field-stat-value">${Object.keys(field.tenants).length}</div>
+                                </div>
                             </div>
-                            <div class="field-stat-value text-gray-900">${field.totalArea.toFixed(2)} га</div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Орендар</th>
+                                        <th class="text-right">Площа оренди в обробітку (га)</th>
+                                        <th class="text-right">% від площі поля</th>
+                                        <th class="text-right" style="width: 30%;">Розподіл</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tenantsHtml}
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="field-stat-item">
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <div class="field-stat-label">Площа оренди в обробітку</div>
-                            </div>
-                            <div class="field-stat-value text-green-600">${rentedArea.toFixed(2)} га</div>
-                        </div>
-                        <div class="field-stat-item">
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                                <div class="field-stat-label">Вільні від оренди в обробітку</div>
-                            </div>
-                            <div class="field-stat-value text-yellow-500">${unrentedArea.toFixed(2)} га</div>
-                        </div>
-                        <div class="field-stat-item">
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                                <div class="field-stat-label">Самовільний обробіток</div>
-                            </div>
-                            <div class="field-stat-value text-red-600">${unauthorizedArea.toFixed(2)} га</div>
-                        </div>
-                        <div class="field-stat-item">
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                                <div class="field-stat-label">Кількість орендарів</div>
-                            </div>
-                            <div class="field-stat-value">${Object.keys(field.tenants).length}</div>
+                        <div>
+                            <div id="map-${fieldId}" class="field-map"></div>
                         </div>
                     </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Орендар</th>
-                                <th class="text-right">Площа оренди в обробітку (га)</th>
-                                <th class="text-right">% від площі поля</th>
-                                <th class="text-right" style="width: 30%;">Розподіл</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${tenantsHtml}
-                        </tbody>
-                    </table>
-                </div>
-                <div>
-                    <div id="map-${fieldId}" class="field-map"></div>
-                </div>
-            </div>
-        `;
+                `;
 
-        container.appendChild(fieldDiv);
-        initializeFieldMap(fieldId, field);
-    });
-}
+                container.appendChild(fieldDiv);
+                initializeFieldMap(fieldId, field);
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', loadAndProcessData);
     </script>
 </body>
