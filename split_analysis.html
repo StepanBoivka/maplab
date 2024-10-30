@@ -486,9 +486,12 @@
        fieldDiv.className = 'field-card';
 
        // Calculate areas
-       let totalFieldArea = field.totalArea;
-       let rentedArea = Object.values(field.tenants).reduce((sum, area) => sum + area, 0);
-       let unrentedArea = field.geometry.features
+let totalFieldArea = field.totalArea;
+let rentedArea = Object.values(field.tenants).reduce((sum, area) => sum + area, 0);
+let unrentedArea = field.geometry.features
+    .filter(f => !f.properties.tenant && f.properties.status === 'Обробляється')
+    .reduce((sum, f) => sum + f.properties.area, 0);
+let unauthorizedArea = totalFieldArea - rentedArea - unrentedArea;
            .filter(f => !f.properties.tenant && f.properties.status === 'Обробляється')
            .reduce((sum, f) => sum + f.properties.area, 0);
        let unauthorizedArea = totalFieldArea - rentedArea - unrentedArea;
