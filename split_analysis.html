@@ -500,14 +500,8 @@
        let unrentedArea = field.geometry.features
            .filter(f => !f.properties.tenant && f.properties.status === 'Обробляється')
            .reduce((sum, f) => sum + f.properties.area, 0);
-       let unauthorizedArea = totalFieldArea - rentedArea - unrentedArea;
-
-       console.log(`Поле ${fieldId}:`, {
-           totalFieldArea,
-           rentedArea,
-           unrentedArea,
-           unauthorizedArea
-       });
+       // Додаємо Math.max щоб уникнути від'ємних значень
+       let unauthorizedArea = Math.max(0, totalFieldArea - rentedArea - unrentedArea);
 
        // Sort tenants by area
        const sortedTenants = Object.entries(field.tenants)
@@ -559,73 +553,72 @@
                            <div class="flex items-center gap-2">
                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                   </svg>
-                                <div class="field-stat-label">Площа поля</div>
-                            </div>
-                            <div class="field-stat-value text-gray-900">${totalFieldArea.toFixed(2)} га</div>
-                        </div>
-                        <div class="field-stat-item">
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <div class="field-stat-label">Площа оренди в обробітку</div>
-                            </div>
-                            <div class="field-stat-value text-green-600">${rentedArea.toFixed(2)} га</div>
-                        </div>
-                        <div class="field-stat-item">
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                                <div class="field-stat-label">Вільні від оренди в обробітку</div>
-                            </div>
-                            <div class="field-stat-value text-yellow-500">${unrentedArea.toFixed(2)} га</div>
-                        </div>
-                        <div class="field-stat-item">
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                                <div class="field-stat-label">Самовільний обробіток</div>
-                            </div>
-                            <div class="field-stat-value text-red-600">${unauthorizedArea.toFixed(2)} га</div>
-                        </div>
-                        <div class="field-stat-item">
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                                <div class="field-stat-label">Кількість орендарів</div>
-                            </div>
-                            <div class="field-stat-value">${Object.keys(field.tenants).length}</div>
-                        </div>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Орендар</th>
-                                <th class="text-right">Площа оренди в обробітку (га)</th>
-                                <th class="text-right">% від площі поля</th>
-                                <th class="text-right" style="width: 30%;">Розподіл</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${finalTenantsHtml}
-                        </tbody>
-                    </table>
-                </div>
-                <div>
-                    <div id="map-${fieldId}" class="field-map"></div>
-                </div>
-            </div>
-        `;
+                               </svg>
+                               <div class="field-stat-label">Площа поля</div>
+                           </div>
+                           <div class="field-stat-value text-gray-900">${totalFieldArea.toFixed(2)} га</div>
+                       </div>
+                       <div class="field-stat-item">
+                           <div class="flex items-center gap-2">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                   <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                               </svg>
+                               <div class="field-stat-label">Площа оренди в обробітку</div>
+                           </div>
+                           <div class="field-stat-value text-green-600">${rentedArea.toFixed(2)} га</div>
+                       </div>
+                       <div class="field-stat-item">
+                           <div class="flex items-center gap-2">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                   <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                               </svg>
+                               <div class="field-stat-label">Вільні від оренди в обробітку</div>
+                           </div>
+                           <div class="field-stat-value text-yellow-500">${unrentedArea.toFixed(2)} га</div>
+                       </div>
+                       <div class="field-stat-item">
+                           <div class="flex items-center gap-2">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                   <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                               </svg>
+                               <div class="field-stat-label">Самовільний обробіток</div>
+                           </div>
+                           <div class="field-stat-value text-red-600">${unauthorizedArea.toFixed(2)} га</div>
+                       </div>
+                       <div class="field-stat-item">
+                           <div class="flex items-center gap-2">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                   <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                               </svg>
+                               <div class="field-stat-label">Кількість орендарів</div>
+                           </div>
+                           <div class="field-stat-value">${Object.keys(field.tenants).length}</div>
+                       </div>
+                   </div>
+                   <table class="data-table">
+                       <thead>
+                           <tr>
+                               <th>Орендар</th>
+                               <th class="text-right">Площа оренди в обробітку (га)</th>
+                               <th class="text-right">% від площі поля</th>
+                               <th class="text-right" style="width: 30%;">Розподіл</th>
+                           </tr>
+                       </thead>
+                       <tbody>
+                           ${finalTenantsHtml}
+                       </tbody>
+                   </table>
+               </div>
+               <div>
+                   <div id="map-${fieldId}" class="field-map"></div>
+               </div>
+           </div>
+       `;
 
-        container.appendChild(fieldDiv);
-        initializeFieldMap(fieldId, field);
-    });
+       container.appendChild(fieldDiv);
+       initializeFieldMap(fieldId, field);
+   });
 }
-
         document.addEventListener('DOMContentLoaded', loadAndProcessData);
     </script>
 </body>
