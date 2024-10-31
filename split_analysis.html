@@ -275,13 +275,13 @@
                        };
                    },
                    onEachFeature: function(feature, layer) {
-    const status = feature.properties.status;
     const tenant = feature.properties.tenant || 'Не вказано';
-    const area = feature.properties.area.toFixed(2);
+    const status = feature.properties.status || 'Не вказано';
+    const area = feature.properties.area ? feature.properties.area.toFixed(2) : '0.00';
     const cadastral = feature.properties['Кадастровий номер'] || 'Не вказано';
     const owner = feature.properties['Власник'] || 'Не вказано';
     
-    layer.bindPopup(`
+    const popupContent = `
         <div class="text-sm">
             <div><strong>Кадастровий номер:</strong> ${cadastral}</div>
             <div><strong>Власник:</strong> ${owner}</div>
@@ -289,7 +289,9 @@
             <div><strong>Площа:</strong> ${area} га</div>
             <div><strong>Статус:</strong> ${status}</div>
         </div>
-    `);
+    `;
+    
+    layer.bindPopup(popupContent);
 }
                }).addTo(map);
                map.fitBounds(fieldLayer.getBounds());
