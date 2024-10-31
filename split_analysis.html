@@ -319,14 +319,17 @@
                    },
                 onEachFeature: function(feature, layer) {
     if (feature.properties) {
+        // Створюємо унікальний ID для цього попапу
+        const popupId = Math.random().toString(36).substring(7);
+        
         var popupContent = '<div class="popup-tabs">' +
-            '<div class="popup-tab active" data-tab="ownership">Основна</div>' +
-            '<div class="popup-tab" data-tab="lease">Інше</div>' +
+            `<div class="popup-tab active" data-tab="ownership-${popupId}">Основна</div>` +
+            `<div class="popup-tab" data-tab="lease-${popupId}">Інше</div>` +
             '</div>';
 
-        var ownershipContent = '<div class="popup-content active" id="ownership"><table>';
-        var leaseContent = '<div class="popup-content" id="lease"><table>';
-        var otherContent = '<div class="popup-content" id="other"><table>';
+        var ownershipContent = `<div class="popup-content active" id="ownership-${popupId}"><table>`;
+        var leaseContent = `<div class="popup-content" id="lease-${popupId}"><table>`;
+        var otherContent = `<div class="popup-content" id="other-${popupId}"><table>`;
 
         // Визначаємо порядок відображення властивостей
         var orderedKeys = [
@@ -398,17 +401,20 @@
 
         // Додаємо обробник подій для вкладок після відкриття попапу
         layer.on('popupopen', function() {
-            var tabs = document.querySelectorAll('.popup-tab');
-            tabs.forEach(function(tab) {
-                tab.addEventListener('click', function() {
-                    var tabId = this.getAttribute('data-tab');
-                    document.querySelectorAll('.popup-tab, .popup-content').forEach(function(el) {
-                        el.classList.remove('active');
+            var popup = document.querySelector('.leaflet-popup-content');
+            if (popup) {
+                var tabs = popup.querySelectorAll('.popup-tab');
+                tabs.forEach(function(tab) {
+                    tab.addEventListener('click', function() {
+                        var tabId = this.getAttribute('data-tab');
+                        popup.querySelectorAll('.popup-tab, .popup-content').forEach(function(el) {
+                            el.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                        popup.querySelector('#' + tabId).classList.add('active');
                     });
-                    this.classList.add('active');
-                    document.getElementById(tabId).classList.add('active');
                 });
-            });
+            }
         });
     }
 }
