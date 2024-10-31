@@ -538,20 +538,19 @@
 
        let finalTenantsHtml = tenantsHtml;
        if (unrentedArea > 0) {
-           const percentage = (unrentedArea / field.totalArea * 100).toFixed(1);
-           finalTenantsHtml += `
-               <tr>
-                   <td>Вільні від оренди в обробітку</td>
-                   <td class="text-right">${unrentedArea.toFixed(2)} га</td>
-                   <td class="text-right">${percentage}%</td>
-                   <td class="text-right relative" style="height: 24px;">
-                       <div style="width: ${percentage}%; background-color: #EAB308; opacity: 0.3;" class="percentage-bar"></div>
-                       <span class="percentage-text">${percentage}%</span>
-                   </td>
-               </tr>
-           `;
-       }
-
+    const percentage = (unrentedArea / field.totalArea * 100).toFixed(1);
+    finalTenantsHtml += `
+        <tr>
+            <td>Вільні від оренди в обробітку</td>
+            <td class="text-right">${unrentedArea.toFixed(2)} га</td>
+            <td class="text-right">${percentage}%</td>
+            <td class="text-right relative" style="height: 24px;">
+                <div style="width: ${percentage}%; background-color: #ffffff; opacity: 0.3;" class="percentage-bar"></div>
+                <span class="percentage-text">${percentage}%</span>
+            </td>
+        </tr>
+    `;
+}
        fieldDiv.innerHTML = `
            <div class="field-header">
                <div class="font-bold">${field.name}</div>
