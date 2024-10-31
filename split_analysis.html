@@ -224,45 +224,59 @@
        }
 
        function initializeFieldMap(fieldId, field) {
-           const map = L.map(`map-${fieldId}`);
-           L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-               attribution: '&copy; <a href="https://www.google.com/maps">Google</a>'
-           }).addTo(map);
+    const map = L.map(`map-${fieldId}`);
+    L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        attribution: '&copy; <a href="https://www.google.com/maps">Google</a>'
+    }).addTo(map);
 
-           if (field.geometry) {
-               const fieldLayer = L.geoJSON(field.geometry, {
-                   style: function(feature) {
-                       const tenant = feature.properties.tenant;
-                       const status = feature.properties.status;
-                       const baseColor = tenant ? stringToColor(tenant) : '#808080';
-                       
-                       return {
-                           color: baseColor,
-                           weight: 1,
-                           opacity: 1,
-                           fillColor: baseColor,
-                           fillOpacity: status === 'Обробляється' ? 0.3 : 0.1,
-                           dashArray: status === 'Не обробляється' ? '3' : null
-                       };
-                   },
-                   onEachFeature: function(feature, layer) {
-                       const status = feature.properties.status;
-                       const tenant = feature.properties.tenant || 'Не вказано';
-                       const area = feature.properties.area.toFixed(2);
-                       layer.bindPopup(`
-                           <div class="text-sm">
-                               <div><strong>Статус:</strong> ${status}</div>
-                               <div><strong>Орендар:</strong> ${tenant}</div>
-                               <div><strong>Площа:</strong> ${area} га</div>
-                           </div>
-                       `);
-                   }
-               }).addTo(map);
-               map.fitBounds(fieldLayer.getBounds());
-           }
-           return map;
-       }
+    // Додаємо шар полів
+    fetch(dataPath + 'field.geojson')
+        .then(response => response.json())
+        .then(data => {
+            const fieldLayer = L.geoJSON(data, {
+                style: {
+                    color: 'yellow',
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0
+                }
+            }).addTo(map);
+        });
 
+    // Додаємо основний шар з даними
+    if (field.geometry) {
+        const fieldLayer = L.geoJSON(field.geometry, {
+            style: function(feature) {
+                const tenant = feature.properties.tenant;
+                const status = feature.properties.status;
+                const baseColor = tenant ? stringToColor(tenant) : '#808080';
+                
+                return {
+                    color: baseColor,
+                    weight: 1,
+                    opacity: 1,
+                    fillColor: baseColor,
+                    fillOpacity: status === 'Обробляється' ? 0.3 : 0.1,
+                    dashArray: status === 'Не обробляється' ? '3' : null
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                const status = feature.properties.status;
+                const tenant = feature.properties.tenant || 'Не вказано';
+                const area = feature.properties.area.toFixed(2);
+                layer.bindPopup(`
+                    <div class="text-sm">
+                        <div><strong>Статус:</strong> ${status}</div>
+                        <div><strong>Орендар:</strong> ${tenant}</div>
+                        <div><strong>Площа:</strong> ${area} га</div>
+                    </div>
+                `);
+            }
+        }).addTo(map);
+        map.fitBounds(fieldLayer.getBounds());
+    }
+    return map;
+}
        const urlParams = new URLSearchParams(window.location.search);
        const selectedFile = urlParams.get('file');
        const id = urlParams.get('id');
