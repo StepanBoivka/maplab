@@ -442,7 +442,7 @@
                .sort((a, b) => b[1].totalArea - a[1].totalArea);
 
            sortedTenants.forEach(([tenant, data]) => {
-               const tenantColor = stringToColor(tenant);
+               const tenantColor = getColor(tenant);
                const cultivationPercentage = (data.cultivatedArea / data.totalArea * 100).toFixed(1);
                const uncultivationPercentage = (data.uncultivatedArea / data.totalArea * 100).toFixed(1);
 
@@ -519,7 +519,7 @@
 
        const tenantsHtml = sortedTenants
            .map(([tenant, area]) => {
-               const tenantColor = stringToColor(tenant);
+               const tenantColor = getColor(tenant);
                const percentage = (area / field.totalArea * 100).toFixed(1);
                
                return `
