@@ -246,15 +246,19 @@
             }).addTo(map);
         });
 
-   
-
     // Додаємо основний шар з даними
     if (field.geometry) {
         const fieldLayer = L.geoJSON(field.geometry, {
             style: function(feature) {
                 const tenant = feature.properties.tenant;
                 const status = feature.properties.status;
-                const baseColor = tenant ? stringToColor(tenant) : '#808080';
+                let baseColor;
+                
+                if (!tenant || tenant === '') {
+                    baseColor = '#ffffff'; // Білий колір для ділянок без орендаря
+                } else {
+                    baseColor = stringToColor(tenant); // Використовуємо існуючу функцію для кольорів орендарів
+                }
                 
                 return {
                     color: baseColor,
