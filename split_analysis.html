@@ -529,10 +529,11 @@
                    stats.fields[fieldId].geometry.features.push({
                        type: 'Feature',
                        properties: {
-                           status: status,
-                           tenant: tenant,
-                           area: area
-                       },
+    ...props,  // Додаємо всі властивості з оригінального об'єкта
+    status: status,
+    tenant: tenant,
+    area: area
+},
                        geometry: feature.geometry
                    });
                    
