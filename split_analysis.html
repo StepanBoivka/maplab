@@ -233,14 +233,12 @@
     fetch(dataPath + 'field.geojson')
         .then(response => response.json())
         .then(data => {
-            console.log('Current fieldId:', fieldId);
+            console.log('Current fieldId:', fieldId, 'Field name:', field.name);
             const fieldLayer = L.geoJSON(data, {
                 style: function(feature) {
-                    // Додаємо логування для діагностики
-                    console.log('Feature properties:', feature.properties);
-                    console.log('Feature field number:', feature.properties['Номер поля']);
-                    const isCurrentField = feature.properties['Номер поля'] === fieldId;
-                    console.log('Is current field?', isCurrentField);
+                    // Порівнюємо з властивістю name
+                    const isCurrentField = feature.properties.name === field.name;
+                    console.log('Checking field:', feature.properties.name, 'Current:', field.name, 'Match:', isCurrentField);
                     
                     return {
                         color: 'yellow',
@@ -251,6 +249,8 @@
                 }
             }).addTo(map);
         });
+
+    // Решта коду залишається без змін...
 
     // Додаємо основний шар з даними
     if (field.geometry) {
