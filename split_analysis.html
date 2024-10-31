@@ -275,23 +275,29 @@
                        };
                    },
                    onEachFeature: function(feature, layer) {
-    const tenant = feature.properties.tenant || 'Не вказано';
-    const status = feature.properties.status || 'Не вказано';
-    const area = feature.properties.area ? feature.properties.area.toFixed(2) : '0.00';
-    const cadastral = feature.properties['Кадастровий номер'] || 'Не вказано';
-    const owner = feature.properties['Власник'] || 'Не вказано';
-    
-    const popupContent = `
-        <div class="text-sm">
-            <div><strong>Кадастровий номер:</strong> ${cadastral}</div>
-            <div><strong>Власник:</strong> ${owner}</div>
-            <div><strong>Орендар:</strong> ${tenant}</div>
-            <div><strong>Площа:</strong> ${area} га</div>
-            <div><strong>Статус:</strong> ${status}</div>
-        </div>
-    `;
-    
-    layer.bindPopup(popupContent);
+    if (feature && feature.properties) {  // Перевіряємо наявність властивостей
+        const status = feature.properties.status;
+        const tenant = feature.properties.tenant;
+        const area = feature.properties.area;
+        
+        let popupContent = '<div class="text-sm">';
+        
+        if (tenant) {
+            popupContent += `<div><strong>Орендар:</strong> ${tenant}</div>`;
+        }
+        
+        if (area) {
+            popupContent += `<div><strong>Площа:</strong> ${area.toFixed(2)} га</div>`;
+        }
+        
+        if (status) {
+            popupContent += `<div><strong>Статус:</strong> ${status}</div>`;
+        }
+        
+        popupContent += '</div>';
+        
+        layer.bindPopup(popupContent);
+    }
 }
                }).addTo(map);
                map.fitBounds(fieldLayer.getBounds());
