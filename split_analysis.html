@@ -139,6 +139,49 @@
                 height: 300px;
             }
         }
+        .popup-tabs {
+    display: flex;
+    border-bottom: 1px solid #ccc;
+}
+.popup-tab {
+    padding: 8px 12px;
+    cursor: pointer;
+    background: #f1f1f1;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    margin-right: 2px;
+    font-size: 12px;
+}
+.popup-tab.active {
+    background: #fff;
+    border-bottom: 1px solid #fff;
+    margin-bottom: -1px;
+}
+.popup-content {
+    display: none;
+    padding: 10px;
+    font-size: 12px;
+}
+.popup-content.active {
+    display: block;
+}
+.popup-content table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 5px;
+}
+.popup-content td {
+    padding: 2px 0;
+    vertical-align: top;
+}
+.popup-content td.property-name {
+    font-weight: bold;
+    padding-right: 10px;
+    white-space: nowrap;
+}
+.popup-content td.property-value {
+    padding-left: 5px;
+}
     </style>
 </head>
 <body class="bg-gray-50">
@@ -274,29 +317,99 @@
                            dashArray: status === 'Не обробляється' ? '3' : null
                        };
                    },
-                   onEachFeature: function(feature, layer) {
-    if (feature && feature.properties) {  // Перевіряємо наявність властивостей
-        const status = feature.properties.status;
-        const tenant = feature.properties.tenant;
-        const area = feature.properties.area;
-        
-        let popupContent = '<div class="text-sm">';
-        
-        if (tenant) {
-            popupContent += `<div><strong>Орендар:</strong> ${tenant}</div>`;
+                onEachFeature: function(feature, layer) {
+    if (feature.properties) {
+        var popupContent = '<div class="popup-tabs">' +
+            '<div class="popup-tab active" data-tab="ownership">Основна</div>' +
+            '<div class="popup-tab" data-tab="lease">Інше</div>' +
+            '</div>';
+
+        var ownershipContent = '<div class="popup-content active" id="ownership"><table>';
+        var leaseContent = '<div class="popup-content" id="lease"><table>';
+        var otherContent = '<div class="popup-content" id="other"><table>';
+
+        // Визначаємо порядок відображення властивостей
+        var orderedKeys = [
+            "Кадастровий номер",
+            "Площа розрахована",
+            "Власник",
+            "Дата реєстрації",
+            "Орендар",
+            "Дата реєстрації оренди",
+            "Дата завершення",
+            "Вид обмеження",
+            "Цільове",
+            "Посилання",
+            "Дата оновлення"
+        ];
+
+        // Додаємо всі інші ключі, які не вказані в orderedKeys
+        for (var key in feature.properties) {
+            if (orderedKeys.indexOf(key) === -1) {
+                orderedKeys.push(key);
+            }
         }
+
+        orderedKeys.forEach(function(key) {
+            if (feature.properties.hasOwnProperty(key)) {
+                var value = feature.properties[key];
+                var row = '<tr><td class="property-name">' + key + ':</td><td class="property-value">';
+                if (key === "Посилання" && value) {
+                    row += '<a href="' + value + '" target="_blank"><span class="link-icon"></span><span class="link-text">інформація ДЗК</span></a>';
+                } else {
+                    row += value;
+                }
+                row += '</td></tr>';
+
+                // Розподіляємо інформацію по вкладках
+                switch (key) {
+                    case "Кадастровий номер":
+                    case "Площа розрахована":
+                    case "Власник":
+                    case "Орендар":
+                    case "Дата реєстрації оренди":
+                    case "Дата реєстрації":
+                    case "Дата завершення":
+                    case "Вид обмеження":
+                    case "Посилання":
+                    case "Дата оновлення":
+                        ownershipContent += row;
+                        break;
+                    case "Вид обмеження:":
+                    case "Дата реєстрації":
+                    case "Дата завершення":
+                        leaseContent += row;
+                        break;
+                    default:
+                        // інші поля
+                }
+            }
+        });
+
+        ownershipContent += '</table></div>';
+        leaseContent += '</table></div>';
+        otherContent += '</table></div>';
+
+        popupContent += ownershipContent + leaseContent + otherContent;
         
-        if (area) {
-            popupContent += `<div><strong>Площа:</strong> ${area.toFixed(2)} га</div>`;
-        }
-        
-        if (status) {
-            popupContent += `<div><strong>Статус:</strong> ${status}</div>`;
-        }
-        
-        popupContent += '</div>';
-        
-        layer.bindPopup(popupContent);
+        var popup = L.popup({maxWidth: 300, maxHeight: 300});
+        popup.setContent(popupContent);
+        layer.bindPopup(popup);
+
+        // Додаємо обробник подій для вкладок після відкриття попапу
+        layer.on('popupopen', function() {
+            var tabs = document.querySelectorAll('.popup-tab');
+            tabs.forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    var tabId = this.getAttribute('data-tab');
+                    document.querySelectorAll('.popup-tab, .popup-content').forEach(function(el) {
+                        el.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
     }
 }
                }).addTo(map);
