@@ -234,15 +234,20 @@
         .then(response => response.json())
         .then(data => {
             const fieldLayer = L.geoJSON(data, {
-                style: {
-                    color: 'yellow',
-                    weight: 2,
-                    opacity: 1,
-                    fillOpacity: 0
+                style: function(feature) {
+                    // Перевіряємо, чи це поле, яке ми зараз аналізуємо
+                    const isCurrentField = feature.properties['Номер поля'] === fieldId;
+                    return {
+                        color: 'yellow',
+                        weight: isCurrentField ? 3 : 1, // Товщина 3 для поточного поля, 1 для інших
+                        opacity: 1,
+                        fillOpacity: 0
+                    };
                 }
             }).addTo(map);
         });
 
+    
     // Додаємо основний шар з даними
     if (field.geometry) {
         const fieldLayer = L.geoJSON(field.geometry, {
