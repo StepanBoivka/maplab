@@ -40,39 +40,78 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
+            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* Зберігаємо всі стилі з оригінальної версії */
         .color-box {
             width: 12px;
             height: 12px;
             display: inline-block;
             margin-right: 5px;
         }
-        
+
         .layer-name {
             color: black;
             font-size: 12px;
         }
-        
+
         .leaflet-control-search {
             top: 50px !important;
         }
 
-        /* Адаптивність для смартфонів */
-        @media (max-width: 576px) {
-            #fileSelect {
-                max-width: calc(100% - 100px);
-                font-size: 14px;
-            }
-            
-            .navbar {
-                padding: 0.3rem;
-            }
+        .popup-tabs {
+            display: flex;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .popup-tab {
+            padding: 8px 12px;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-bottom: none;
+            margin-right: 2px;
+            font-size: 12px;
+        }
+
+        .popup-tab.active {
+            background: #fff;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px;
+        }
+
+        .popup-content {
+            display: none;
+            padding: 10px;
+            font-size: 12px;
+        }
+
+        .popup-content.active {
+            display: block;
+        }
+
+        .popup-content table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 5px;
+        }
+
+        .popup-content td {
+            padding: 2px 0;
+            vertical-align: top;
+        }
+
+        .popup-content td.property-name {
+            font-weight: bold;
+            padding-right: 10px;
+            white-space: nowrap;
+        }
+
+        .popup-content td.property-value {
+            padding-left: 5px;
         }
     </style>
 
@@ -87,30 +126,37 @@
 </head>
 <body>
     <!-- Навігаційна панель -->
-    <nav class="navbar navbar-dark bg-dark fixed-top py-1">
-        <div class="container-fluid px-2">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
             <!-- Селект зліва -->
-            <select class="form-select form-select-sm bg-dark text-light border-secondary" id="fileSelect" style="max-width: calc(100% - 100px);">
+            <select class="form-select me-2 bg-dark text-light border-secondary" id="fileSelect" style="width: auto;">
                 <option>Виберіть раду</option>
             </select>
 
             <!-- Кнопки справа -->
-            <div class="d-flex align-items-center">
-                <button class="btn btn-outline-light btn-transparent btn-sm d-flex align-items-center justify-content-center me-1" 
-                        id="exportButton" 
-                        title="Експорт в список"
-                        style="width: 32px; height: 32px;">
-                    <i class="bi bi-table"></i>
+            <div class="ms-auto">
+                <button class="btn btn-outline-light btn-transparent" id="exportButton" title="Експорт в список">
+                    <i class="bi bi-table fs-5"></i>
                 </button>
-                <button class="btn btn-outline-light btn-transparent btn-sm d-flex align-items-center justify-content-center" 
-                        id="statisticsButton" 
-                        title="Статистика"
-                        style="width: 32px; height: 32px;">
-                    <i class="bi bi-pie-chart-fill"></i>
+                <button class="btn btn-outline-light btn-transparent ms-2" id="statisticsButton" title="Статистика">
+                    <i class="bi bi-pie-chart-fill fs-5"></i>
                 </button>
             </div>
         </div>
     </nav>
+
+    <style>
+        .btn-transparent {
+            background-color: transparent !important;
+        }
+        .btn-transparent:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        .form-select option {
+            background-color: #212529;
+            color: white;
+        }
+    </style>
 
     <!-- Карта -->
     <div id="map"></div>
@@ -126,7 +172,9 @@
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
 
-    </head>
+    <!-- Основний JavaScript код -->
+    <script>
+        </head>
 <body>
     <div id="map"></div>
     <div id="controls">
@@ -694,6 +742,6 @@ function addTenantLayers() {
             }
         });
 
-    
+    </script>
 </body>
 </html>
