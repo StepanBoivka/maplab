@@ -80,6 +80,27 @@
                 padding: 0.3rem;
             }
         }
+        .select-custom {
+    width: 300px; /* Стандартна ширина для десктопів */
+}
+
+@media (max-width: 992px) {
+    .select-custom {
+        width: 250px; /* Для планшетів */
+    }
+}
+
+@media (max-width: 576px) {
+    .select-custom {
+        width: 200px; /* Для мобільних */
+    }
+}
+
+@media (max-width: 400px) {
+    .select-custom {
+        width: 150px; /* Для дуже малих екранів */
+    }
+}
     </style>
 
     <!-- Google Analytics -->
@@ -96,7 +117,7 @@
     <nav class="navbar navbar-dark bg-dark fixed-top py-1">
         <div class="container-fluid px-2">
             <!-- Селект зліва -->
-            <select class="form-select form-select-sm bg-dark text-light border-secondary" id="fileSelect" style="max-width: calc(100% - 100px);">
+            <select class="form-select form-select-sm bg-dark text-light border-secondary select-custom" id="fileSelect">
                 <option>Виберіть раду</option>
             </select>
 
