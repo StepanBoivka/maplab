@@ -749,15 +749,19 @@ function addTenantLayers() {
             }
         }
         // Додаємо обробник події для кнопки експорту
-        document.getElementById('exportButton').addEventListener('click', function() {
-            var data = collectMapData();
-            if (data.length > 0) {
-                var csv = convertToCSV(data);
-                downloadCSV(csv, 'список.csv');
-            } else {
-                alert('Немає даних для експорту. Будь ласка, виберіть файл з даними спочатку.');
-            }
-        });
+document.getElementById('exportButton').addEventListener('click', function() {
+    var data = collectMapData();
+    var selectedFile = document.getElementById('fileSelect').value; // Отримуємо назву вибраного файлу
+    
+    if (data.length > 0) {
+        var csv = convertToCSV(data);
+        // Використовуємо назву вибраного файлу для імені CSV
+        var filename = selectedFile.replace('.geojson', '') + '.csv'; // Видаляємо розширення .geojson якщо воно є
+        downloadCSV(csv, filename);
+    } else {
+        alert('Немає даних для експорту. Будь ласка, виберіть файл з даними спочатку.');
+    }
+});
  </script>
 
     
