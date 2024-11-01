@@ -569,10 +569,13 @@
     
     document.getElementById('search-container').appendChild(searchResults);
 
-    // Додаємо обробник події input
-    searchInput.removeEventListener('input', handleSearch);
-    
-    function handleSearch() {
+    // Видаляємо старі обробники подій, якщо вони є
+    var newSearchInput = searchInput.cloneNode(true);
+    searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+    searchInput = newSearchInput;
+
+    // Додаємо новий обробник події input
+    searchInput.addEventListener('input', function() {
         var text = this.value;
         searchResults.innerHTML = ''; // Очищаємо попередні результати
 
@@ -613,9 +616,7 @@
             });
             searchResults.appendChild(div);
         });
-    }
-
-    searchInput.addEventListener('input', handleSearch);
+    });
 
     // Закриваємо результати при кліку поза полем пошуку
     document.addEventListener('click', function(e) {
