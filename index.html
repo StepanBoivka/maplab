@@ -568,73 +568,79 @@
     
     document.getElementById('search-container').appendChild(searchResults);
 
-    // Функція для пошуку
-    function performSearch(text) {
+    // Очищаємо поле пошуку при кожному новому виклику
+    searchInput.value = '';
+
+    // Функція для пошуку з миттєвим відображенням результатів
+    function searchFeatures(text) {
         searchResults.innerHTML = '';
-        searchResults.style.display = 'none';
+        
+        if (!text || text.length < 1) {
+            searchResults.style.display = 'none';
+            return;
+        }
 
-        if (!text || text.length < 2) return;
+        const matches = [];
+        text = text.toLowerCase();
 
-        const results = [];
-
-        layer.eachLayer((layer) => {
+        layer.eachLayer(function(layer) {
             if (layer.feature && layer.feature.properties) {
-                const props = layer.feature.properties;
-                const cadastralNumber = String(props['Кадастровий номер'] || '').toLowerCase();
-                const owner = String(props['Власник'] || '').toLowerCase();
-                const searchText = text.toLowerCase();
+                const kadNum = String(layer.feature.properties['Кадастровий номер'] || '').toLowerCase();
+                const owner = String(layer.feature.properties['Власник'] || '').toLowerCase();
 
-                if (cadastralNumber.includes(searchText) || owner.includes(searchText)) {
-                    results.push({
+                if (kadNum.includes(text) || owner.includes(text)) {
+                    matches.push({
                         layer: layer,
-                        cadastralNumber: props['Кадастровий номер'] || 'Не вказано',
-                        owner: props['Власник'] || 'Не вказано'
+                        kadNum: layer.feature.properties['Кадастровий номер'] || 'Не вказано',
+                        owner: layer.feature.properties['Власник'] || 'Не вказано'
                     });
                 }
             }
         });
 
-        if (results.length > 0) {
+        if (matches.length > 0) {
             searchResults.style.display = 'block';
-
-            results.forEach((result) => {
-                const resultDiv = document.createElement('div');
-                resultDiv.className = 'search-result';
-                resultDiv.innerHTML = `
-                    <div><strong>Кадастровий номер:</strong> ${result.cadastralNumber}</div>
-                    <div><strong>Власник:</strong> ${result.owner}</div>
+            matches.forEach(function(match) {
+                const div = document.createElement('div');
+                div.className = 'search-result';
+                div.innerHTML = `
+                    <div><strong>Кадастровий номер:</strong> ${match.kadNum}</div>
+                    <div><strong>Власник:</strong> ${match.owner}</div>
                 `;
 
-                resultDiv.addEventListener('click', () => {
-                    if (result.layer.getBounds) {
-                        map.fitBounds(result.layer.getBounds());
-                        result.layer.openPopup();
+                div.addEventListener('click', function() {
+                    if (match.layer.getBounds) {
+                        map.fitBounds(match.layer.getBounds());
+                        match.layer.openPopup();
                     }
-                    searchInput.value = '';
                     searchResults.style.display = 'none';
+                    searchInput.value = '';
                 });
 
-                searchResults.appendChild(resultDiv);
+                searchResults.appendChild(div);
             });
+        } else {
+            searchResults.style.display = 'none';
         }
     }
 
-    // Додаємо обробники подій
-    const searchHandler = _.debounce((e) => performSearch(e.target.value), 300);
-    searchInput.addEventListener('input', searchHandler);
-
-    // Закриваємо результати при кліку поза полем пошуку
-    document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-            searchResults.style.display = 'none';
-        }
+    // Додаємо миттєвий пошук при введенні
+    searchInput.addEventListener('input', function(e) {
+        searchFeatures(this.value);
     });
 
-    // Перевіряємо натискання клавіш
-    searchInput.addEventListener('keydown', (e) => {
+    // Обробка клавіш
+    searchInput.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             searchResults.style.display = 'none';
             searchInput.value = '';
+        }
+    });
+
+    // Закриваємо результати при кліку поза полем пошуку
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
         }
     });
 }
