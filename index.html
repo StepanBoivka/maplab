@@ -599,16 +599,7 @@
         }
     });
 }
-            map.addControl(searchControl);
-
-            layer.eachLayer(function(layer) {
-                if (layer.feature && layer.feature.properties) {
-                    var props = layer.feature.properties;
-                    var searchField = (props['Кадастровий номер'] || '') + ' ' + (props['Власник'] || '');
-                    layer.feature.properties._searchField = searchField;
-                }
-            });
-        }
+            
 
         function collectMapData() {
             var data = [];
