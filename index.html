@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css" />
@@ -16,38 +20,45 @@
             padding: 0;
             margin: 0;
         }
-        #controls {
+        #map {
+            height: calc(100vh - 56px);
+            margin-top: 56px;
+        }
+        .navbar {
+            background-color: #212529 !important;
+        }
+        .navbar-brand, .nav-link {
+            color: white !important;
+        }
+        #search-container {
+            width: 250px;
             position: absolute;
-            z-index: 1000;
-            top: 10px;
-            left: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .navbar-container {
+            position: relative;
+        }
+        .action-buttons .btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 4px;
             display: flex;
-            flex-direction: column;
-            width: 200px;
+            align-items: center;
+            justify-content: center;
+            background-color: #343a40;
+            border: 1px solid #6c757d;
+            color: #fff;
+            transition: all 0.2s ease-in-out;
         }
-        #fileSelect {
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 5px;
-            font-size: 12px;
+        .action-buttons .btn:hover {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: #fff;
         }
-        #geolocationButton {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: #28a745;
-            color: white;
-            border: 1px solid #28a745;
-            border-radius: 50%;
-            padding: 8px;
-            cursor: pointer;
-            z-index: 1000;
-            font-size: 16px;
-        }
-        #geolocationButton:hover {
-            background: #218838;
-            border-color: #1e7e34;
+        .action-buttons .btn i {
+            font-size: 1rem;
         }
         .color-box {
             width: 12px;
@@ -60,102 +71,51 @@
             font-size: 12px;
         }
         .leaflet-control-search {
-            top: 50px !important; /* Змістити поле пошуку вниз */
-        }
-        #exportButton {
-            position: absolute;
-            bottom: 50px;
-            right: 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 8px 12px;
-            cursor: pointer;
-            z-index: 1000;
-            font-size: 14px;
-        }
-        #exportButton:hover {
-            background: #0056b3;
-        }
-        .link-icon {
-            width: 16px;
-            height: 16px;
-            display: inline-block;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>');
-            background-size: cover;
-            vertical-align: middle;
-            margin-right: 5px;
-        }
-        .link-text {
-            vertical-align: middle;
-            font-size: 14px;
-            color: #0066cc;
+            top: 50px !important;
         }
         .popup-tabs {
-    display: flex;
-    border-bottom: 1px solid #ccc;
-}
-.popup-tab {
-    padding: 8px 12px;
-    cursor: pointer;
-    background: #f1f1f1;
-    border: 1px solid #ccc;
-    border-bottom: none;
-    margin-right: 2px;
-    font-size: 12px;
-}
-.popup-tab.active {
-    background: #fff;
-    border-bottom: 1px solid #fff;
-    margin-bottom: -1px;
-}
-.popup-content {
-    display: none;
-    padding: 10px;
-    font-size: 12px;
-}
-.popup-content.active {
-    display: block;
-}
+            display: flex;
+            border-bottom: 1px solid #ccc;
+        }
+        .popup-tab {
+            padding: 8px 12px;
+            cursor: pointer;
+            background: #f1f1f1;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            margin-right: 2px;
+            font-size: 12px;
+        }
+        .popup-tab.active {
+            background: #fff;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px;
+        }
+        .popup-content {
+            display: none;
+            padding: 10px;
+            font-size: 12px;
+        }
+        .popup-content.active {
+            display: block;
+        }
         .popup-content table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 5px;
-}
-.popup-content table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 5px;
-}
-.popup-content td {
-    padding: 2px 0;
-    vertical-align: top;
-}
-.popup-content td.property-name {
-    font-weight: bold;
-    padding-right: 10px;
-    white-space: nowrap;
-}
-.popup-content td.property-value {
-    padding-left: 5px;
-}
-        #statisticsButton {
-    position: absolute;
-    bottom: 90px;
-    right: 10px;
-    background: #28a745;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 8px 12px;
-    cursor: pointer;
-    z-index: 1000;
-    font-size: 14px;
-}
-#statisticsButton:hover {
-    background: #218838;
-}
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 5px;
+        }
+        .popup-content td {
+            padding: 2px 0;
+            vertical-align: top;
+        }
+        .popup-content td.property-name {
+            font-weight: bold;
+            padding-right: 10px;
+            white-space: nowrap;
+        }
+        .popup-content td.property-value {
+            padding-left: 5px;
+        }
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -168,15 +128,41 @@
     </script>
 </head>
 <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid navbar-container">
+            <!-- Left side: File Select Dropdown -->
+            <div class="dropdown">
+                <select id="fileSelect" class="form-select">
+                    <option>Виберіть раду</option>
+                </select>
+            </div>
+
+            <!-- Center: Search -->
+            <div id="search-container">
+                <input type="text" id="map-search" class="form-control form-control-sm" placeholder="Пошук...">
+            </div>
+
+            <!-- Right side: Action Buttons -->
+            <div class="action-buttons d-flex gap-2">
+                <button class="btn" id="statisticsButton" title="Статистика">
+                    <i class="bi bi-graph-up"></i>
+                </button>
+                <button class="btn" id="exportButton" title="Експорт в список">
+                    <i class="bi bi-download"></i>
+                </button>
+                <button class="btn" id="geolocationButton" title="Моє місцезнаходження">
+                    <i class="bi bi-geo-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Map Container -->
     <div id="map"></div>
-    <div id="controls">
-        <select id="fileSelect">
-            <option>Виберіть файл</option>
-        </select>
-    </div>
-    <div id="geolocationButton">📍</div>
-    <button id="exportButton">Експорт в список</button>
-    <button id="statisticsButton" class="statistics-button">Статистика</button>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
@@ -199,7 +185,6 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
 
-        // Отримуємо ідентифікатор папки з URL, якщо є
         var dataPath = 'data/';
         if (id) {
             dataPath += id + '/';
@@ -213,7 +198,7 @@
         var baseMaps = {
             "Google Maps": googleLayer,
             "OpenStreetMap": openStreetMapLayer,
-            "Актуальні растри": rasterLayer // Додаємо новий шар
+            "Актуальні растри": rasterLayer
         };
 
         var overlays = {};
@@ -224,12 +209,11 @@
 
         // Заздалегідь визначені кольори
        var predefinedColors = [
-    "#E44754", "#1B9688", "#ff9947", "#FAC1FA", "#9BBFF8",
-    "#95F1FA", "#C6F8BD", "#F7FAB2", "#FFD7A6", "#FDABAB",
-    "#A569BD", "#FF5733", "#4A235A", "#7DCEA0", "#E74C3C",
-    "#F5B041", "#2471A3", "#AF7AC5", "#58D68D", "#5DADE2"
-];
-
+            "#E44754", "#1B9688", "#ff9947", "#FAC1FA", "#9BBFF8",
+            "#95F1FA", "#C6F8BD", "#F7FAB2", "#FFD7A6", "#FDABAB",
+            "#A569BD", "#FF5733", "#4A235A", "#7DCEA0", "#E74C3C",
+            "#F5B041", "#2471A3", "#AF7AC5", "#58D68D", "#5DADE2"
+        ];
 
         var colorIndex = 0;
 
@@ -243,131 +227,121 @@
             }
             return tenantColors[tenant];
         }
-
         function onEachFeature(feature, layer) {
-    if (feature.properties) {
-        var popupContent = '<div class="popup-tabs">' +
-            '<div class="popup-tab active" data-tab="ownership">Основна</div>' +
-            '<div class="popup-tab" data-tab="lease">Інше</div>' +
-            
-            '</div>';
+            if (feature.properties) {
+                var popupContent = '<div class="popup-tabs">' +
+                    '<div class="popup-tab active" data-tab="ownership">Основна</div>' +
+                    '<div class="popup-tab" data-tab="lease">Інше</div>' +
+                    '</div>';
 
-        var ownershipContent = '<div class="popup-content active" id="ownership"><table>';
-        var leaseContent = '<div class="popup-content" id="lease"><table>';
-        var otherContent = '<div class="popup-content" id="other"><table>';
+                var ownershipContent = '<div class="popup-content active" id="ownership"><table>';
+                var leaseContent = '<div class="popup-content" id="lease"><table>';
+                var otherContent = '<div class="popup-content" id="other"><table>';
 
-        // Визначаємо порядок відображення властивостей 1111
-        var orderedKeys = [
-            "Кадастровий номер",
-            "Площа розрахована",
-            "Власник",
-            "Дата реєстрації",
-            "Орендар",
-            "Дата реєстрації оренди",
-            "Дата завершення",
-            "Вид обмеження",
-            "Цільове",
-            "Посилання",
-            "Дата оновлення"
-        ];
+                var orderedKeys = [
+                    "Кадастровий номер",
+                    "Площа розрахована",
+                    "Власник",
+                    "Дата реєстрації",
+                    "Орендар",
+                    "Дата реєстрації оренди",
+                    "Дата завершення",
+                    "Вид обмеження",
+                    "Цільове",
+                    "Посилання",
+                    "Дата оновлення"
+                ];
 
-        // Додаємо всі інші ключі, які не вказані в orderedKeys
-        for (var key in feature.properties) {
-            if (orderedKeys.indexOf(key) === -1) {
-                orderedKeys.push(key);
-            }
-        }
-
-        orderedKeys.forEach(function(key) {
-            if (feature.properties.hasOwnProperty(key)) {
-                var value = feature.properties[key];
-                var row = '<tr><td class="property-name">' + key + ':</td><td class="property-value">';
-                if (key === "Посилання" && value) {
-                    row += '<a href="' + value + '" target="_blank"><span class="link-icon"></span><span class="link-text">інформація ДЗК</span></a>';
-                } else {
-                    row += value;
+                for (var key in feature.properties) {
+                    if (orderedKeys.indexOf(key) === -1) {
+                        orderedKeys.push(key);
+                    }
                 }
-                row += '</td></tr>';
 
-                // Розподіляємо інформацію по вкладках
-                switch (key) {
-                    case "Кадастровий номер":
-                    case "Площа розрахована":
-                    case "Власник":
-                    case "Орендар":
-                    case "Дата реєстрації оренди":
-                    case "Дата реєстрації":
-                    case "Дата завершення":
-                    case "Вид обмеження":
-                    case "Посилання":
-                    case "Дата оновлення":
-                        ownershipContent += row;
-                        break;
-                        case "Вид обмеження:":
-                        
-                        case "Дата реєстрації":
-                        case "Дата завершення":
-                                             
-                        leaseContent += row;
-                        break;
-                    default:
-                        
-                }
-            }
-        });
+                orderedKeys.forEach(function(key) {
+                    if (feature.properties.hasOwnProperty(key)) {
+                        var value = feature.properties[key];
+                        var row = '<tr><td class="property-name">' + key + ':</td><td class="property-value">';
+                        if (key === "Посилання" && value) {
+                            row += '<a href="' + value + '" target="_blank"><span class="link-icon"></span><span class="link-text">інформація ДЗК</span></a>';
+                        } else {
+                            row += value;
+                        }
+                        row += '</td></tr>';
 
-        ownershipContent += '</table></div>';
-        leaseContent += '</table></div>';
-        otherContent += '</table></div>';
-
-        popupContent += ownershipContent + leaseContent + otherContent;
-        
-        var popup = L.popup({maxWidth: 300, maxHeight: 300});
-        popup.setContent(popupContent);
-        layer.bindPopup(popup);
-
-        // Додаємо обробник подій для вкладок після відкриття попапу
-        layer.on('popupopen', function() {
-            var tabs = document.querySelectorAll('.popup-tab');
-            tabs.forEach(function(tab) {
-                tab.addEventListener('click', function() {
-                    var tabId = this.getAttribute('data-tab');
-                    document.querySelectorAll('.popup-tab, .popup-content').forEach(function(el) {
-                        el.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                    document.getElementById(tabId).classList.add('active');
+                        switch (key) {
+                            case "Кадастровий номер":
+                            case "Площа розрахована":
+                            case "Власник":
+                            case "Орендар":
+                            case "Дата реєстрації оренди":
+                            case "Дата реєстрації":
+                            case "Дата завершення":
+                            case "Вид обмеження":
+                            case "Посилання":
+                            case "Дата оновлення":
+                                ownershipContent += row;
+                                break;
+                            case "Вид обмеження:":
+                            case "Дата реєстрації":
+                            case "Дата завершення":
+                                leaseContent += row;
+                                break;
+                            default:
+                        }
+                    }
                 });
-            });
-        });
-        document.getElementById('statisticsButton').addEventListener('click', function() {
-    var selectedFile = document.getElementById('fileSelect').value;
-    if (selectedFile && selectedFile !== 'Виберіть файл') {
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-        const statisticsUrl = `statistics.html?file=${encodeURIComponent(selectedFile)}${id ? `&id=${id}` : ''}`;
-        window.location.href = statisticsUrl;
-    } else {
-        alert('Будь ласка, спочатку виберіть файл з даними.');
-    }
-});
 
-        // Додаткова логіка для обробки орендарів та площ
-        var tenant = feature.properties["Орендар"];
-        var area = parseFloat(feature.properties["Площа розрахована"]);
-        if (!isNaN(area)) {
-            if (tenant === null || tenant === "" || tenant === undefined) {
-                freeLayer.addLayer(layer);
-                freeArea += area;
-            } else {
-                if (!tenantAreas[tenant]) {
-                    tenantAreas[tenant] = 0;
+                ownershipContent += '</table></div>';
+                leaseContent += '</table></div>';
+                otherContent += '</table></div>';
+
+                popupContent += ownershipContent + leaseContent + otherContent;
+
+                var popup = L.popup({maxWidth: 300, maxHeight: 300});
+                popup.setContent(popupContent);
+                layer.bindPopup(popup);
+
+                layer.on('popupopen', function() {
+                    var tabs = document.querySelectorAll('.popup-tab');
+                    tabs.forEach(function(tab) {
+                        tab.addEventListener('click', function() {
+                            var tabId = this.getAttribute('data-tab');
+                            document.querySelectorAll('.popup-tab, .popup-content').forEach(function(el) {
+                                el.classList.remove('active');
+                            });
+                            this.classList.add('active');
+                            document.getElementById(tabId).classList.add('active');
+                        });
+                    });
+                });
+                document.getElementById('statisticsButton').addEventListener('click', function() {
+                    var selectedFile = document.getElementById('fileSelect').value;
+                    if (selectedFile && selectedFile !== 'Виберіть файл') {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const id = urlParams.get('id');
+                        const statisticsUrl = `statistics.html?file=${encodeURIComponent(selectedFile)}${id ? `&id=${id}` : ''}`;
+                        window.location.href = statisticsUrl;
+                    } else {
+                        alert('Будь ласка, спочатку виберіть файл з даними.');
+                    }
+                });
+
+                var tenant = feature.properties["Орендар"];
+                var area = parseFloat(feature.properties["Площа розрахована"]);
+                if (!isNaN(area)) {
+                    if (tenant === null || tenant === "" || tenant === undefined) {
+                        freeLayer.addLayer(layer);
+                        freeArea += area;
+                    } else {
+                        if (!tenantAreas[tenant]) {
+                            tenantAreas[tenant] = 0;
+                        }
+                        tenantAreas[tenant] += area;
+                    }
                 }
-                tenantAreas[tenant] += area;
             }
         }
-    }
-}
         function styleFeature(feature) {
             return {
                 color: getColor(feature.properties["Орендар"]),
@@ -378,16 +352,16 @@
         }
 
         function clearOverlays() {
-    for (var layerName in overlays) {
-        if (overlays.hasOwnProperty(layerName) && layerName !== "Поля обробітку") { // Не очищуємо "Поля обробітку"
-            map.removeLayer(overlays[layerName]);
+            for (var layerName in overlays) {
+                if (overlays.hasOwnProperty(layerName) && layerName !== "Поля обробітку") {
+                    map.removeLayer(overlays[layerName]);
+                }
+            }
+            overlays = { "Поля обробітку": fieldLayer };
         }
-    }
-    overlays = { "Поля обробітку": fieldLayer }; // Зберігаємо цей шар
-}
 
         function addGeoJsonLayer(url, layerName) {
-            clearOverlays(); // Очистити старі полігони
+            clearOverlays();
 
             fetch(url)
                 .then(response => response.json())
@@ -408,38 +382,33 @@
 
         var layersControl;
         var searchControl;
-
-        // Додаємо шар "Поля обробітку"
-        var fieldLayer; // Створюємо змінну для зберігання шару
-        var currentZoom = map.getZoom(); // Отримуємо поточний зум карти
-
-        // Визначаємо мінімальний і максимальний рівень зуму для відображення написів
-        var minZoomForLabels = 15; // Мінімальний зум, на якому видно написи
-        var maxZoomForLabels = 18; // Максимальний зум, на якому видно написи
+        var fieldLayer;
+        var currentZoom = map.getZoom();
+        var minZoomForLabels = 15;
+        var maxZoomForLabels = 18;
 
         function styleFieldFeature(feature) {
             return {
-                color: 'yellow', // Межа жовта
+                color: 'yellow',
                 weight: 3,
                 opacity: 1,
-                fillOpacity: 0 // Прозорість заповнення
+                fillOpacity: 0
             };
         }
 
         function updateLabelsVisibility() {
-    currentZoom = map.getZoom(); // Оновлюємо поточний рівень зуму
-    fieldLayer.eachLayer(function (layer) {
-        if (currentZoom >= minZoomForLabels && currentZoom <= maxZoomForLabels) {
-            // Показуємо підказки тільки на визначеному діапазоні зуму
-            layer.getTooltip().setOpacity(1);
-        } else {
-            // Ховаємо підказки
-            layer.getTooltip().setOpacity(0);
+            currentZoom = map.getZoom();
+            fieldLayer.eachLayer(function (layer) {
+                if (currentZoom >= minZoomForLabels && currentZoom <= maxZoomForLabels) {
+                    layer.getTooltip().setOpacity(1);
+                } else {
+                    layer.getTooltip().setOpacity(0);
+                }
+            });
         }
-    });
-}
-function loadFileList() {
-            fetch(dataPath +'file_list.json')
+
+        function loadFileList() {
+            fetch(dataPath + 'file_list.json')
                 .then(response => response.json())
                 .then(data => {
                     var select = document.getElementById('fileSelect');
@@ -467,48 +436,46 @@ function loadFileList() {
         function addFieldLayer() {
             fetch(dataPath + 'field.geojson')
                 .then(response => response.json())
-        .then(data => {
-            fieldLayer = L.geoJSON(data, {
-                style: styleFieldFeature,
-                onEachFeature: function (feature, layer) {
-                    if (feature.properties && feature.properties.area) {
-                        var area = feature.properties.area; 
-                        // Додаємо підказку лише з числом площі
-                        layer.bindTooltip(area.toString(), {
-                            permanent: true,   // Постійна підказка
-                            direction: 'center', // Позиціонування в центрі полігону
-                            className: 'area-tooltip', // Додатковий клас для стилізації
-                            opacity: 0 // Спочатку підказки приховані
-                        });
-                    }
-                }
-            }).addTo(map);
+                .then(data => {
+                    fieldLayer = L.geoJSON(data, {
+                        style: styleFieldFeature,
+                        onEachFeature: function (feature, layer) {
+                            if (feature.properties && feature.properties.area) {
+                                var area = feature.properties.area;
+                                layer.bindTooltip(area.toString(), {
+                                    permanent: true,
+                                    direction: 'center',
+                                    className: 'area-tooltip',
+                                    opacity: 0
+                                });
+                            }
+                        }
+                    }).addTo(map);
 
-            // Оновлюємо видимість підказок відповідно до поточного рівня зуму
-            updateLabelsVisibility();
-// Додаємо подію для оновлення видимості підказок при зміні зуму
-map.on('zoomend', function() {
-    updateLabelsVisibility();
-});
-            // Додаємо до меню шарів
-            overlays["Поля обробітку"] = fieldLayer;
-            var colorBox = '<span class="color-box" style="background-color:transparent; border: 2px solid yellow"></span>';
-            layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Поля обробітку</span>');
-        })
-        .catch(error => console.error('Error loading Field GeoJSON data:', error));
-}
+                    updateLabelsVisibility();
+                    map.on('zoomend', function() {
+                        updateLabelsVisibility();
+                    });
+                    
+                    overlays["Поля обробітку"] = fieldLayer;
+                    var colorBox = '<span class="color-box" style="background-color:transparent; border: 2px solid yellow"></span>';
+                    layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Поля обробітку</span>');
+                })
+                .catch(error => console.error('Error loading Field GeoJSON data:', error));
+        }
 
         function updateLayersControl() {
             if (layersControl) {
                 map.removeControl(layersControl);
             }
             layersControl = L.control.layers(baseMaps, overlays, {
-                collapsed: true // Меню згорнуте за замовчуванням
+                collapsed: true
             }).addTo(map);
             addTenantLayers();
             addFreeLayer();
         }
-function addTenantLayers() {
+
+        function addTenantLayers() {
             var tenantLayers = {};
             Object.values(overlays).forEach(layerGroup => {
                 layerGroup.eachLayer(layer => {
@@ -538,6 +505,7 @@ function addTenantLayers() {
                 layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
             });
         }
+
         function addFreeLayer() {
             if (freeLayer.getLayers().length > 0) {
                 overlays["вільні від оренди"] = freeLayer;
@@ -545,6 +513,7 @@ function addTenantLayers() {
                 layersControl.addOverlay(freeLayer, colorBox + '<span class="layer-name">вільні від оренди (' + freeArea.toFixed(2) + ' га)</span>');
             }
         }
+
         function addSearchControl(layer) {
             if (searchControl) {
                 map.removeControl(searchControl);
@@ -558,7 +527,7 @@ function addTenantLayers() {
                     var jsons = records;
                     var ret = {};
 
-                    text = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Екрануємо спеціальні символи
+                    text = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                     var reg = new RegExp(text, 'i');
                     
                     for (var i in jsons) {
@@ -566,19 +535,15 @@ function addTenantLayers() {
                             var props = jsons[i].layer.feature && jsons[i].layer.feature.properties ? jsons[i].layer.feature.properties : {};
                             var kadastrovyNomer = props['Кадастровий номер'] || '';
                             var vlasnyk = props['Власник'] || '';
-                            
-                            console.log('Перевірка:', kadastrovyNomer, vlasnyk);
 
                             if (reg.test(kadastrovyNomer) || reg.test(vlasnyk)) {
                                 ret[i] = jsons[i];
-                                console.log('Знайдено співпадіння:', i, kadastrovyNomer, vlasnyk);
                             }
                         } catch (error) {
                             console.error('Помилка при обробці об\'єкта:', error, jsons[i]);
                         }
                     }
                     
-                    console.log('Кількість знайдених результатів:', Object.keys(ret).length);
                     return ret;
                 },
                 buildTip: function(text, val) {
@@ -602,7 +567,6 @@ function addTenantLayers() {
             });
             map.addControl(searchControl);
 
-            // Додаємо спеціальне поле для пошуку до кожного об'єкта
             layer.eachLayer(function(layer) {
                 if (layer.feature && layer.feature.properties) {
                     var props = layer.feature.properties;
@@ -612,37 +576,8 @@ function addTenantLayers() {
             });
         }
 
-        // Завантаження даних при завантаженні сторінки
-       // if (id) {
-       //     addGeoJsonLayer(dataPath + 'yourDataFile.geojson', 'Ваш шар');
-       // }
-
-        addFieldLayer();
-
-        // Обробка натискання кнопки геолокації
-        document.getElementById('geolocationButton').addEventListener('click', function() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var lat = position.coords.latitude;
-                    var lng = position.coords.longitude;
-                    map.setView([lat, lng], 16);
-                    L.marker([lat, lng]).addTo(map)
-                        .bindPopup('Ви тут!')
-                        .openPopup();
-                }, function() {
-                    alert('Не вдалося отримати ваше місцезнаходження.');
-                });
-            } else {
-                alert('Геолокація не підтримується вашим браузером.');
-            }
-        });
-        loadFileList();
-        updateLayersControl();
-
-// Додаємо нову функцію для збору даних з карти
         function collectMapData() {
             var data = [];
-            // Перевіряємо, чи є активний шар ділянок
             var activeLayer = null;
             for (var key in overlays) {
                 if (overlays.hasOwnProperty(key) && key !== "Поля обробітку") {
@@ -661,8 +596,7 @@ function addTenantLayers() {
             return data;
         }
 
-        // Функція для конвертації даних у CSV
-       function convertToCSV(objArray) {
+        function convertToCSV(objArray) {
             var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
             var str = '';
             var headers = Object.keys(array[0]).filter(key => key !== '_searchField' && key !== 'Посилання');
@@ -676,30 +610,26 @@ function addTenantLayers() {
                     var key = headers[index];
                     var value = array[i][key];
                     
-                    // Перевірка на null або undefined
                     if (value === null || value === undefined) {
                         value = '';
                     } else {
-                        // Особлива обробка для різних типів полів
                         if (key === "Площа" || key === "Площа розрахована" || key === "Площа ДЗК" || key === "НГО") {
                             if (typeof value === 'number') {
-                                value = value.toFixed(4); // Форматуємо число з 4 знаками після коми
+                                value = value.toFixed(4);
                             } else if (typeof value === 'string') {
-                                // Якщо значення є рядком, спробуємо перетворити його на число
                                 var numValue = parseFloat(value);
                                 if (!isNaN(numValue)) {
                                     value = numValue.toFixed(4);
                                 }
                             }
                         } else if (key === "Дата НГО") {
-                            // Переконуємося, що дата коректно форматована
                             value = value.toString();
                         } else if (typeof value === 'string') {
-                            value = value.replace(/"/g, '""'); // Екранування лапок
-                            value = '"' + value + '"'; // Огортання значення в лапки
+                            value = value.replace(/"/g, '""');
+                            value = '"' + value + '"';
                         } else if (typeof value === 'object') {
                             value = JSON.stringify(value).replace(/"/g, '""');
-                            value = '"' + value + '"'; // Огортання значення в лапки
+                            value = '"' + value + '"';
                         }
                     }
                     
@@ -709,7 +639,7 @@ function addTenantLayers() {
             }
             return str;
         }
-        // Функція для завантаження CSV файлу
+
         function downloadCSV(csv, filename) {
             var blob = new Blob(["\ufeff", csv], { type: 'text/csv;charset=utf-8;' });
             var link = document.createElement("a");
@@ -723,7 +653,7 @@ function addTenantLayers() {
                 document.body.removeChild(link);
             }
         }
-        // Додаємо обробник події для кнопки експорту
+
         document.getElementById('exportButton').addEventListener('click', function() {
             var data = collectMapData();
             if (data.length > 0) {
@@ -734,8 +664,25 @@ function addTenantLayers() {
             }
         });
 
+        document.getElementById('geolocationButton').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    map.setView([lat, lng], 16);
+                    L.marker([lat, lng]).addTo(map)
+                        .bindPopup('Ви тут!')
+                        .openPopup();
+                }, function() {
+                    alert('Не вдалося отримати ваше місцезнаходження.');
+                });
+            } else {
+                alert('Геолокація не підтримується вашим браузером.');
+            }
+        });
 
-        
+        loadFileList();
+        updateLayersControl();
     </script>
 </body>
 </html>
