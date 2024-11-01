@@ -30,12 +30,6 @@
         .navbar-brand, .nav-link {
             color: white !important;
         }
-        #search-container {
-            width: 250px;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
         .navbar-container {
             position: relative;
         }
@@ -116,47 +110,6 @@
         .popup-content td.property-value {
             padding-left: 5px;
         }
-        .leaflet-control-search {
-    display: none !important;
-}
-#search-container {
-    width: 250px;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
-}
-#map-search {
-    border: 1px solid #ccc;
-    background-color: white;
-}
-.search-result {
-    background-color: white;
-    padding: 5px;
-    border: 1px solid #ccc;
-    margin-top: 2px;
-    cursor: pointer;
-}
-.search-result:hover {
-    background-color: #f0f0f0;
-}
-        .search-result:hover {
-        background-color: #f0f0f0;
-    }
-
-    /* Додайте новий стиль тут */
-    .search-results-container {
-        position: absolute;
-        width: 100%;
-        background-color: white;
-        z-index: 1000;
-        max-height: 300px;
-        overflow-y: auto;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        border-radius: 4px;
-        margin-top: 2px;
-        top: 100%;
-    }
     </style>
     <title>Карта земельних ділянок</title>
     <!-- Google tag (gtag.js) -->
@@ -180,10 +133,7 @@
             </div>
 
             <!-- Center: Search -->
-            <div id="search-container">
-                <input type="text" id="map-search" class="form-control form-control-sm" placeholder="Пошук...">
-            </div>
-
+            
             <!-- Right side: Action Buttons -->
             <div class="action-buttons d-flex gap-2">
                 <button class="btn" id="statisticsButton" title="Статистика">
@@ -556,91 +506,62 @@
         }
 
         function addSearchControl(layer) {
-    const searchInput = document.getElementById('map-search');
-    const searchResults = document.createElement('div');
-    searchResults.className = 'search-results-container';
-    
-    // Видаляємо старий контейнер результатів, якщо він існує
-    const oldResults = document.querySelector('.search-results-container');
-    if (oldResults) {
-        oldResults.remove();
+    if (searchControl) {
+        map.removeControl(searchControl);
     }
-    
-    document.getElementById('search-container').appendChild(searchResults);
+    searchControl = new L.Control.Search({
+        layer: layer,
+        propertyName: '_searchField',
+        initial: false,
+        textPlaceholder: 'Пошук за кадастровим номером або власником',
+        filterData: function(text, records) {
+            var jsons = records;
+            var ret = {};
 
-    // Очищаємо поле пошуку при кожному новому виклику
-    searchInput.value = '';
+            text = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            var reg = new RegExp(text, 'i');
+            
+            for (var i in jsons) {
+                try {
+                    var props = jsons[i].layer.feature && jsons[i].layer.feature.properties ? jsons[i].layer.feature.properties : {};
+                    var kadastrovyNomer = props['Кадастровий номер'] || '';
+                    var vlasnyk = props['Власник'] || '';
 
-    // Функція для пошуку з миттєвим відображенням результатів
-    function searchFeatures(text) {
-        searchResults.innerHTML = '';
-        
-        if (!text || text.length < 1) {
-            searchResults.style.display = 'none';
-            return;
-        }
-
-        const matches = [];
-        text = text.toLowerCase();
-
-        layer.eachLayer(function(layer) {
-            if (layer.feature && layer.feature.properties) {
-                const kadNum = String(layer.feature.properties['Кадастровий номер'] || '').toLowerCase();
-                const owner = String(layer.feature.properties['Власник'] || '').toLowerCase();
-
-                if (kadNum.includes(text) || owner.includes(text)) {
-                    matches.push({
-                        layer: layer,
-                        kadNum: layer.feature.properties['Кадастровий номер'] || 'Не вказано',
-                        owner: layer.feature.properties['Власник'] || 'Не вказано'
-                    });
+                    if (reg.test(kadastrovyNomer) || reg.test(vlasnyk)) {
+                        ret[i] = jsons[i];
+                    }
+                } catch (error) {
+                    console.error('Помилка при обробці об\'єкта:', error, jsons[i]);
                 }
             }
-        });
-
-        if (matches.length > 0) {
-            searchResults.style.display = 'block';
-            matches.forEach(function(match) {
-                const div = document.createElement('div');
-                div.className = 'search-result';
-                div.innerHTML = `
-                    <div><strong>Кадастровий номер:</strong> ${match.kadNum}</div>
-                    <div><strong>Власник:</strong> ${match.owner}</div>
-                `;
-
-                div.addEventListener('click', function() {
-                    if (match.layer.getBounds) {
-                        map.fitBounds(match.layer.getBounds());
-                        match.layer.openPopup();
-                    }
-                    searchResults.style.display = 'none';
-                    searchInput.value = '';
-                });
-
-                searchResults.appendChild(div);
-            });
-        } else {
-            searchResults.style.display = 'none';
-        }
-    }
-
-    // Додаємо миттєвий пошук при введенні
-    searchInput.addEventListener('input', function(e) {
-        searchFeatures(this.value);
-    });
-
-    // Обробка клавіш
-    searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            searchResults.style.display = 'none';
-            searchInput.value = '';
+            return ret;
+        },
+        buildTip: function(text, val) {
+            try {
+                var props = val.layer.feature && val.layer.feature.properties ? val.layer.feature.properties : {};
+                var kadastrovyNomer = props['Кадастровий номер'] || 'Не вказано';
+                var vlasnyk = props['Власник'] || 'Не вказано';
+                return '<a href="#">Кадастровий номер: ' + kadastrovyNomer + '<br>Власник: ' + vlasnyk + '</a>';
+            } catch (error) {
+                console.error('Помилка при створенні підказки:', error);
+                return '<a href="#">Помилка: неможливо відобразити дані</a>';
+            }
+        },
+        moveToLocation: function(latlng, title, map) {
+            if (latlng.layer && latlng.layer.getBounds) {
+                map.fitBounds(latlng.layer.getBounds());
+            } else {
+                map.setView(latlng, 15);
+            }
         }
     });
+    map.addControl(searchControl);
 
-    // Закриваємо результати при кліку поза полем пошуку
-    document.addEventListener('click', function(e) {
-        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-            searchResults.style.display = 'none';
+    layer.eachLayer(function(layer) {
+        if (layer.feature && layer.feature.properties) {
+            var props = layer.feature.properties;
+            var searchField = (props['Кадастровий номер'] || '') + ' ' + (props['Власник'] || '');
+            layer.feature.properties._searchField = searchField;
         }
     });
 }
