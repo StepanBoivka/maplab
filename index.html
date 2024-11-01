@@ -556,73 +556,94 @@
         }
 
         function addSearchControl(layer) {
-    // Отримуємо поле пошуку
-    var searchInput = document.getElementById('map-search');
-    var searchResults = document.createElement('div');
+    const searchInput = document.getElementById('map-search');
+    const searchResults = document.createElement('div');
     searchResults.className = 'search-results-container';
     
     // Видаляємо старий контейнер результатів, якщо він існує
-    var oldResults = document.querySelector('.search-results-container');
+    const oldResults = document.querySelector('.search-results-container');
     if (oldResults) {
         oldResults.remove();
     }
     
     document.getElementById('search-container').appendChild(searchResults);
 
-    // Видаляємо старі обробники подій, якщо вони є
-    var newSearchInput = searchInput.cloneNode(true);
-    searchInput.parentNode.replaceChild(newSearchInput, searchInput);
-    searchInput = newSearchInput;
+    // Функція для пошуку
+    function searchFeatures(text) {
+        if (text.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
 
-    // Додаємо новий обробник події input
-    searchInput.addEventListener('input', function() {
-        var text = this.value;
-        searchResults.innerHTML = ''; // Очищаємо попередні результати
+        // Очищаємо попередні результати
+        searchResults.innerHTML = '';
 
-        if (text.length < 2) return; // Мінімальна довжина для пошуку
+        // Створюємо регулярний вираз для пошуку
+        text = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const reg = new RegExp(text, 'i');
 
-        var results = [];
+        const matches = [];
         layer.eachLayer(function(layer) {
             if (layer.feature && layer.feature.properties) {
-                var props = layer.feature.properties;
-                var kadastrovyNomer = props['Кадастровий номер'] || '';
-                var vlasnyk = props['Власник'] || '';
+                const props = layer.feature.properties;
+                const kadastrovyNomer = props['Кадастровий номер'] || '';
+                const vlasnyk = props['Власник'] || '';
 
-                if (kadastrovyNomer.toLowerCase().includes(text.toLowerCase()) || 
-                    vlasnyk.toLowerCase().includes(text.toLowerCase())) {
-                    results.push({
+                if (reg.test(kadastrovyNomer) || reg.test(vlasnyk)) {
+                    matches.push({
                         layer: layer,
-                        kadastrovyNomer: kadastrovyNomer,
-                        vlasnyk: vlasnyk
+                        properties: props
                     });
                 }
             }
         });
 
-        // Відображаємо результати
-        results.forEach(function(result) {
-            var div = document.createElement('div');
-            div.className = 'search-result';
-            div.innerHTML = `Кадастровий номер: ${result.kadastrovyNomer}<br>Власник: ${result.vlasnyk}`;
-            div.addEventListener('click', function() {
-                if (result.layer.getBounds) {
-                    map.fitBounds(result.layer.getBounds());
-                } else if (result.layer.getLatLng) {
-                    map.setView(result.layer.getLatLng(), 15);
-                }
-                result.layer.openPopup();
-                searchResults.innerHTML = ''; // Очищаємо результати після вибору
-                searchInput.value = ''; // Очищаємо поле пошуку
+        // Показуємо результати
+        if (matches.length > 0) {
+            searchResults.style.display = 'block';
+            matches.forEach(function(item) {
+                const div = document.createElement('div');
+                div.className = 'search-result';
+                div.innerHTML = `
+                    <div class="search-result-content">
+                        <div><strong>Кадастровий номер:</strong> ${item.properties['Кадастровий номер'] || 'Не вказано'}</div>
+                        <div><strong>Власник:</strong> ${item.properties['Власник'] || 'Не вказано'}</div>
+                    </div>
+                `;
+
+                div.addEventListener('click', function() {
+                    if (item.layer.getBounds) {
+                        map.fitBounds(item.layer.getBounds());
+                    } else {
+                        map.setView(item.layer.getLatLng(), 15);
+                    }
+                    item.layer.openPopup();
+                    searchResults.style.display = 'none';
+                    searchInput.value = '';
+                });
+
+                searchResults.appendChild(div);
             });
-            searchResults.appendChild(div);
-        });
+        } else {
+            searchResults.style.display = 'none';
+        }
+    }
+
+    // Обробник події input
+    searchInput.addEventListener('input', function(e) {
+        searchFeatures(this.value);
     });
 
     // Закриваємо результати при кліку поза полем пошуку
     document.addEventListener('click', function(e) {
         if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-            searchResults.innerHTML = '';
+            searchResults.style.display = 'none';
         }
+    });
+
+    // Запобігаємо закриттю результатів при кліку на них
+    searchResults.addEventListener('click', function(e) {
+        e.stopPropagation();
     });
 }
         function collectMapData() {
