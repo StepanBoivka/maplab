@@ -555,16 +555,19 @@ function loadFileList() {
             }
         });
         function addFieldLayer() {
-            fetch(dataPath + 'field.geojson')
-                .then(response => response.json())
+    fetch(dataPath + 'field.geojson')
+        .then(response => response.json())
         .then(data => {
             fieldLayer = L.geoJSON(data, {
                 style: styleFieldFeature,
                 onEachFeature: function (feature, layer) {
-                    if (feature.properties && feature.properties.area) {
-                        var area = feature.properties.area; 
-                        // Додаємо підказку лише з числом площі
-                        layer.bindTooltip(area.toString(), {
+                    if (feature.properties && feature.properties.area && feature.properties.name) {
+                        // Отримуємо name і area з властивостей, перетворюємо area на рядок
+                        var name = feature.properties.name;
+                        var area = feature.properties.area.toString(); 
+
+                        // Додаємо підказку з name та area через дефіс
+                        layer.bindTooltip(`${name} - ${area}`, {
                             permanent: true,   // Постійна підказка
                             direction: 'center', // Позиціонування в центрі полігону
                             className: 'area-tooltip', // Додатковий клас для стилізації
@@ -573,6 +576,9 @@ function loadFileList() {
                     }
                 }
             }).addTo(map);
+        });
+}
+
 
             // Оновлюємо видимість підказок відповідно до поточного рівня зуму
             updateLabelsVisibility();
