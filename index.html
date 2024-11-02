@@ -214,6 +214,25 @@
     margin-left: -10px !important;
     margin-top: -10px !important;
 }
+        .nav-tabs .nav-link {
+    color: #495057;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    margin-right: 5px;
+}
+
+.nav-tabs .nav-link.active {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+}
+
+.tab-content {
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+}
     </style>
 
     <!-- Google Analytics -->
@@ -265,9 +284,33 @@
     <div class="modal-content">
         <span class="close">&times;</span>
         <h5>Пошук за кадастровими номерами</h5>
-        <p>Вставте список кадастрових номерів (кожен з нового рядка)</p>
-        <textarea id="cadastralList" placeholder="Наприклад:&#10;6821555100:05:006:0001&#10;6821555100:05:006:0002"></textarea>
-        <button class="btn btn-primary" id="searchCadastral">Пошук</button>
+        
+        <!-- Tabs -->
+        <div class="nav nav-tabs mb-3" id="cadastralTabs" role="tablist">
+            <button class="nav-link active" id="own-tab" data-bs-toggle="tab" data-bs-target="#own" type="button" role="tab" aria-controls="own" aria-selected="true">
+                Свої ділянки
+            </button>
+            <button class="nav-link" id="others-tab" data-bs-toggle="tab" data-bs-target="#others" type="button" role="tab" aria-controls="others" aria-selected="false">
+                Чужі ділянки
+            </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="cadastralTabContent">
+            <!-- Own Plots Tab -->
+            <div class="tab-pane fade show active" id="own" role="tabpanel" aria-labelledby="own-tab">
+                <p>Вставте список своїх кадастрових номерів (кожен з нового рядка)</p>
+                <textarea id="ownCadastralList" class="form-control mb-2" rows="6" placeholder="Наприклад:&#10;6821555100:05:006:0001&#10;6821555100:05:006:0002"></textarea>
+            </div>
+            
+            <!-- Others' Plots Tab -->
+            <div class="tab-pane fade" id="others" role="tabpanel" aria-labelledby="others-tab">
+                <p>Вставте список чужих кадастрових номерів (кожен з нового рядка)</p>
+                <textarea id="othersCadastralList" class="form-control mb-2" rows="6" placeholder="Наприклад:&#10;6821555100:05:006:0003&#10;6821555100:05:006:0004"></textarea>
+            </div>
+        </div>
+
+        <button class="btn btn-primary mt-3" id="searchCadastral">Пошук</button>
     </div>
 </div>
 
@@ -841,44 +884,54 @@ document.getElementById('exportButton').addEventListener('click', function() {
     }
 });
 
-        var cadastralModal = document.getElementById("cadastralModal");
+var cadastralModal = document.getElementById("cadastralModal");
 var cadastralBtn = document.getElementById("cadastralSearchButton");
 var closeBtn = document.getElementsByClassName("close")[0];
 var searchBtn = document.getElementById("searchCadastral");
-var markersLayer = L.layerGroup().addTo(map);
+var ownMarkersLayer = L.layerGroup().addTo(map);
+var othersMarkersLayer = L.layerGroup().addTo(map);
 
 // Функція очищення текстового поля
-function clearCadastralList() {
-    document.getElementById("cadastralList").value = '';
+function clearCadastralLists() {
+    document.getElementById("ownCadastralList").value = '';
+    document.getElementById("othersCadastralList").value = '';
 }
 
 // Функція відкриття модального вікна
 cadastralBtn.onclick = function() {
-    clearCadastralList(); // Очищуємо поле при кожному відкритті
+    clearCadastralLists();
     cadastralModal.style.display = "block";
 }
 
 // Функції закриття
 closeBtn.onclick = function() {
     cadastralModal.style.display = "none";
-    clearCadastralList(); // Очищуємо поле при закритті
+    clearCadastralLists();
 }
 
 window.onclick = function(event) {
     if (event.target == cadastralModal) {
         cadastralModal.style.display = "none";
-        clearCadastralList(); // Очищуємо поле при закритті
+        clearCadastralLists();
     }
 }
 
+
 // Функція пошуку
 searchBtn.onclick = function() {
-    var cadastralText = document.getElementById("cadastralList").value;
-    var cadastralNumbers = cadastralText.split('\n')
+    var ownCadastralText = document.getElementById("ownCadastralList").value;
+    var othersCadastralText = document.getElementById("othersCadastralList").value;
+    
+    var ownNumbers = ownCadastralText.split('\n')
+        .map(num => num.trim())
+        .filter(num => num.length > 0);
+    
+    var othersNumbers = othersCadastralText.split('\n')
         .map(num => num.trim())
         .filter(num => num.length > 0);
 
-    markersLayer.clearLayers();
+    ownMarkersLayer.clearLayers();
+    othersMarkersLayer.clearLayers();
     
     var foundFeatures = new Map();
     var activeLayer = null;
@@ -890,32 +943,31 @@ searchBtn.onclick = function() {
             activeLayer.eachLayer(function(layer) {
                 if (layer.feature && layer.feature.properties) {
                     var kadNum = layer.feature.properties['Кадастровий номер'];
-                    if (kadNum && cadastralNumbers.includes(kadNum) && !foundFeatures.has(kadNum)) {
-                        foundFeatures.set(kadNum, layer);
+                    
+                    if (kadNum && !foundFeatures.has(kadNum)) {
+                        var isOwn = ownNumbers.includes(kadNum);
+                        var isOther = othersNumbers.includes(kadNum);
                         
-                        var center = layer.getBounds().getCenter();
-                        var marker = L.marker(center, {
-                            icon: L.divIcon({
-                                className: 'custom-div-icon',
-                                html: `
-                                    <div style="
-                                        background-color: #FF0000;
-                                        width: 40px;
-                                        height: 40px;
-                                        border-radius: 50%;
-                                        border: 3px solid white;
-                                        box-shadow: 0 0 4px rgba(0,0,0,0.5);
-                                        animation: pulse 2s infinite;
-                                    "></div>
-                                `,
-                                iconSize: [10, 10],
-                                iconAnchor: [5, 5]
-                            })
-                        }).addTo(markersLayer);
-                        
-                        marker.bindPopup(`<div style="font-size: 14px; font-weight: bold;">${kadNum}</div>`, {
-                            offset: [0, -20]
-                        });
+                        if (isOwn || isOther) {
+                            foundFeatures.set(kadNum, layer);
+                            
+                            var center = layer.getBounds().getCenter();
+                            var marker = createMarker(center, kadNum, isOwn);
+                            
+                            marker.bindPopup(`
+                                <div style="font-size: 14px; font-weight: bold;">
+                                    ${kadNum}
+                                    <br>
+                                    <span style="color: ${isOwn ? '#28a745' : '#dc3545'}">
+                                        ${isOwn ? 'Своя ділянка' : 'Чужа ділянка'}
+                                    </span>
+                                </div>
+                            `, {
+                                offset: [0, -20]
+                            });
+                            
+                            marker.addTo(isOwn ? ownMarkersLayer : othersMarkersLayer);
+                        }
                     }
                 }
             });
@@ -923,20 +975,18 @@ searchBtn.onclick = function() {
     }
 
     if (foundFeatures.size > 0) {
-        var group = L.featureGroup(Array.from(foundFeatures.values()));
+        var group = L.featureGroup([ownMarkersLayer, othersMarkersLayer]);
         map.fitBounds(group.getBounds(), {
             padding: [50, 50]
         });
         
         cadastralModal.style.display = "none";
-        // Очищуємо поле після успішного пошуку
-        clearCadastralList();
+        clearCadastralLists();
         alert(`Знайдено ${foundFeatures.size} ділянок`);
     } else {
         alert('Ділянок не знайдено');
     }
 }
-
 closeBtn.onclick = function() {
     cadastralModal.style.display = "none";
 }
@@ -1009,6 +1059,28 @@ searchBtn.onclick = function() {
     } else {
         alert('Ділянок не знайдено');
     }
+}
+        // Функція створення маркера
+function createMarker(center, kadNum, isOwn) {
+    var color = isOwn ? '#28a745' : '#dc3545'; // Зелений для своїх, червоний для чужих
+    return L.marker(center, {
+        icon: L.divIcon({
+            className: 'custom-div-icon',
+            html: `
+                <div style="
+                    background-color: ${color};
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 0 4px rgba(0,0,0,0.5);
+                    animation: pulse 2s infinite;
+                "></div>
+            `,
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+        })
+    });
 }
  </script>
 
