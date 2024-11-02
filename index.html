@@ -195,6 +195,25 @@
     margin: 10px 0;
     padding: 5px;
 }
+        @keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.custom-div-icon {
+    margin-left: -10px !important;
+    margin-top: -10px !important;
+}
     </style>
 
     <!-- Google Analytics -->
@@ -851,10 +870,9 @@ searchBtn.onclick = function() {
 
     markersLayer.clearLayers();
     
-    var foundFeatures = new Map(); // Використовуємо Map для зберігання унікальних ділянок
+    var foundFeatures = new Map();
     var activeLayer = null;
     
-    // Знаходимо всі активні шари з ділянками
     for (var key in overlays) {
         if (overlays.hasOwnProperty(key) && key !== "Поля обробітку") {
             activeLayer = overlays[key];
@@ -863,22 +881,32 @@ searchBtn.onclick = function() {
                 if (layer.feature && layer.feature.properties) {
                     var kadNum = layer.feature.properties['Кадастровий номер'];
                     if (kadNum && cadastralNumbers.includes(kadNum) && !foundFeatures.has(kadNum)) {
-                        // Зберігаємо тільки першу знайдену ділянку з таким кадастровим номером
                         foundFeatures.set(kadNum, layer);
                         
-                        // Add marker at the center of the polygon
                         var center = layer.getBounds().getCenter();
                         var marker = L.marker(center, {
                             icon: L.divIcon({
                                 className: 'custom-div-icon',
-                                html: '<div style="background-color: #ff7800; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>',
-                                iconSize: [12, 12],
-                                iconAnchor: [6, 6]
+                                html: `
+                                    <div style="
+                                        background-color: #FF0000;
+                                        width: 20px;
+                                        height: 20px;
+                                        border-radius: 50%;
+                                        border: 3px solid white;
+                                        box-shadow: 0 0 4px rgba(0,0,0,0.5);
+                                        animation: pulse 2s infinite;
+                                    "></div>
+                                `,
+                                iconSize: [20, 20],
+                                iconAnchor: [10, 10]
                             })
                         }).addTo(markersLayer);
                         
-                        // Bind popup with cadastral info
-                        marker.bindPopup(kadNum);
+                        // Додаємо більш помітний popup
+                        marker.bindPopup(`<div style="font-size: 14px; font-weight: bold;">${kadNum}</div>`, {
+                            offset: [0, -10]
+                        });
                     }
                 }
             });
@@ -886,7 +914,6 @@ searchBtn.onclick = function() {
     }
 
     if (foundFeatures.size > 0) {
-        // Create a featureGroup to fit bounds
         var group = L.featureGroup(Array.from(foundFeatures.values()));
         map.fitBounds(group.getBounds(), {
             padding: [50, 50]
