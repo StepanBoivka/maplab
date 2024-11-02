@@ -891,7 +891,7 @@ var searchBtn = document.getElementById("searchCadastral");
 var ownMarkersLayer = L.layerGroup().addTo(map);
 var othersMarkersLayer = L.layerGroup().addTo(map);
 
-// Функція очищення текстового поля
+// Функція очищення текстових полів
 function clearCadastralLists() {
     document.getElementById("ownCadastralList").value = '';
     document.getElementById("othersCadastralList").value = '';
@@ -916,6 +916,28 @@ window.onclick = function(event) {
     }
 }
 
+// Функція створення маркера
+function createMarker(center, kadNum, isOwn) {
+    var color = isOwn ? '#28a745' : '#dc3545'; // Зелений для своїх, червоний для чужих
+    return L.marker(center, {
+        icon: L.divIcon({
+            className: 'custom-div-icon',
+            html: `
+                <div style="
+                    background-color: ${color};
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 0 4px rgba(0,0,0,0.5);
+                    animation: pulse 2s infinite;
+                "></div>
+            `,
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+        })
+    });
+}
 
 // Функція пошуку
 searchBtn.onclick = function() {
@@ -982,79 +1004,6 @@ searchBtn.onclick = function() {
         
         cadastralModal.style.display = "none";
         clearCadastralLists();
-        alert(`Знайдено ${foundFeatures.size} ділянок`);
-    } else {
-        alert('Ділянок не знайдено');
-    }
-}
-closeBtn.onclick = function() {
-    cadastralModal.style.display = "none";
-}
-
-window.onclick = function(event) {
-    if (event.target == cadastralModal) {
-        cadastralModal.style.display = "none";
-    }
-}
-
-searchBtn.onclick = function() {
-    var cadastralText = document.getElementById("cadastralList").value;
-    var cadastralNumbers = cadastralText.split('\n')
-        .map(num => num.trim())
-        .filter(num => num.length > 0);
-
-    markersLayer.clearLayers();
-    
-    var foundFeatures = new Map();
-    var activeLayer = null;
-    
-    for (var key in overlays) {
-        if (overlays.hasOwnProperty(key) && key !== "Поля обробітку") {
-            activeLayer = overlays[key];
-            
-            activeLayer.eachLayer(function(layer) {
-                if (layer.feature && layer.feature.properties) {
-                    var kadNum = layer.feature.properties['Кадастровий номер'];
-                    if (kadNum && cadastralNumbers.includes(kadNum) && !foundFeatures.has(kadNum)) {
-                        foundFeatures.set(kadNum, layer);
-                        
-                        var center = layer.getBounds().getCenter();
-                        var marker = L.marker(center, {
-                            icon: L.divIcon({
-                                className: 'custom-div-icon',
-                                html: `
-                                    <div style="
-                                        background-color: #FF0000;
-                                        width: 20px;
-                                        height: 20px;
-                                        border-radius: 50%;
-                                        border: 3px solid white;
-                                        box-shadow: 0 0 4px rgba(0,0,0,0.5);
-                                        animation: pulse 2s infinite;
-                                    "></div>
-                                `,
-                                iconSize: [10, 10],
-                                iconAnchor: [5, 5]
-                            })
-                        }).addTo(markersLayer);
-                        
-                        // Додаємо більш помітний popup
-                        marker.bindPopup(`<div style="font-size: 14px; font-weight: bold;">${kadNum}</div>`, {
-                            offset: [0, -10]
-                        });
-                    }
-                }
-            });
-        }
-    }
-
-    if (foundFeatures.size > 0) {
-        var group = L.featureGroup(Array.from(foundFeatures.values()));
-        map.fitBounds(group.getBounds(), {
-            padding: [50, 50]
-        });
-        
-        cadastralModal.style.display = "none";
         alert(`Знайдено ${foundFeatures.size} ділянок`);
     } else {
         alert('Ділянок не знайдено');
