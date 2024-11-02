@@ -152,6 +152,49 @@
 .popup-content td.property-value {
     padding-left: 5px;
 }
+        /* Додайте ці стилі до існуючого блоку <style> */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 5px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#cadastralList {
+    width: 100%;
+    height: 150px;
+    margin: 10px 0;
+    padding: 5px;
+}
     </style>
 
     <!-- Google Analytics -->
@@ -175,6 +218,12 @@
             <!-- Кнопки справа -->
             <div class="d-flex align-items-center">
                 <button class="btn btn-outline-light btn-transparent btn-sm d-flex align-items-center justify-content-center me-1" 
+            id="cadastralSearchButton" 
+            title="Пошук за списком кадастрових номерів"
+            style="width: 32px; height: 32px;">
+        <i class="bi bi-search"></i>
+    </button>
+                <button class="btn btn-outline-light btn-transparent btn-sm d-flex align-items-center justify-content-center me-1" 
                         id="exportButton" 
                         title="Експорт в список"
                         style="width: 32px; height: 32px;">
@@ -192,6 +241,16 @@
 
     <!-- Карта -->
     <div id="map"></div>
+    <!-- Modal for cadastral numbers input -->
+<div id="cadastralModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h5>Пошук за кадастровими номерами</h5>
+        <p>Вставте список кадастрових номерів (кожен з нового рядка)</p>
+        <textarea id="cadastralList" placeholder="Наприклад:&#10;6821555100:05:006:0001&#10;6821555100:05:006:0002"></textarea>
+        <button class="btn btn-primary" id="searchCadastral">Пошук</button>
+    </div>
+</div>
 
     <!-- Кнопка геолокації -->
     <button class="btn btn-warning" id="geolocationButton">
@@ -762,6 +821,87 @@ document.getElementById('exportButton').addEventListener('click', function() {
         alert('Немає даних для експорту. Будь ласка, виберіть файл з даними спочатку.');
     }
 });
+
+        // Додайте цей код у ваш існуючий JavaScript
+var cadastralModal = document.getElementById("cadastralModal");
+var cadastralBtn = document.getElementById("cadastralSearchButton");
+var closeBtn = document.getElementsByClassName("close")[0];
+var searchBtn = document.getElementById("searchCadastral");
+var markersLayer = L.layerGroup().addTo(map);
+
+cadastralBtn.onclick = function() {
+    cadastralModal.style.display = "block";
+}
+
+closeBtn.onclick = function() {
+    cadastralModal.style.display = "none";
+}
+
+window.onclick = function(event) {
+    if (event.target == cadastralModal) {
+        cadastralModal.style.display = "none";
+    }
+}
+
+searchBtn.onclick = function() {
+    var cadastralText = document.getElementById("cadastralList").value;
+    var cadastralNumbers = cadastralText.split('\n')
+        .map(num => num.trim())
+        .filter(num => num.length > 0);
+
+    markersLayer.clearLayers();
+    
+    var foundFeatures = [];
+    var activeLayer = null;
+    
+    // Find active layer
+    for (var key in overlays) {
+        if (overlays.hasOwnProperty(key) && key !== "Поля обробітку") {
+            activeLayer = overlays[key];
+            break;
+        }
+    }
+
+    if (activeLayer) {
+        activeLayer.eachLayer(function(layer) {
+            if (layer.feature && layer.feature.properties) {
+                var kadNum = layer.feature.properties['Кадастровий номер'];
+                if (kadNum && cadastralNumbers.includes(kadNum)) {
+                    foundFeatures.push(layer);
+                    
+                    // Add marker at the center of the polygon
+                    var center = layer.getBounds().getCenter();
+                    var marker = L.marker(center, {
+                        icon: L.divIcon({
+                            className: 'custom-div-icon',
+                            html: '<div style="background-color: #ff7800; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>',
+                            iconSize: [12, 12],
+                            iconAnchor: [6, 6]
+                        })
+                    }).addTo(markersLayer);
+                    
+                    // Bind popup with cadastral info
+                    marker.bindPopup(kadNum);
+                }
+            }
+        });
+
+        if (foundFeatures.length > 0) {
+            // Create a featureGroup to fit bounds
+            var group = L.featureGroup(foundFeatures);
+            map.fitBounds(group.getBounds(), {
+                padding: [50, 50]
+            });
+            
+            cadastralModal.style.display = "none";
+            alert(`Знайдено ${foundFeatures.length} ділянок`);
+        } else {
+            alert('Ділянок не знайдено');
+        }
+    } else {
+        alert('Спочатку виберіть файл з даними');
+    }
+}
  </script>
 
     
