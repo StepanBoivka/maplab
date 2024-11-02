@@ -907,12 +907,7 @@ closeBtn.onclick = function() {
     clearCadastralLists();
 }
 
-window.onclick = function(event) {
-    if (event.target == cadastralModal) {
-        cadastralModal.style.display = "none";
-        clearCadastralLists();
-    }
-}
+
 
 // Функція створення маркера
 function createMarker(center, kadNum, isOwn) {
@@ -1007,28 +1002,7 @@ searchBtn.onclick = function() {
         alert('Ділянок не знайдено');
     }
 }
-        // Функція створення маркера
-function createMarker(center, kadNum, isOwn) {
-    var color = isOwn ? '#28a745' : '#dc3545'; // Зелений для своїх, червоний для чужих
-    return L.marker(center, {
-        icon: L.divIcon({
-            className: 'custom-div-icon',
-            html: `
-                <div style="
-                    background-color: ${color};
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 50%;
-                    border: 3px solid white;
-                    box-shadow: 0 0 4px rgba(0,0,0,0.5);
-                    animation: pulse 2s infinite;
-                "></div>
-            `,
-            iconSize: [40, 40],
-            iconAnchor: [20, 20]
-        })
-    });
-}
+        
  </script>
 
     
