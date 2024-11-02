@@ -902,7 +902,10 @@ cadastralBtn.onclick = function() {
     clearCadastralLists();
     cadastralModal.style.display = "block";
 }
-
+closeBtn.onclick = function() {
+    cadastralModal.style.display = "none";
+    clearCadastralLists();
+}
 
 window.onclick = function(event) {
     if (event.target == cadastralModal) {
