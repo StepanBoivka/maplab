@@ -851,55 +851,51 @@ searchBtn.onclick = function() {
 
     markersLayer.clearLayers();
     
-    var foundFeatures = [];
+    var foundFeatures = new Map(); // Використовуємо Map для зберігання унікальних ділянок
     var activeLayer = null;
     
-    // Find active layer
+    // Знаходимо всі активні шари з ділянками
     for (var key in overlays) {
         if (overlays.hasOwnProperty(key) && key !== "Поля обробітку") {
             activeLayer = overlays[key];
-            break;
+            
+            activeLayer.eachLayer(function(layer) {
+                if (layer.feature && layer.feature.properties) {
+                    var kadNum = layer.feature.properties['Кадастровий номер'];
+                    if (kadNum && cadastralNumbers.includes(kadNum) && !foundFeatures.has(kadNum)) {
+                        // Зберігаємо тільки першу знайдену ділянку з таким кадастровим номером
+                        foundFeatures.set(kadNum, layer);
+                        
+                        // Add marker at the center of the polygon
+                        var center = layer.getBounds().getCenter();
+                        var marker = L.marker(center, {
+                            icon: L.divIcon({
+                                className: 'custom-div-icon',
+                                html: '<div style="background-color: #ff7800; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>',
+                                iconSize: [12, 12],
+                                iconAnchor: [6, 6]
+                            })
+                        }).addTo(markersLayer);
+                        
+                        // Bind popup with cadastral info
+                        marker.bindPopup(kadNum);
+                    }
+                }
+            });
         }
     }
 
-    if (activeLayer) {
-        activeLayer.eachLayer(function(layer) {
-            if (layer.feature && layer.feature.properties) {
-                var kadNum = layer.feature.properties['Кадастровий номер'];
-                if (kadNum && cadastralNumbers.includes(kadNum)) {
-                    foundFeatures.push(layer);
-                    
-                    // Add marker at the center of the polygon
-                    var center = layer.getBounds().getCenter();
-                    var marker = L.marker(center, {
-                        icon: L.divIcon({
-                            className: 'custom-div-icon',
-                            html: '<div style="background-color: #ff7800; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>',
-                            iconSize: [12, 12],
-                            iconAnchor: [6, 6]
-                        })
-                    }).addTo(markersLayer);
-                    
-                    // Bind popup with cadastral info
-                    marker.bindPopup(kadNum);
-                }
-            }
+    if (foundFeatures.size > 0) {
+        // Create a featureGroup to fit bounds
+        var group = L.featureGroup(Array.from(foundFeatures.values()));
+        map.fitBounds(group.getBounds(), {
+            padding: [50, 50]
         });
-
-        if (foundFeatures.length > 0) {
-            // Create a featureGroup to fit bounds
-            var group = L.featureGroup(foundFeatures);
-            map.fitBounds(group.getBounds(), {
-                padding: [50, 50]
-            });
-            
-            cadastralModal.style.display = "none";
-            alert(`Знайдено ${foundFeatures.length} ділянок`);
-        } else {
-            alert('Ділянок не знайдено');
-        }
+        
+        cadastralModal.style.display = "none";
+        alert(`Знайдено ${foundFeatures.size} ділянок`);
     } else {
-        alert('Спочатку виберіть файл з даними');
+        alert('Ділянок не знайдено');
     }
 }
  </script>
