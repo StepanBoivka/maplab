@@ -997,20 +997,18 @@ searchBtn.onclick = function() {
     }
 
     if (foundFeatures.size > 0) {
-    var group = L.featureGroup([ownMarkersLayer, othersMarkersLayer]);
-    map.fitBounds(group.getBounds(), {
-        padding: [50, 50]
-    });
-    
-    alert(`Знайдено ${foundFeatures.size} ділянок`); // Спочатку показуємо повідомлення
-    cadastralModal.style.display = "none"; // Потім закриваємо модальне вікно
-    clearCadastralLists(); // І очищуємо поля
-} else {
-    alert('Ділянок не знайдено');
-}
+        var group = L.featureGroup([ownMarkersLayer, othersMarkersLayer]);
+        map.fitBounds(group.getBounds(), {
+            padding: [50, 50]
+        });
         
- </script>
-
-    
+        alert(`Знайдено ${foundFeatures.size} ділянок`);
+        cadastralModal.style.display = "none";
+        clearCadastralLists();
+    } else {
+        alert('Ділянок не знайдено');
+    }
+}
+    </script>
 </body>
 </html>
