@@ -168,17 +168,10 @@
     <nav class="navbar navbar-dark bg-dark fixed-top py-1">
         <div class="container-fluid px-2">
             <!-- Селект зліва -->
-            <div class="d-flex">
-    <select class="form-select form-select-sm bg-dark text-light border-secondary select-custom" id="fileSelect">
-        <option>Виберіть раду</option>
-    </select>
-    <!-- Новий селект для фільтрації по назві поля -->
-     <select class="form-select form-select-sm bg-dark text-light border-secondary select-custom ms-2" id="fieldNameSelect">
-     <option value="">Всі поля</option>  
-       </select>  
-</div>
-                
-              
+            <select class="form-select form-select-sm bg-dark text-light border-secondary select-custom" id="fileSelect">
+                <option>Виберіть раду</option>
+            </select>
+
             <!-- Кнопки справа -->
             <div class="d-flex align-items-center">
                 <button class="btn btn-outline-light btn-transparent btn-sm d-flex align-items-center justify-content-center me-1" 
@@ -418,84 +411,26 @@
     overlays = { "Поля обробітку": fieldLayer }; // Зберігаємо цей шар
 }
 
-        // Глобальна змінна для зберігання всіх даних
-let allGeoJsonData = null;
+        function addGeoJsonLayer(url, layerName) {
+            clearOverlays(); // Очистити старі полігони
 
-function addGeoJsonLayer(url, layerName) {
-    clearOverlays(); 
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    var geoJsonLayer = L.geoJSON(data, {
+                        style: styleFeature,
+                        onEachFeature: onEachFeature
+                    });
 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            allGeoJsonData = data; // Зберігаємо всі дані
-            updateFieldNameSelect(data.features); // Оновлюємо список полів
-            displayFilteredData(data.features, layerName); // Додали layerName як параметр
-        })
-        .catch(error => console.error('Error loading GeoJSON data:', error));
-}
-
-// Функція для оновлення списку полів
-function updateFieldNameSelect(features) {
-    const fieldNames = new Set();
-    features.forEach(feature => {
-        if (feature.properties && feature.properties['Назва поля']) {
-            fieldNames.add(feature.properties['Назва поля']);
+                    overlays[layerName] = geoJsonLayer;
+                    geoJsonLayer.addTo(map);
+                    map.fitBounds(geoJsonLayer.getBounds());
+                    updateLayersControl();
+                    addSearchControl(geoJsonLayer);
+                })
+                .catch(error => console.error('Error loading GeoJSON data:', error));
         }
-    });
 
-    const select = document.getElementById('fieldNameSelect');
-    select.innerHTML = '<option value="">Всі поля</option>';
-    
-    Array.from(fieldNames).sort().forEach(fieldName => {
-        const option = document.createElement('option');
-        option.value = fieldName;
-        option.textContent = fieldName;
-        select.appendChild(option);
-    });
-}
-
-// Функція для відображення відфільтрованих даних
-function displayFilteredData(features, layerName) {
-    const selectedFieldName = document.getElementById('fieldNameSelect').value;
-    
-    let filteredFeatures;
-    if (selectedFieldName) {
-        filteredFeatures = features.filter(feature => 
-            feature.properties && 
-            feature.properties['Назва поля'] === selectedFieldName
-        );
-    } else {
-        filteredFeatures = features;
-    }
-
-    // Створюємо новий GeoJSON з відфільтрованими даними
-    const filteredData = {
-        type: 'FeatureCollection',
-        features: filteredFeatures
-    };
-
-    // Створюємо та відображаємо шар
-    var geoJsonLayer = L.geoJSON(filteredData, {
-        style: styleFeature,
-        onEachFeature: onEachFeature
-    });
-
-    overlays[layerName] = geoJsonLayer;
-    geoJsonLayer.addTo(map);
-    if (filteredFeatures.length > 0) {
-        map.fitBounds(geoJsonLayer.getBounds());
-    }
-    updateLayersControl();
-    addSearchControl(geoJsonLayer);
-}
-
-// Додаємо обробник події для select
-document.getElementById('fieldNameSelect').addEventListener('change', function() {
-    if (allGeoJsonData) {
-        const selectedFile = document.getElementById('fileSelect').value;
-        displayFilteredData(allGeoJsonData.features, selectedFile);
-    }
-});
         var layersControl;
         var searchControl;
 
@@ -554,7 +489,7 @@ function loadFileList() {
                 addGeoJsonLayer(dataPath + selectedFile, selectedFile);
             }
         });
-       function addFieldLayer() {
+        function addFieldLayer() {
             fetch(dataPath + 'field.geojson')
                 .then(response => response.json())
         .then(data => {
@@ -573,8 +508,6 @@ function loadFileList() {
                     }
                 }
             }).addTo(map);
-       
-
 
             // Оновлюємо видимість підказок відповідно до поточного рівня зуму
             updateLabelsVisibility();
