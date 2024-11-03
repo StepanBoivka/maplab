@@ -233,6 +233,28 @@
     border-top: none;
     border-radius: 0 0 4px 4px;
 }
+
+.select-custom-small {
+    width: 100px; /* Стандартна ширина для десктопів */
+}
+
+@media (max-width: 992px) {
+    .select-custom-small {
+        width: 80px; /* Для планшетів */
+    }
+}
+
+@media (max-width: 576px) {
+    .select-custom-small {
+        width: 70px; /* Для мобільних */
+    }
+}
+
+@media (max-width: 400px) {
+    .select-custom-small {
+        width: 60px; /* Для дуже малих екранів */
+    }
+}
     </style>
 
     <!-- Google Analytics -->
@@ -248,19 +270,26 @@
     <!-- Навігаційна панель -->
     <nav class="navbar navbar-dark bg-dark fixed-top py-1">
         <div class="container-fluid px-2">
-            <!-- Селект зліва -->
-            <select class="form-select form-select-sm bg-dark text-light border-secondary select-custom" id="fileSelect">
-                <option>Виберіть раду</option>
-            </select>
+            <div class="d-flex align-items-center">
+                <!-- Селект для вибору ради -->
+                <select class="form-select form-select-sm bg-dark text-light border-secondary select-custom" id="fileSelect">
+                    <option>Виберіть раду</option>
+                </select>
+
+                <!-- Селект для вибору поля -->
+                <select class="form-select form-select-sm bg-dark text-light border-secondary select-custom-small ms-2" id="fieldSelect">
+                    <option value="">Всі поля</option>
+                </select>
+            </div>
 
             <!-- Кнопки справа -->
             <div class="d-flex align-items-center">
                 <button class="btn btn-outline-light btn-transparent btn-sm d-flex align-items-center justify-content-center me-1" 
-            id="cadastralSearchButton" 
-            title="Пошук за списком кадастрових номерів"
-            style="width: 32px; height: 32px;">
-        <i class="bi bi-search"></i>
-    </button>
+                    id="cadastralSearchButton" 
+                    title="Пошук за списком кадастрових номерів"
+                    style="width: 32px; height: 32px;">
+                    <i class="bi bi-search"></i>
+                </button>
                 <button class="btn btn-outline-light btn-transparent btn-sm d-flex align-items-center justify-content-center me-1" 
                         id="exportButton" 
                         title="Експорт в список"
@@ -283,7 +312,7 @@
 <div id="cadastralModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h5>Пошук за кадастровими номерами</h5>
+        <h5>Пошук за кадастровими номер</h5>
         
         <!-- Tabs -->
         <div class="nav nav-tabs mb-3" id="cadastralTabs" role="tablist">
@@ -437,7 +466,7 @@
 
                 // Розподіляємо інформацію по вкладках
                 switch (key) {
-                    case "Кадастровий номер":
+                    case "Кадастровий номе��":
                     case "Площа розрахована":
                     case "Власник":
                     case "Орендар":
@@ -494,13 +523,24 @@
         const statisticsUrl = `statistics.html?file=${encodeURIComponent(selectedFile)}${id ? `&id=${id}` : ''}`;
         window.location.href = statisticsUrl;
     } else {
-        alert('Будь ласка, спочатку виберіть файл з даними.');
+        alert('Будь ласка, с��очатку виберіть файл з даними.');
     }
 });
 
         // Додаткова логіка для обробки орендарів та площ
         var tenant = feature.properties["Орендар"];
-        var area = parseFloat(feature.properties["Площа розрахована"]);
+        var selectedField = document.getElementById('fieldSelect').value;
+        
+        // Вибираємо поле площі в залежності від вибору поля
+        var area;
+        if (selectedField) {
+            // Якщо вибране конкретне поле, використовуємо "Площа частини"
+            area = parseFloat(feature.properties["Площа частини"]);
+        } else {
+            // Якщо показуємо всю раду, використовуємо "Площа розрахована"
+            area = parseFloat(feature.properties["Площа розрахована"]);
+        }
+
         if (!isNaN(area)) {
             if (tenant === null || tenant === "" || tenant === undefined) {
                 freeLayer.addLayer(layer);
@@ -533,14 +573,38 @@
 }
 
         function addGeoJsonLayer(url, layerName) {
-            clearOverlays(); // Очистити старі полігони
+            clearOverlays();
 
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
+                    // Зберігаємо оригінальні дані
+                    originalGeoJsonData = data;
+                    
+                    // Створюємо новий шар
                     var geoJsonLayer = L.geoJSON(data, {
                         style: styleFeature,
                         onEachFeature: onEachFeature
+                    });
+
+                    // Заповнюємо список полів
+                    var fieldSelect = document.getElementById('fieldSelect');
+                    fieldSelect.innerHTML = '<option value="">Всі поля</option>';
+                    
+                    // Отримуємо унікальні назви полів
+                    var uniqueFields = new Set();
+                    data.features.forEach(feature => {
+                        if (feature.properties && feature.properties['Назва поля']) {
+                            uniqueFields.add(feature.properties['Назва поля']);
+                        }
+                    });
+                    
+                    // Додаємо опції до select
+                    Array.from(uniqueFields).sort().forEach(fieldName => {
+                        var option = document.createElement('option');
+                        option.value = fieldName;
+                        option.textContent = fieldName;
+                        fieldSelect.appendChild(option);
                     });
 
                     overlays[layerName] = geoJsonLayer;
@@ -576,7 +640,7 @@
     currentZoom = map.getZoom(); // Оновлюємо поточний рівень зуму
     fieldLayer.eachLayer(function (layer) {
         if (currentZoom >= minZoomForLabels && currentZoom <= maxZoomForLabels) {
-            // Показуємо підказки тільки на визначеному діапазоні зуму
+            // оказуємо підкзки тільки на визначеному діапазоні зуму
             layer.getTooltip().setOpacity(1);
         } else {
             // Ховаємо підказки
@@ -649,41 +713,41 @@ map.on('zoomend', function() {
                 map.removeControl(layersControl);
             }
             layersControl = L.control.layers(baseMaps, overlays, {
-                collapsed: true // Меню згорнуте за замовчуванням
+                collapsed: true // Меню згорнте за замовчуванням
             }).addTo(map);
             addTenantLayers();
             addFreeLayer();
         }
 function addTenantLayers() {
-            var tenantLayers = {};
-            Object.values(overlays).forEach(layerGroup => {
-                layerGroup.eachLayer(layer => {
-                    var tenant = layer.feature.properties["Орендар"];
-                    if (tenant) {
-                        if (!tenantLayers[tenant]) {
-                            tenantLayers[tenant] = L.layerGroup();
-                        }
-                        tenantLayers[tenant].addLayer(layer);
-                    }
-                });
-            });
+    var tenantLayers = {};
+    Object.values(overlays).forEach(layerGroup => {
+        layerGroup.eachLayer(layer => {
+            var tenant = layer.feature.properties["Орендар"];
+            if (tenant) {
+                if (!tenantLayers[tenant]) {
+                    tenantLayers[tenant] = L.layerGroup();
+                }
+                tenantLayers[tenant].addLayer(layer);
+            }
+        });
+    });
 
-            var tenantList = Object.keys(tenantLayers).map(tenant => {
-                return {
-                    tenant: tenant,
-                    layer: tenantLayers[tenant],
-                    area: tenantAreas[tenant] ? tenantAreas[tenant].toFixed(2) : 0
-                };
-            });
+    var tenantList = Object.keys(tenantLayers).map(tenant => {
+        return {
+            tenant: tenant,
+            layer: tenantLayers[tenant],
+            area: tenantAreas[tenant] ? tenantAreas[tenant].toFixed(2) : 0
+        };
+    });
 
-            tenantList.sort((a, b) => b.area - a.area);
+    tenantList.sort((a, b) => b.area - a.area);
 
-            tenantList.forEach(item => {
-                overlays[item.tenant] = item.layer;
-                var colorBox = '<span class="color-box" style="background-color:' + getColor(item.tenant) + '"></span>';
-                layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
-            });
-        }
+    tenantList.forEach(item => {
+        overlays[item.tenant] = item.layer;
+        var colorBox = '<span class="color-box" style="background-color:' + getColor(item.tenant) + '"></span>';
+        layersControl.addOverlay(item.layer, colorBox + '<span class="layer-name">' + item.tenant + ' (' + item.area + ' га)</span>');
+    });
+}
         function addFreeLayer() {
             if (freeLayer.getLayers().length > 0) {
                 overlays["вільні від оренди"] = freeLayer;
@@ -758,7 +822,7 @@ function addTenantLayers() {
             });
         }
 
-        // Завантаження даних при завантаженні сторінки
+        // Завантаження даних при заватаженні сторінки
        // if (id) {
        //     addGeoJsonLayer(dataPath + 'yourDataFile.geojson', 'Ваш шар');
        // }
@@ -791,7 +855,7 @@ function addTenantLayers() {
             // Перевіряємо, чи є активний шар ділянок
             var activeLayer = null;
             for (var key in overlays) {
-                if (overlays.hasOwnProperty(key) && key !== "Поля обробітку") {
+                if (overlays.hasOwnProperty(key) && key !== "Поля оробітку") {
                     activeLayer = overlays[key];
                     break;
                 }
@@ -822,11 +886,11 @@ function addTenantLayers() {
                     var key = headers[index];
                     var value = array[i][key];
                     
-                    // Перевірка на null або undefined
+                    // Переврка на null або undefined
                     if (value === null || value === undefined) {
                         value = '';
                     } else {
-                        // Особлива обробка для різних типів полів
+                        // Осолива обробка для різних типів полів
                         if (key === "Площа" || key === "Площа розрахована" || key === "Площа ДЗК" || key === "НГО") {
                             if (typeof value === 'number') {
                                 value = value.toFixed(4); // Форматуємо число з 4 знаками після коми
@@ -842,7 +906,7 @@ function addTenantLayers() {
                             value = value.toString();
                         } else if (typeof value === 'string') {
                             value = value.replace(/"/g, '""'); // Екранування лапок
-                            value = '"' + value + '"'; // Огортання значення в лапки
+                            value = '"' + value + '"'; // Огортання значеня в лапки
                         } else if (typeof value === 'object') {
                             value = JSON.stringify(value).replace(/"/g, '""');
                             value = '"' + value + '"'; // Огортання значення в лапки
@@ -1009,6 +1073,42 @@ searchBtn.onclick = function() {
         alert('Ділянок не знайдено');
     }
 }
+
+// Додайте після addGeoJsonLayer
+document.getElementById('fieldSelect').addEventListener('change', function() {
+    var selectedField = this.value;
+    var selectedFile = document.getElementById('fileSelect').value;
+    
+    if (selectedFile !== 'Виберіть раду' && originalGeoJsonData) {
+        clearOverlays();
+        tenantAreas = {};
+        freeArea = 0;
+        
+        var filteredData = {
+            type: "FeatureCollection",
+            features: selectedField ? 
+                originalGeoJsonData.features.filter(f => 
+                    f.properties && 
+                    f.properties['Назва поля'] === selectedField
+                ) : originalGeoJsonData.features
+        };
+        
+        var geoJsonLayer = L.geoJSON(filteredData, {
+            style: styleFeature,
+            onEachFeature: onEachFeature
+        });
+
+        overlays[selectedFile] = geoJsonLayer;
+        geoJsonLayer.addTo(map);
+        
+        if (geoJsonLayer.getBounds().isValid()) {
+            map.fitBounds(geoJsonLayer.getBounds());
+        }
+        
+        updateLayersControl();
+        addSearchControl(geoJsonLayer);
+    }
+});
     </script>
 </body>
 </html>
