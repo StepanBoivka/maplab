@@ -265,6 +265,9 @@
         gtag('js', new Date());
         gtag('config', 'G-CMBXL0TQLR');
     </script>
+
+    <!-- Додайте після інших скриптів -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <!-- Навігаційна панель -->
@@ -466,7 +469,7 @@
 
                 // Розподіляємо інформацію по вкладках
                 switch (key) {
-                    case "Кадастровий номе��":
+                    case "Кадастровий номер":
                     case "Площа розрахована":
                     case "Власник":
                     case "Орендар":
@@ -474,7 +477,7 @@
                     case "Дата реєстрації":
                     case "Дата завершення":
                     case "Вид обмеження":
-                    case "Посилання":
+                    case "Пилння":
                     case "Дата оновлення":
                         ownershipContent += row;
                         break;
@@ -523,7 +526,7 @@
         const statisticsUrl = `statistics.html?file=${encodeURIComponent(selectedFile)}${id ? `&id=${id}` : ''}`;
         window.location.href = statisticsUrl;
     } else {
-        alert('Будь ласка, с��очатку виберіть файл з даними.');
+        alert('Будь ласка, сочатку виберіть файл з даними.');
     }
 });
 
@@ -531,10 +534,10 @@
         var tenant = feature.properties["Орендар"];
         var selectedField = document.getElementById('fieldSelect').value;
         
-        // Вибираємо поле площі в залежності від вибору поля
+        // Вибираємо поле площі в заеності від вибору поля
         var area;
         if (selectedField) {
-            // Якщо вибране конкретне поле, використовуємо "Площа частини"
+            // Якщо вибране конкретне поле, використовуємо "Площа частни"
             area = parseFloat(feature.properties["Площа частини"]);
         } else {
             // Якщо показуємо всю раду, використовуємо "Площа розрахована"
@@ -696,7 +699,7 @@ function loadFileList() {
 
             // Оновлюємо видимість підказок відповідно до поточного рівня зуму
             updateLabelsVisibility();
-// Додаємо подію для оновлення видимості підказок при зміні зуму
+// Додаємо подію для оновлння видимості підказк при зміні зуму
 map.on('zoomend', function() {
     updateLabelsVisibility();
 });
@@ -852,17 +855,11 @@ function addTenantLayers() {
 // Додаємо нову функцію для збору даних з карти
         function collectMapData() {
             var data = [];
-            // Перевіряємо, чи є активний шар ділянок
-            var activeLayer = null;
-            for (var key in overlays) {
-                if (overlays.hasOwnProperty(key) && key !== "Поля оробітку") {
-                    activeLayer = overlays[key];
-                    break;
-                }
-            }
+            var selectedFile = document.getElementById('fileSelect').value;
             
-            if (activeLayer) {
-                activeLayer.eachLayer(layer => {
+            // Перевіряємо, чи є активний шар ділянок
+            if (overlays[selectedFile]) {
+                overlays[selectedFile].eachLayer(layer => {
                     if (layer.feature && layer.feature.properties) {
                         data.push(layer.feature.properties);
                     }
@@ -871,82 +868,93 @@ function addTenantLayers() {
             return data;
         }
 
-        // Функція для конвертації даних у CSV
-       function convertToCSV(objArray) {
-            var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
-            var str = '';
-            var headers = Object.keys(array[0]).filter(key => key !== '_searchField' && key !== 'Посилання');
-
-            str += headers.join(',') + '\r\n';
-
-            for (var i = 0; i < array.length; i++) {
-                var line = '';
-                for (var index in headers) {
-                    if (line != '') line += ',';
-                    var key = headers[index];
-                    var value = array[i][key];
-                    
-                    // Переврка на null або undefined
-                    if (value === null || value === undefined) {
-                        value = '';
-                    } else {
-                        // Осолива обробка для різних типів полів
-                        if (key === "Площа" || key === "Площа розрахована" || key === "Площа ДЗК" || key === "НГО") {
-                            if (typeof value === 'number') {
-                                value = value.toFixed(4); // Форматуємо число з 4 знаками після коми
-                            } else if (typeof value === 'string') {
-                                // Якщо значення є рядком, спробуємо перетворити його на число
-                                var numValue = parseFloat(value);
+        // Функція дя експорту в Excel
+        function exportToExcel(data, filename) {
+            // Підготовка даних
+            var processedData = data.map(item => {
+                var newItem = {};
+                for (let key in item) {
+                    // Пропускаємо службові поля
+                    if (key !== '_searchField' && key !== 'Посилання') {
+                        if (key === "НГО") {
+                            // Спеціальна обробка для НГО
+                            let value = item[key];
+                            if (value === null || value === undefined || value === "" || value === "NaN" || value === ",NaN") {
+                                newItem[key] = ""; // Порожнє значення для невалідних даних
+                            } else {
+                                // Спроба конвертувати в число
+                                let numValue = parseFloat(String(value).replace(/,/g, ''));
                                 if (!isNaN(numValue)) {
-                                    value = numValue.toFixed(4);
+                                    newItem[key] = numValue;
+                                } else {
+                                    newItem[key] = ""; // Якщо не вдалося конвертувати
                                 }
                             }
-                        } else if (key === "Дата НГО") {
-                            // Переконуємося, що дата коректно форматована
-                            value = value.toString();
-                        } else if (typeof value === 'string') {
-                            value = value.replace(/"/g, '""'); // Екранування лапок
-                            value = '"' + value + '"'; // Огортання значеня в лапки
-                        } else if (typeof value === 'object') {
-                            value = JSON.stringify(value).replace(/"/g, '""');
-                            value = '"' + value + '"'; // Огортання значення в лапки
+                        } else if (key === "Площа" || key === "Площа розрахована" || key === "Площа ДЗК" || key === "Площа частини") {
+                            let value = item[key];
+                            if (value === null || value === undefined || value === "" || value === "NaN") {
+                                newItem[key] = 0;
+                            } else {
+                                newItem[key] = typeof value === 'number' ? 
+                                    Number(value.toFixed(4)) : 
+                                    Number(parseFloat(value).toFixed(4));
+                            }
+                        } else {
+                            // Всі інші поля залишаємо як є
+                            newItem[key] = item[key] || "";
                         }
                     }
-                    
-                    line += value;
                 }
-                str += line + '\r\n';
+                return newItem;
+            });
+
+            // Створення робочої книги
+            var wb = XLSX.utils.book_new();
+            var ws = XLSX.utils.json_to_sheet(processedData);
+
+            // Встановлення форматів для колонок
+            var range = XLSX.utils.decode_range(ws['!ref']);
+            var numberFormat = '#,##0.0000';
+
+            for (var C = range.s.c; C <= range.e.c; C++) {
+                var address = XLSX.utils.encode_col(C) + "1";
+                var cell = ws[address];
+                if (cell && cell.v) {
+                    var columnName = cell.v;
+                    
+                    for (var R = range.s.r + 1; R <= range.e.r; R++) {
+                        var cellAddress = XLSX.utils.encode_col(C) + (R + 1);
+                        if (ws[cellAddress]) {
+                            if (columnName === "НГО") {
+                                if (ws[cellAddress].v !== "") {
+                                    ws[cellAddress].z = '#,##0.00';
+                                }
+                            } else if (columnName === "Площа" || 
+                                     columnName === "Площа розрахована" || 
+                                     columnName === "Площа ДЗК" || 
+                                     columnName === "Площа частини") {
+                                ws[cellAddress].z = numberFormat;
+                            } else if (columnName.includes("Дата")) {
+                                ws[cellAddress].t = 's';
+                            }
+                        }
+                    }
+                }
             }
-            return str;
-        }
-        // Функція для завантаження CSV файлу
-        function downloadCSV(csv, filename) {
-            var blob = new Blob(["\ufeff", csv], { type: 'text/csv;charset=utf-8;' });
-            var link = document.createElement("a");
-            if (link.download !== undefined) {
-                var url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", filename);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+
+            // Встановлюємо ширину колонок
+            var wscols = [];
+            for (var i = 0; i <= range.e.c; i++) {
+                wscols.push({ wch: 20 });
             }
+            ws['!cols'] = wscols;
+
+            // Додавання листа до книги
+            XLSX.utils.book_append_sheet(wb, ws, "Ділянки");
+
+            // Збереження файлу
+            XLSX.writeFile(wb, filename + '.xlsx');
         }
-        // Додаємо обробник події для кнопки експорту
-document.getElementById('exportButton').addEventListener('click', function() {
-    var data = collectMapData();
-    var selectedFile = document.getElementById('fileSelect').value; // Отримуємо назву вибраного файлу
-    
-    if (data.length > 0) {
-        var csv = convertToCSV(data);
-        // Використовуємо назву вибраного файлу для імені CSV
-        var filename = selectedFile.replace('.geojson', '') + '.csv'; // Видаляємо розширення .geojson якщо воно є
-        downloadCSV(csv, filename);
-    } else {
-        alert('Немає даних для експорту. Будь ласка, виберіть файл з даними спочатку.');
-    }
-});
 
 var cadastralModal = document.getElementById("cadastralModal");
 var cadastralBtn = document.getElementById("cadastralSearchButton");
@@ -1107,6 +1115,18 @@ document.getElementById('fieldSelect').addEventListener('change', function() {
         
         updateLayersControl();
         addSearchControl(geoJsonLayer);
+    }
+});
+
+document.getElementById('exportButton').addEventListener('click', function() {
+    var data = collectMapData();
+    var selectedFile = document.getElementById('fileSelect').value;
+    
+    if (data.length > 0) {
+        var filename = selectedFile.replace('.geojson', '');
+        exportToExcel(data, filename);
+    } else {
+        alert('Немає даних для експорту. Будь ласка, виберіть файл з даними спочатку.');
     }
 });
     </script>
