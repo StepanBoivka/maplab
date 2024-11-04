@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.css">
     <link rel="stylesheet" href="css/area-tooltip.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+    <link rel="stylesheet" href="css/leaflet.draw.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet-easybutton@2.4.0/src/easy-button.css">
 
     <style>
@@ -334,12 +334,12 @@
             <!-- Own Plots Tab -->
             <div class="tab-pane fade show active" id="own" role="tabpanel" aria-labelledby="own-tab">
                 <p>Вставте список своїх кадастрових номерів (кожен з нового рядка)</p>
-                <textarea id="ownCadastralList" class="form-control mb-2" rows="6" placeholder="Наприклад:&#10;6821555100:05:006:0001&#10;6821555100:05:006:0002"></textarea>
+                <textarea id="ownCadastralList" class="form-control mb-2" rows="6" placeholder="Наприкд:&#10;6821555100:05:006:0001&#10;6821555100:05:006:0002"></textarea>
             </div>
             
             <!-- Others' Plots Tab -->
             <div class="tab-pane fade" id="others" role="tabpanel" aria-labelledby="others-tab">
-                <p>Вставте список чужих кадастрових номерів (кожен з новоо рядка)</p>
+                <p>Вставте список ужих кадастрових номерів (кожен з новоо рядка)</p>
                 <textarea id="othersCadastralList" class="form-control mb-2" rows="6" placeholder="Наприклад:&#10;6821555100:05:006:0003&#10;6821555100:05:006:0004"></textarea>
             </div>
         </div>
@@ -359,11 +359,12 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-layers-tree@1.0.0/dist/leaflet-control-layers-tree.js"></script>
     <script src="https://unpkg.com/leaflet-search@3.0.0/dist/leaflet-search.min.js"></script>
-    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="https://unpkg.com/leaflet-geometryutil/src/leaflet.geometryutil.js"></script>
+    <script src="js/leaflet.draw.js"></script>
     <script src="https://unpkg.com/leaflet-easybutton@2.4.0/src/easy-button.js"></script>
 
     <script>
-    // Отримання параметрів з URL
+    // Отримання парметрів з URL
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id'); // Отримання значення параметра 'id'
 
@@ -395,7 +396,7 @@
         var baseMaps = {
             "Google Maps": googleLayer,
             "OpenStreetMap": openStreetMapLayer,
-            "Актуальні растри": rasterLayer // Додаємо новий шар
+            "Актуальн растри": rasterLayer // Додаємо новий шар
         };
 
         var overlays = {};
@@ -465,7 +466,7 @@
                 var value = feature.properties[key];
                 var row = '<tr><td class="property-name">' + key + ':</td><td class="property-value">';
                 if (key === "Посилання" && value) {
-                    row += '<a href="' + value + '" target="_blank"><span class="link-icon"></span><span class="link-text">інформація ДЗК</span></a>';
+                    row += '<a href="' + value + '" target="_blank"><span class="link-icon"></span><span class="link-text">інформація ЗК</span></a>';
                 } else {
                     row += value;
                 }
@@ -474,7 +475,7 @@
                 // Розподіляємо інформацію по вкладкам
                 switch (key) {
                     case "Кадастровий номер":
-                    case "Площа розрахована":
+                    case "Площа розрхоана":
                     case "Власник":
                     case "Орендар":
                     case "Дата реєстрації оренди":
@@ -515,10 +516,10 @@
         // Вибираємо поле площі в залежності від вибору поля
         var area;
         if (selectedField) {
-            // Якщо вибране конкретне поле, використовуємо "Площа частини"
+            // Якщо вибрае конкретне поле, використовуємо "Площа частини"
             area = parseFloat(feature.properties["Площа частини"]);
         } else {
-            // Якщо показуємо всю раду, використовуємо "Площа розрахована"
+            // Якщо показуємо всю раду, використовуємо "Площа розрахвана"
             area = parseFloat(feature.properties["Площа розрахована"]);
         }
 
@@ -613,7 +614,7 @@
                 color: 'yellow', // Межа жовта
                 weight: 3,
                 opacity: 1,
-                fillOpacity: 0 // Прозорість заповнення
+                fillOpacity: 0 // розорість заповнення
             };
         }
 
@@ -668,7 +669,7 @@ function loadFileList() {
                         layer.bindTooltip(area.toString(), {
                             permanent: true,   // Постійна підказка
                             direction: 'center', // Позиціонування в центрі полігону
-                            className: 'area-tooltip', // Додатковий клас для стилізації
+                            className: 'area-tooltip', // Додтковий клас для стилізації
                             opacity: 0 // Спочатку підказки приховані
                         });
                     }
@@ -677,14 +678,14 @@ function loadFileList() {
 
             // Оновлюємо видимість підказок відповідно до поточного рівня зуму
             updateLabelsVisibility();
-// Додаємо подію для оновлння виимості підказк при зміні зуму
+// Додаємо подію для оновлння виимості підказк ри зміні зуму
 map.on('zoomend', function() {
     updateLabelsVisibility();
 });
             // Додаємо до меню шарів
             overlays["Поля обробітку"] = fieldLayer;
             var colorBox = '<span class="color-box" style="background-color:transparent; border: 2px solid yellow"></span>';
-            layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Поля обробітку</span>');
+            layersControl.addOverlay(fieldLayer, colorBox + '<span class="layer-name">Пол обробітку</span>');
         })
         .catch(error => console.error('Error loading Field GeoJSON data:', error));
 }
@@ -694,7 +695,7 @@ map.on('zoomend', function() {
                 map.removeControl(layersControl);
             }
             layersControl = L.control.layers(baseMaps, overlays, {
-                collapsed: true // Меню згорнте за замовчуванням
+                collapsed: true // Меню згорнте за замовчуваням
             }).addTo(map);
             addTenantLayers();
             addFreeLayer();
@@ -755,7 +756,7 @@ function addTenantLayers() {
                     for (var i in jsons) {
                         try {
                             var props = jsons[i].layer.feature && jsons[i].layer.feature.properties ? jsons[i].layer.feature.properties : {};
-                            var kadastrovyNomer = props['Кадастровий омер'] || '';
+                            var kadastrovyNomer = props['адастровий оер'] || '';
                             var vlasnyk = props['Власник'] || '';
                             
                             console.log('Перевірка:', kadastrovyNomer, vlasnyk);
@@ -777,7 +778,7 @@ function addTenantLayers() {
                         var props = val.layer.feature && val.layer.feature.properties ? val.layer.feature.properties : {};
                         var kadastrovyNomer = props['Кадастровий номер'] || 'Не вказано';
                         var vlasnyk = props['Власник'] || 'Не вказано';
-                        return '<a href="#">Кадастровий номер: ' + kadastrovyNomer + '<br>Власник: ' + vlasnyk + '</a>';
+                        return '<a href="#">адастровий номер: ' + kadastrovyNomer + '<br>Власник: ' + vlasnyk + '</a>';
                     } catch (error) {
                         console.error('Помилка при створенні підказки:', error);
                         return '<a href="#">Помилка: неможливо відобразити дані</a>';
@@ -860,7 +861,7 @@ function addTenantLayers() {
                             if (value === null || value === undefined || value === "" || value === "NaN" || value === ",NaN") {
                                 newItem[key] = ""; // Порожнє значення для невалідних даних
                             } else {
-                                // Спроба конвертувати в число
+                                // Спроба конвертувати в чисо
                                 let numValue = parseFloat(String(value).replace(/,/g, ''));
                                 if (!isNaN(numValue)) {
                                     newItem[key] = numValue;
@@ -928,7 +929,7 @@ function addTenantLayers() {
             ws['!cols'] = wscols;
 
             // Додавання листа до книги
-            XLSX.utils.book_append_sheet(wb, ws, "Ді��янки");
+            XLSX.utils.book_append_sheet(wb, ws, "Діянки");
 
             // Збереження файлу
             XLSX.writeFile(wb, filename + '.xlsx');
@@ -947,7 +948,7 @@ function clearCadastralLists() {
     document.getElementById("othersCadastralList").value = '';
 }
 
-// Функція відкриття модального вікна
+// Функці відкриття модального вікна
 cadastralBtn.onclick = function() {
     clearCadastralLists();
     cadastralModal.style.display = "block";
@@ -1052,11 +1053,11 @@ searchBtn.onclick = function() {
             padding: [50, 50]
         });
         
-        alert(`Знайдено ${foundFeatures.size} ділянок`);
+        alert(`Знайдено ${foundFeatures.size} длянок`);
         cadastralModal.style.display = "none";
         clearCadastralLists();
     } else {
-        alert('Ділянок не зайдено');
+        alert('Діляок не зайдено');
     }
 }
 
@@ -1104,11 +1105,11 @@ document.getElementById('exportButton').addEventListener('click', function() {
         var filename = selectedFile.replace('.geojson', '');
         exportToExcel(data, filename);
     } else {
-        alert('Немає даних для експорту. Будь ласка, виберіть файл з даними спочатку.');
+        alert('Немає аніх для експорту. Будь ласка, виберіть файл з даними спочатку.');
     }
 });
 
-        // Ініціалізація плагіна Leaflet.draw з активним лише інструментом для полігонів
+        // Ініціалізація плагіна Leaflet.draw з активним лиш інструментом для полігонів
         var editableLayers = new L.FeatureGroup();
         map.addLayer(editableLayers);
 
@@ -1142,19 +1143,118 @@ document.getElementById('exportButton').addEventListener('click', function() {
             editableLayers.addLayer(layer);
         });
 
-        // Функція для експорту в GeoJSON
+        // Оновлена функція exportToGeoJSON
         function exportToGeoJSON() {
-            var geojson = editableLayers.toGeoJSON();
-            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(geojson));
-            var downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "polygons.geojson");
-            document.body.appendChild(downloadAnchorNode); // required for firefox
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+            var modal = document.getElementById('exportModal');
+            var span = modal.getElementsByClassName("close")[0];
+            var confirmBtn = document.getElementById('confirmExport');
+            var filenameInput = document.getElementById('exportFilename');
+            var polygonsList = document.getElementById('polygonsList');
+
+            // Встановлюємо дефолтну назву файлу
+            var defaultFilename = 'polygons_' + new Date().toISOString().slice(0,10);
+            filenameInput.value = defaultFilename;
+
+            // Очищаємо список полігонів
+            polygonsList.innerHTML = '';
+
+            // Додаємо кожен полігон до списку
+            var index = 1;
+            editableLayers.eachLayer(function(layer) {
+                if (layer instanceof L.Polygon) {
+                    var area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+                    var areaInHectares = (area / 10000).toFixed(4);
+                    
+                    var polygonItem = document.createElement('div');
+                    polygonItem.className = 'list-group-item';
+                    polygonItem.innerHTML = `
+                        <div class="mb-2">
+                            <strong>Полігон ${index} (${areaInHectares} га)</strong>
+                        </div>
+                        <div class="form-group">
+                            <textarea class="form-control polygon-note" 
+                                     data-layer-id="${L.stamp(layer)}" 
+                                     placeholder="Примітка для полігону ${index}..."
+                                     rows="2"></textarea>
+                        </div>
+                    `;
+                    polygonsList.appendChild(polygonItem);
+                    index++;
+                }
+            });
+
+            modal.style.display = "block";
+
+            // Закриття модального вікна при кліку на хрестик
+            span.onclick = function() {
+                modal.style.display = "none";
+                filenameInput.value = '';
+            }
+
+            // Закриття модального вікна при кліку поза ним
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                    filenameInput.value = '';
+                }
+            }
+
+            // Обробка кліку на кнопку експорту
+            confirmBtn.onclick = function() {
+                var geojson = editableLayers.toGeoJSON();
+                var notesMap = {};
+
+                // Збираємо всі примітки в об'єкт
+                document.querySelectorAll('.polygon-note').forEach(function(textarea) {
+                    notesMap[textarea.dataset.layerId] = textarea.value;
+                });
+                
+                // Додаємо примітки та площі до кожного feature
+                geojson.features.forEach(function(feature, index) {
+                    if (!feature.properties) {
+                        feature.properties = {};
+                    }
+
+                    // Знаходимо відповідний шар і його примітку
+                    var layer = editableLayers.getLayers()[index];
+                    var layerId = L.stamp(layer);
+                    
+                    // Додаємо примітку
+                    feature.properties.note = notesMap[layerId] || '';
+                    
+                    // Розраховуємо і додаємо площу в гектарах
+                    if (feature.geometry && feature.geometry.type === 'Polygon') {
+                        var latLngs = [];
+                        feature.geometry.coordinates[0].forEach(function(coord) {
+                            latLngs.push(L.latLng(coord[1], coord[0]));
+                        });
+                        var area = L.GeometryUtil.geodesicArea(latLngs);
+                        feature.properties.area = (area / 10000).toFixed(4);
+                    }
+                });
+
+                // Отримуємо назву файлу
+                var filename = filenameInput.value || defaultFilename;
+                if (!filename.endsWith('.geojson')) {
+                    filename += '.geojson';
+                }
+
+                // Експортуємо файл
+                var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(geojson));
+                var downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", filename);
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+
+                // Закриваємо модальне вікно
+                modal.style.display = "none";
+                filenameInput.value = '';
+            }
         }
 
-        // Додайте кнопку експорту в панель інструментів Leaflet.draw
+        // Додайте кнопку експорту в панель інструентів Leaflet.draw
         L.Control.ExportGeoJSON = L.Control.extend({
             onAdd: function(map) {
                 var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
@@ -1183,5 +1283,24 @@ document.getElementById('exportButton').addEventListener('click', function() {
 
         map.addControl(new L.Control.ExportGeoJSON({ position: 'topright' }));
     </script>
+
+    <!-- Modal for GeoJSON export -->
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h5>Експорт GeoJSON</h5>
+            <div class="mb-3">
+                <label for="exportFilename" class="form-label">Назва файлу</label>
+                <input type="text" class="form-control" id="exportFilename" placeholder="Введіть назву файлу...">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Полігони</label>
+                <div id="polygonsList" class="list-group mb-2">
+                    <!-- Тут будуть полігони -->
+                </div>
+            </div>
+            <button class="btn btn-primary" id="confirmExport">Експортувати</button>
+        </div>
+    </div>
 </body>
 </html>
