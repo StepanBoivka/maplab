@@ -189,6 +189,12 @@ button:hover {
     background: #FFFFFF; /* Колір фону */
 }
 
+.nav-group {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
 .main-nav h1 {
     font-size: 14px; /* Зменшуємо розмір шрифту заголовка */
     margin: 0; /* Видаляємо відступи */
@@ -223,7 +229,7 @@ button:hover {
     display: flex;
     align-items: center;
     gap: 3px; /* Зменшуємо проміжки між елементами */
-    margin-left: 5px; /* Зменшуємо відступ зліва */
+    margin-left: auto; /* Вирівнюємо по правій стороні */
     padding-left: 5px; /* Зменшуємо відступ зліва */
 }
 
