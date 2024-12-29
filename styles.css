@@ -184,20 +184,20 @@ button:hover {
     margin-bottom: 5px; /* Зменшуємо відступ знизу */
     padding: 2px 5px; /* Зменшуємо відступи */
     border-bottom: 1px solid #CCCCCC; /* Колір бордюру */
-    height: 40px; /* Встановлюємо фіксовану висоту */
-    line-height: 40px; /* Вирівнюємо текст по центру */
+    height: 35px; /* Встановлюємо фіксовану висоту */
+    line-height: 35px; /* Вирівнюємо текст по центру */
     background: #FFFFFF; /* Колір фону */
 }
 
 .main-nav h1 {
-    font-size: 16px; /* Зменшуємо розмір шрифту заголовка */
+    font-size: 14px; /* Зменшуємо розмір шрифту заголовка */
     margin: 0; /* Видаляємо відступи */
     color: #333333; /* Колір тексту заголовка */
 }
 
 .nav-links {
     display: flex;
-    gap: 20px;
+    gap: 10px; /* Зменшуємо проміжки між кнопками */
 }
 
 .nav-links a {
@@ -464,7 +464,7 @@ button:hover {
 
     .nav-links {
         flex-direction: column;
-        gap: 10px;
+        gap: 5px;
         width: 100%;
     }
 
