@@ -1,0 +1,426 @@
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.data-container {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 5px;
+    margin: 20px 0;
+    min-height: 100px;
+}
+
+button {
+    padding: 10px 20px;
+    background: #3ECF8E;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #2EBF7E;
+}
+
+.auth-section {
+    margin: 20px 0;
+    padding: 20px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.auth-section input {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Удаляем неиспользуемые стили */
+.google-button,
+.google-button:hover,
+.divider {
+    display: none;
+}
+
+.primary-button {
+    width: 100%;
+    background: #3ECF8E;
+}
+
+.filters {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+}
+
+.filters input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.parcel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.parcel-card {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#map {
+    height: 500px;
+    width: 100%;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.map-controls {
+    margin-bottom: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.map-switch {
+    padding: 8px 15px;
+    background: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.map-switch.active {
+    background: #3ECF8E;
+    color: white;
+    border-color: #2EBF7E;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    margin: 50px auto;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.edit-form textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.close-modal {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.note {
+    background: #f8f9fa;
+    padding: 8px;
+    border-left: 3px solid #3ECF8E;
+    margin: 8px 0;
+    border-radius: 0 4px 4px 0;
+}
+
+.main-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links a {
+    padding: 8px 16px;
+    text-decoration: none;
+    color: #333;
+    border-radius: 4px;
+}
+
+.nav-links a.active {
+    background: #3ECF8E;
+    color: white;
+}
+
+.nav-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 20px;
+    padding-left: 20px;
+    border-left: 1px solid #eee;
+}
+
+.user-email {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.logout-button {
+    padding: 5px 10px;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.logout-button:hover {
+    background: #d32f2f;
+}
+
+.nav-links button {
+    background: none;
+    border: none;
+    color: inherit;
+    padding: inherit;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: #3ECF8E;
+    margin: 10px 0;
+}
+
+.dashboard {
+    max-height: 100vh;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.chart-container {
+    flex: 1;
+    min-height: 300px;
+    max-height: 400px;
+    margin-top: 20px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.chart-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    height: 400px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-email {
+    color: #666;
+}
+
+.logout-button {
+    padding: 5px 10px;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.logout-button:hover {
+    background: #d32f2f;
+}
+
+.map-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.map-container .main-nav {
+    padding: 10px 20px;
+    margin: 0;
+    background: white;
+}
+
+.map-controls {
+    padding: 10px 20px;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.controls-group,
+.search-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.search-group {
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-group input {
+    flex: 1;
+}
+
+#map {
+    flex: 1;
+    margin: 0;
+    border-radius: 0;
+}
+
+.clear-button {
+    background: #f44336;
+}
+
+.clear-button:hover {
+    background: #d32f2f;
+}
+
+.search-button {
+    min-width: 40px;
+    padding: 8px;
+    background: #3ECF8E;
+    transition: background-color 0.3s;
+}
+
+.search-button.clear-mode {
+    background: #666;
+}
+
+.search-button:hover {
+    background: #2EBF7E;
+}
+
+.search-button.clear-mode:hover {
+    background: #555;
+}
+
+.clear-icon, .search-icon {
+    font-size: 14px;
+}
+
+#coatuuDropdown {
+    white-space: normal; /* Позволяет переносить текст по строкам */
+    max-width: 100%; /* Ограничивает максимальную ширину */
+    overflow-wrap: break-word; /* Переносит длинные слова */
+    width: 100%; /* Устанавливает ширину на 100% */
+    display: block; /* Делает элемент блочным */
+}
+
+#coatuuDropdown option {
+    white-space: normal; /* Позволяет переносить текст по строкам */
+    word-wrap: break-word; /* Переносит длинные слова */
+    overflow-wrap: break-word; /* Переносит длинные слова */
+}
+
+.select2-container .select2-selection--multiple {
+    min-height: 32px;  /* Делаем поле компактным */
+    padding: 4px;
+    height: 32px; /* Фіксована висота для компактності */
+    overflow: hidden; /* Сховати переповнення */
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    margin: 2px 4px 2px 0;
+    padding: 2px 4px;
+    white-space: nowrap; /* Однорядкове відображення вибраних елементів */
+    overflow: hidden; /* Сховати переповнення */
+    text-overflow: ellipsis; /* Додати троєточчя при обриві тексту */
+    max-width: 150px; /* Обмеження максимальної ширини вибраного елементу */
+    margin-right: 4px; /* Відступ між вибраними елементами */
+}
+
+.select2-container .select2-selection--multiple .select2-selection__rendered {
+    white-space: nowrap;        /* Одна строка */
+    overflow: hidden;           /* Скрываем содержимое за краем */
+    text-overflow: ellipsis;    /* Троеточие при обрезке */
+    line-height: 32px;          /* Выравнивание по центру */
+    height: 32px;
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кадастрова система - Дашборд</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div id="auth-section" class="auth-section">
+            <h2>Вхід в систему</h2>
+            <input type="email" id="email" placeholder="Email" />
+            <input type="password" id="password" placeholder="Password" />
+            <button onclick="signIn()" class="primary-button">Увійти</button>
+        </div>
+
+        <div id="main-content" style="display: none;">
+            <nav class="main-nav">
+                <h1>Кадастрова система</h1>
+                <div class="nav-group">
+                    <div class="nav-links">
+                        <a href="index.html" class="active">Дашборд</a>
+                        <a href="map.html">Карта ділянок</a>
+                    </div>
+                    <div class="user-info">
+                        <span id="userEmail" class="user-email"></span>
+                        <button onclick="signOut()" class="logout-button">Вийти</button>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="filters">
+                <select id="coatuuDropdown">
+                    <option value="">Всі Сільські ради</option>
+                </select>
+            </div>
+
+            <div class="dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card" id="totalParcels">
+                        <h3>Всього ділянок</h3>
+                        <p class="stat-number">...</p>
+                    </div>
+                    <div class="stat-card" id="totalArea">
+                        <h3>Загальна площа</h3>
+                        <p class="stat-number">...</p>
+                    </div>
+                    <div class="stat-card" id="avgArea">
+                        <h3>Середня площа</h3>
+                        <p class="stat-number">...</p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-card full-width">
+                        <h3>Розподіл за площею</h3>
+                        <canvas id="areaChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-card full-width">
+                        <h3>Розподіл за Сільською радою</h3>
+                        <canvas id="coatuuChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="unique-coatuu-container">
+                    <h3>Унікальні значення Сільських рад</h3>
+                    <ul id="uniqueCoatuuList">
+                        <!-- Унікальні значення будуть додані динамічно -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="config.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

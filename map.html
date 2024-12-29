@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кадастрова система - Карта</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.2.0/dist/css/select2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/wicket@1.3.8/wicket.js"></script>
+</head>
+<body>
+    <div class="map-container">
+        <nav class="main-nav">
+            <h1>Кадастрова система</h1>
+            <div class="nav-group">
+                <div class="nav-links">
+                    <a href="index.html">Дашборд</a>
+                    <a href="map.html" class="active">Карта ділянок</a>
+                </div>
+                <div class="user-info">
+                    <span id="userEmail" class="user-email"></span>
+                    <button onclick="signOut()" class="logout-button">Вийти</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="map-controls">
+            <div class="controls-group">
+                <button onclick="switchBaseMap('satellite')" class="map-switch active" id="satellite-btn">Супутник</button>
+                <button onclick="switchBaseMap('osm')" class="map-switch" id="osm-btn">OpenStreetMap</button>
+            </div>
+            <div class="search-group">
+                <input type="text" id="searchCadnum" placeholder="Пошук за кадастровим номером" />
+                <select id="coatuuDropdown">
+                    <option value="">Всі Сільські ради</option>
+                </select>
+                <button id="searchButton" onclick="searchParcels()" class="search-button">
+                    <span class="search-icon">🔍</span>
+                    <span class="clear-icon" style="display: none">✕</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="map"></div>
+    </div>
+    
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.2.0/dist/js/select2.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            $('#coatuuDropdown').select2({
+                width: '100%',
+                placeholder: 'Виберіть Сільську раду'
+            });
+        });
+    </script>
+</body>
+</html>
