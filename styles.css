@@ -2,6 +2,7 @@
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
+    padding-top: 76px; /* 56px (висота навбару) + 20px (базовий padding) */
 }
 
 .data-container {
@@ -13,28 +14,28 @@
 }
 
 body {
-    background-color: #F7F9FC; /* Спокійний колір фону */
-    color: #333333; /* Спокійний колір тексту */
+    background-color: #F7F9FC;
+    color: #333333;
 }
 
 button {
-    padding: 6px 12px; /* Зменшуємо відступи */
-    font-size: 14px; /* Зменшуємо розмір шрифту */
-    background: #4CAF50; /* Спокійний зелений колір кнопок */
-    color: #FFFFFF; /* Колір тексту кнопок */
+    padding: 6px 12px;
+    font-size: 14px;
+    background: #4CAF50;
+    color: #FFFFFF;
     border: none;
     border-radius: 5px;
     cursor: pointer;
 }
 
 button:hover {
-    background: #388E3C; /* Темніший зелений колір при наведенні */
+    background: #388E3C;
 }
 
 .auth-section {
     margin: 20px 0;
     padding: 20px;
-    background: #FFFFFF; /* Колір фону */
+    background: #FFFFFF;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
@@ -44,11 +45,10 @@ button:hover {
     width: 100%;
     margin: 10px 0;
     padding: 8px;
-    border: 1px solid #CCCCCC; /* Колір бордюру */
+    border: 1px solid #CCCCCC;
     border-radius: 4px;
 }
 
-/* Удаляем неиспользуемые стили */
 .google-button,
 .google-button:hover,
 .divider {
@@ -57,7 +57,7 @@ button:hover {
 
 .primary-button {
     width: 100%;
-    background: #4CAF50; /* Спокійний зелений колір кнопок */
+    background: #4CAF50;
 }
 
 .filters {
@@ -104,25 +104,21 @@ button:hover {
 }
 
 .map-controls {
-    padding: 5px 10px; /* Зменшуємо відступи */
-    margin-bottom: 10px;
-    display: flex;
-    gap: 10px; /* Зменшуємо проміжки між елементами */
-    background: #FFFFFF; /* Колір фону */
+    display: none;
 }
 
 .map-switch {
-    padding: 6px 12px; /* Зменшуємо відступи */
-    background: #E0E0E0; /* Спокійний сірий колір кнопок */
-    color: #333333; /* Колір тексту */
-    border: 1px solid #CCCCCC; /* Колір бордюру */
-    font-size: 14px; /* Зменшуємо розмір шрифту */
+    padding: 6px 12px;
+    background: #E0E0E0;
+    color: #333333;
+    border: 1px solid #CCCCCC;
+    font-size: 14px;
 }
 
 .map-switch.active {
-    background: #4CAF50; /* Спокійний зелений колір активних кнопок */
-    color: #FFFFFF; /* Колір тексту активних кнопок */
-    border-color: #388E3C; /* Темніший зелений колір бордюру активних кнопок */
+    background: #4CAF50;
+    color: #FFFFFF;
+    border-color: #388E3C;
 }
 
 .modal {
@@ -177,88 +173,6 @@ button:hover {
     border-radius: 0 4px 4px 0;
 }
 
-.main-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px; /* Зменшуємо відступ знизу */
-    padding: 2px 5px; /* Зменшуємо відступи */
-    border-bottom: 1px solid #CCCCCC; /* Колір бордюру */
-    height: 35px; /* Встановлюємо фіксовану висоту */
-    line-height: 35px; /* Вирівнюємо текст по центру */
-    background: #FFFFFF; /* Колір фону */
-}
-
-.nav-group {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-}
-
-.main-nav h1 {
-    font-size: 14px; /* Зменшуємо розмір шрифту заголовка */
-    margin: 0; /* Видаляємо відступи */
-    color: #333333; /* Колір тексту заголовка */
-}
-
-.nav-links {
-    display: flex;
-    gap: 10px; /* Зменшуємо проміжки між кнопками */
-}
-
-.nav-links a {
-    padding: 2px 5px; /* Зменшуємо відступи */
-    text-decoration: none;
-    color: #333333; /* Колір тексту */
-    border-radius: 4px;
-    font-size: 12px; /* Зменшуємо розмір шрифту */
-}
-
-.nav-links a.active {
-    background: #4CAF50; /* Спокійний зелений колір активних посилань */
-    color: #FFFFFF; /* Колір тексту активних посилань */
-}
-
-.nav-group {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 3px; /* Зменшуємо проміжки між елементами */
-    margin-left: auto; /* Вирівнюємо по правій стороні */
-    padding-left: 5px; /* Зменшуємо відступ зліва */
-}
-
-.user-email {
-    color: #333333; /* Колір тексту */
-    font-size: 10px; /* Зменшуємо розмір шрифту */
-}
-
-.logout-button {
-    padding: 2px 5px; /* Зменшуємо відступи */
-    background: #F44336; /* Спокійний червоний колір кнопок */
-    color: #FFFFFF; /* Колір тексту кнопок */
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 10px; /* Зменшуємо розмір шрифту */
-}
-
-.logout-button:hover {
-    background: #D32F2F; /* Темніший червоний колір при наведенні */
-}
-
-.nav-links button {
-    background: none;
-    border: none;
-    color: inherit;
-    padding: inherit;
-}
-
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -308,32 +222,9 @@ button:hover {
     height: 400px;
 }
 
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.user-email {
-    color: #666;
-}
-
-.logout-button {
-    padding: 5px 10px;
-    background: #f44336;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.logout-button:hover {
-    background: #d32f2f;
-}
-
 .map-container {
     position: fixed;
-    top: 0;
+    top: 56px; /* Додаємо відступ зверху для навбару */
     left: 0;
     right: 0;
     bottom: 0;
@@ -348,13 +239,13 @@ button:hover {
 }
 
 .map-controls {
-    padding: 5px 10px; /* Зменшуємо відступи */
+    padding: 5px 10px;
     background: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px; /* Зменшуємо проміжки між елементами */
-    border-bottom: 1px солід #eee;
+    gap: 10px;
+    border-bottom: 1px solid #eee;
 }
 
 .controls-group,
@@ -371,8 +262,8 @@ button:hover {
 
 .search-group input {
     flex: 1;
-    padding: 6px 8px; /* Зменшуємо відступи */
-    font-size: 14px; /* Зменшуємо розмір шрифту */
+    padding: 6px 8px;
+    font-size: 14px;
 }
 
 #map {
@@ -391,10 +282,10 @@ button:hover {
 
 .search-button {
     min-width: 40px;
-    padding: 6px 8px; /* Зменшуємо відступи */
+    padding: 6px 8px;
     background: #3ECF8E;
     transition: background-color 0.3s;
-    font-size: 14px; /* Зменшуємо розмір шрифту */
+    font-size: 14px;
 }
 
 .search-button.clear-mode {
@@ -414,88 +305,40 @@ button:hover {
 }
 
 #coatuuDropdown {
-    white-space: normal; /* Позволяет переносить текст по строкам */
-    max-width: 100%; /* Ограничивает максимальную ширину */
-    overflow-wrap: break-word; /* Переносит длинные слова */
-    width: 100%; /* Устанавливает ширину на 100% */
-    display: block; /* Делает элемент блочным */
+    white-space: normal;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    width: 100%;
+    display: block;
 }
 
 #coatuuDropdown option {
-    white-space: normal; /* Позволяет переносить текст по строкам */
-    word-wrap: break-word; /* Переносит длинные слова */
-    overflow-wrap: break-word; /* Переносит длинные слова */
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
-.select2-container .select2-selection--multiple {
-    min-height: 32px;  /* Делаем поле компактным */
-    padding: 4px;
-    height: 32px; /* Фіксована висота для компактності */
-    overflow: hidden; /* Сховати переповнення */
+.dropdown-menu {
+    background-color: #343a40;
+    border: 1px solid rgba(255,255,255,.15);
 }
 
-.select2-container--default .select2-selection--multiple .select2-selection__choice {
-    margin: 2px 4px 2px 0;
-    padding: 2px 4px;
-    white-space: nowrap; /* Однорядкове відображення вибраних елементів */
-    overflow: hidden; /* Сховати переповнення */
-    text-overflow: ellipsis; /* Додати троєточчя при обриві тексту */
-    max-width: 150px; /* Обмеження максимальної ширини вибраного елементу */
-    margin-right: 4px; /* Відступ між вибраними елементами */
+.dropdown-item {
+    color: #fff;
 }
 
-.select2-container .select2-selection--multiple .select2-selection__rendered {
-    white-space: nowrap;        /* Одна строка */
-    overflow: hidden;           /* Скрываем содержимое за краем */
-    text-overflow: ellipsis;    /* Троеточие при обрезке */
-    line-height: 32px;          /* Выравнивание по центру */
-    height: 32px;
+.dropdown-item:hover {
+    background-color: #495057;
+    color: #fff;
+}
+
+.dropdown-divider {
+    border-top: 1px solid rgba(255,255,255,.15);
 }
 
 @media (max-width: 768px) {
     .container {
         padding: 10px;
-    }
-
-    .main-nav {
-        flex-direction: column;
-        align-items: flex-start;
-        height: auto;
-        line-height: normal;
-    }
-
-    .main-nav h1 {
-        font-size: 14px;
-    }
-
-    .nav-links {
-        flex-direction: column;
-        gap: 5px;
-        width: 100%;
-    }
-
-    .nav-links a {
-        padding: 5px 10px;
-        font-size: 14px;
-        width: 100%;
-        text-align: center;
-    }
-
-    .user-info {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-        margin-left: 0;
-        padding-left: 0;
-    }
-
-    .user-email {
-        font-size: 12px;
-    }
-
-    .logout-button {
-        padding: 5px 10px;
-        font-size: 12px;
     }
 
     .map-controls {
@@ -530,5 +373,205 @@ button:hover {
 
     .stat-number {
         font-size: 20px;
+    }
+
+    .navbar .container-fluid {
+        flex-direction: column;
+        height: auto;
+        padding: 10px;
+    }
+
+    .navbar {
+        height: auto;
+    }
+
+    .map-container {
+        top: 160px; /* Збільшуємо відступ зверху для навбару на мобільних */
+    }
+
+    .navbar .d-flex {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px !important;
+    }
+
+    .navbar .form-control,
+    .navbar .form-select,
+    .navbar .btn-group {
+        width: 100% !important;
+    }
+}
+
+/* Оновлюємо стилі для навбару на сторінці карти */
+.navbar-custom {
+    background-color: #000000;
+}
+
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link,
+.navbar-custom .navbar-text {
+    color: #FFFFFF;
+}
+
+.navbar-custom .nav-link.active {
+    background-color: #333333;
+    color: #FFFFFF;
+}
+
+/* Добавляем стили для навигационных кнопок */
+.navbar .btn-outline-light {
+    border-color: rgba(255,255,255,.5);
+}
+
+.navbar .btn-outline-light:hover {
+    background-color: rgba(255,255,255,.1);
+}
+
+.navbar .container-fluid {
+    justify-content: space-between;
+}
+
+/* Додаємо фіксовану висоту для навбару */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    height: 56px;
+    background-color: #212529 !important;
+}
+
+.navbar .btn-dark {
+    border: 1px solid #6c757d;
+}
+
+.navbar .btn-dark:hover,
+.navbar .btn-dark:focus {
+    background-color: #343a40;
+    border-color: #6c757d;
+}
+
+.navbar .btn-dark.active {
+    background-color: #4CAF50;
+    border-color: #388E3C;
+    color: white;
+}
+
+.navbar .form-control,
+.navbar .form-select {
+    background-color: #212529;
+    color: #fff;
+    border-color: #6c757d;
+}
+
+.navbar .form-control::placeholder {
+    color: #6c757d;
+}
+
+.navbar .form-control:focus,
+.navbar .form-select:focus {
+    background-color: #2c3034;
+    color: #fff;
+    border-color: #6c757d;
+    box-shadow: 0 0 0 0.25rem rgba(130,138,145,.25);
+}
+
+/* Адаптивні стилі */
+@media (max-width: 768px) {
+    .navbar .container-fluid {
+        padding: 10px;
+    }
+    
+    .navbar .d-flex {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .navbar .form-control,
+    .navbar .form-select,
+    .navbar .btn-group {
+        width: 100%;
+        max-width: 100% !important;
+    }
+    
+    .map-container {
+        top: auto;
+        padding-top: 56px;
+    }
+}
+
+/* Оновлюємо стилі для навбару на сторінці карти */
+.navbar .btn-light.active {
+    background-color: #4CAF50;
+    color: #FFFFFF;
+    border-color: #388E3C;
+}
+
+.navbar .form-control,
+.navbar .form-select {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Оновлені стилі для навігаційної панелі та Select2 */
+.nav-search-group {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    align-items: center;
+}
+
+.nav-input-wrapper,
+.nav-select-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.nav-input-wrapper {
+    width: 250px;
+    min-width: 250px;
+}
+
+.nav-select-wrapper {
+    width: 200px;
+    min-width: 200px;
+    height: 38px; /* Фіксована висота */
+}
+
+/* Оновлюємо стилі для звичайного select */
+.nav-select-wrapper select {
+    width: 200px;
+    height: 38px;
+    background-color: #212529;
+    color: #fff;
+    border: 1px solid #6c757d;
+}
+
+.nav-select-wrapper select:focus {
+    background-color: #2c3034;
+    color: #fff;
+    border-color: #6c757d;
+    box-shadow: 0 0 0 0.25rem rgba(130,138,145,.25);
+}
+
+/* Виправлення для вирівнювання по висоті */
+.navbar .btn,
+.navbar .form-control,
+.navbar .form-select {
+    height: 38px !important;
+    line-height: normal;
+}
+
+/* Адаптивність */
+@media (max-width: 768px) {
+    .nav-search-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .nav-input-wrapper,
+    .nav-select-wrapper {
+        width: 100%;
+        min-width: 100%;
     }
 }

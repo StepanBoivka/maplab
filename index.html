@@ -4,35 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кадастрова система - Дашборд</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.2.0/dist/css/select2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.2.0/dist/js/select2.min.js"></script>
+    <!-- Додаємо скрипт Bootstrap для роботи меню -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
+    <nav class="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
+        <div class="container-fluid">
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Навігація
+                </button>
+                <ul class="dropdown-menu">
+                    <li><button class="dropdown-item" type="button" onclick="window.location.href='index.html'">Головна</button></li>
+                    <li><button class="dropdown-item" type="button" onclick="window.location.href='map.html'">Карта</button></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button class="dropdown-item" type="button" onclick="signOut()">Вийти</button></li>
+                </ul>
+            </div>
+            <span class="navbar-text" id="userEmail"></span>
+        </div>
+    </nav>
     <div class="container">
         <div id="auth-section" class="auth-section">
             <h2>Вхід в систему</h2>
-            <input type="email" id="email" placeholder="Email" />
-            <input type="password" id="password" placeholder="Password" />
-            <button onclick="signIn()" class="primary-button">Увійти</button>
+            <input type="email" id="email" placeholder="Email" class="form-control" />
+            <input type="password" id="password" placeholder="Password" class="form-control" />
+            <button onclick="signIn()" class="btn btn-primary w-100 mt-3">Увійти</button>
         </div>
 
         <div id="main-content" style="display: none;">
-            <nav class="main-nav">
-                <div class="nav-group">
-                    <div class="nav-links">
-                        <a href="index.html" class="active">Дашборд</a>
-                        <a href="map.html">Карта ділянок</a>
-                    </div>
-                    <div class="user-info">
-                        <span id="userEmail" class="user-email"></span>
-                        <button onclick="signOut()" class="logout-button">Вийти</button>
-                    </div>
-                </div>
-            </nav>
-
             <div class="filters">
-                <select id="coatuuDropdown">
+                <select id="coatuuDropdown" class="form-select">
                     <option value="">Всі Сільські ради</option>
                 </select>
             </div>
@@ -79,5 +88,6 @@
     
     <script src="config.js"></script>
     <script src="dashboard.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -262,8 +262,25 @@ async function loadAllParcelsToMap(cadnum = '', namecoatuuFilters = []) {
     }
 }
 
+// Оновлена функція пошуку
 async function searchParcels() {
-    handleSearch();
+    const cadnum = document.getElementById('searchCadnum').value;
+    const coatuuValue = document.getElementById('coatuuDropdown').value;
+    const namecoatuuFilters = coatuuValue ? [coatuuValue] : [];
+    
+    // Додаємо логування для відладки
+    console.log('Пошук за параметрами:', { 
+        cadnum, 
+        coatuuValue, 
+        namecoatuuFilters 
+    });
+
+    try {
+        await loadAllParcelsToMap(cadnum, namecoatuuFilters);
+    } catch (error) {
+        console.error('Помилка пошуку:', error);
+        alert('Помилка пошуку ділянок');
+    }
 }
 
 // Добавляем функции для работы с модальным окном
@@ -337,13 +354,6 @@ async function clearSearch() {
 
 // Удаляем функцию toggleSearchButton и oninput из input
 
-async function handleSearch() {
-    const cadnum = document.getElementById('searchCadnum').value;
-    const coatuuValue = document.getElementById('coatuuDropdown').value;
-    const namecoatuuFilters = coatuuValue ? [coatuuValue] : [];
-    await loadAllParcelsToMap(cadnum, namecoatuuFilters);
-}
-
 // Добавляем функцию выхода
 async function signOut() {
     try {
@@ -371,17 +381,33 @@ async function checkAuth() {
     }
 }
 
-// Обновляем инициализацию
+// Оновлюємо ініціалізацію (замінюємо стару версію)
 document.addEventListener('DOMContentLoaded', async () => {
-    await checkAuth(); // Сначала проверяем авторизацию
-    initMap(); // Затем инициализируем карту
+    await checkAuth();
+    initMap();
     loadAllParcelsToMap();
-    // При изменении берём массив выбранных значень
-    document.getElementById('coatuuDropdown').addEventListener('change', (event) => {
-        const selectedValue = event.target.value;
-        const filters = selectedValue ? [selectedValue] : [];
-        loadAllParcelsToMap('', filters);
-    });
+
+    // Обробник для кнопки пошуку
+    const searchButton = document.getElementById('searchButton');
+    if (searchButton) {
+        searchButton.onclick = searchParcels;
+    }
+    
+    // Обробник для поля вводу (пошук при натисканні Enter)
+    const searchInput = document.getElementById('searchCadnum');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchParcels();
+            }
+        });
+    }
+
+    // Обробник для випадаючого списку
+    const coatuuDropdown = document.getElementById('coatuuDropdown');
+    if (coatuuDropdown) {
+        coatuuDropdown.addEventListener('change', searchParcels);
+    }
 });
 
 async function insertTestData() {
@@ -483,12 +509,11 @@ async function populateCoatuuDropdown(data) {
     const dropdown = document.getElementById('coatuuDropdown');
     dropdown.innerHTML = '<option value="">Всі Сільські ради</option>'; // Очищаем и добавляем опцию по умолчанию
     allCoatuuValues = [...new Set(data.map(item => item.namecoatuu))];
-    console.log('Унікальні значення для випадаючого списку:', allCoatuuValues); // Добавляем вывод в консоль для отладки
+    console.log('Унікальні значення для випадаючого списку:', allCoatuuValues);
     allCoatuuValues.forEach(namecoatuu => {
         const option = document.createElement('option');
         option.value = namecoatuu;
         option.textContent = namecoatuu;
         dropdown.appendChild(option);
     });
-    $('#coatuuDropdown').select2(); // Инициализируем Select2
 }
