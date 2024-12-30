@@ -12,6 +12,9 @@ async function loadDashboardData(namecoatuuFilter = '') {
             .select('id', { count: 'exact', head: true });
         
         if (countError) {
+            if (countError.code === 'P0001') {
+                alert('У вас немає прав доступу до даних. Будь ласка, зверніться до адміністратора системи.');
+            }
             throw countError;
         }
 
@@ -32,6 +35,9 @@ async function loadDashboardData(namecoatuuFilter = '') {
             const { data, error } = await query;
             
             if (error) {
+                if (error.code === 'P0001') {
+                    alert('У вас немає прав доступу до даних. Будь ласка, зверніться до адміністратора системи.');
+                }
                 throw error;
             }
             if (!data || data.length === 0) break;
@@ -69,8 +75,11 @@ async function loadDashboardData(namecoatuuFilter = '') {
         }
 
     } catch (error) {
-        console.error('Детальна помилка завантаження:', error);
-        console.error('Стек помилки:', error.stack);
+        if (error.message === 'No permissions assigned') {
+            alert('У вас немає прав доступу до даних. Будь ласка, зверніться до адміністратора.');
+        }
+        console.error('Детальна помилка завантаження:', error.message);
+        console.error('Стек помилки:', error.stack || error);
         alert(`Помилка завантаження даних: ${error.message}`);
     } finally {
         document.body.classList.remove('loading');
