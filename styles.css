@@ -1047,3 +1047,68 @@ button:hover {
         flex-shrink: 1; /* Дозволяємо тексту стискатися при необхідності */
     }
 }
+
+/* Уніфіковані стилі для навбару */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    min-height: 56px;
+    height: 56px;
+    padding: 0;
+    background-color: #212529 !important;
+}
+
+.navbar .container-fluid {
+    height: 100%;
+    padding: 0 16px;
+}
+
+.navbar .dropdown-toggle,
+.navbar .navbar-text {
+    font-size: 14px;
+    height: 38px;
+    line-height: 38px;
+}
+
+.navbar .dropdown-menu {
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.navbar-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+    padding: 0;
+    margin: 0;
+}
+
+/* Медіа-запити для мобільних пристроїв */
+@media (max-width: 768px) {
+    .navbar {
+        height: auto;
+    }
+
+    .navbar .container-fluid {
+        padding: 8px;
+    }
+
+    .navbar .d-flex {
+        flex-direction: row !important;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .navbar .dropdown {
+        flex-shrink: 0;
+    }
+
+    .navbar-text {
+        text-align: right;
+        flex-shrink: 1;
+    }
+}
