@@ -761,3 +761,289 @@ button:hover {
         background-color: #4CAF50; /* Чіткий фідбек при натисканні */
     }
 }
+
+/* Оновлені стилі для навігації */
+.navbar .container-fluid {
+    justify-content: space-between;
+}
+
+.navbar .dropdown {
+    position: relative;
+}
+
+.navbar .dropdown-menu {
+    position: absolute;
+    min-width: 200px;
+    margin-top: 0;
+}
+
+/* Медіа-запити для мобільних пристроїв */
+@media (max-width: 768px) {
+    .navbar .dropdown-menu {
+        max-height: calc(100vh - 56px);
+        overflow-y: auto;
+    }
+
+    .navbar-text {
+        margin-left: 0;
+        text-align: center;
+        display: block;
+        width: 100%;
+    }
+}
+
+/* Оновлені стилі для меню */
+.dropdown-menu {
+    min-width: 300px;
+    padding: 1rem;
+}
+
+.dropdown-menu label {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.dropdown-menu .btn-group {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.dropdown-menu .form-control,
+.dropdown-menu .form-select {
+    background-color: #2c3034;
+    border-color: #495057;
+    color: #fff;
+}
+
+.dropdown-menu .form-control::placeholder {
+    color: #6c757d;
+}
+
+.dropdown-menu .btn-primary {
+    background-color: #4CAF50;
+    border-color: #388E3C;
+}
+
+.dropdown-menu .btn-primary:hover {
+    background-color: #388E3C;
+}
+
+/* Адаптивність для мобільних */
+@media (max-width: 768px) {
+    .dropdown-menu {
+        position: fixed;
+        top: 56px;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: calc(100vh - 56px);
+        overflow-y: auto;
+        margin: 0;
+        border-radius: 0;
+    }
+}
+
+/* Оновлюємо стилі для мобільних пристроїв */
+@media (max-width: 768px) {
+    .navbar {
+        position: fixed;
+        height: auto;
+        min-height: 56px;
+        z-index: 1030;
+    }
+
+    .map-container {
+        position: fixed;
+        top: 56px; /* Фіксований відступ від навбару */
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Прибираємо зайві відступи */
+    .navbar .container-fluid {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .dropdown-menu {
+        margin-top: 0;
+        border-radius: 0;
+        border-top: none;
+    }
+
+    /* Прибираємо старі стилі, що могли впливати на відступи */
+    .map-container {
+        padding-top: 0;
+        margin-top: 0;
+    }
+
+    #map {
+        height: 100%;
+        margin: 0;
+    }
+}
+
+/* Оновлені стилі для навбару та карти */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    min-height: 56px;
+    height: auto;
+    padding: 8px;
+}
+
+.navbar .container-fluid {
+    padding: 0 8px;
+}
+
+.map-container {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: calc(100% - 56px);
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Медіа-запити для мобільних пристроїв */
+@media (max-width: 768px) {
+    .navbar {
+        height: auto;
+    }
+
+    .navbar .container-fluid {
+        padding: 4px 8px;
+    }
+
+    .navbar .d-flex {
+        gap: 8px;
+    }
+
+    .dropdown-menu {
+        position: fixed;
+        top: 56px;
+        left: 0;
+        right: 0;
+        width: 100%;
+        margin: 0;
+        padding: 8px;
+        border-radius: 0;
+        max-height: calc(100vh - 56px);
+        overflow-y: auto;
+    }
+
+    .map-container {
+        top: 56px;
+        height: calc(100vh - 56px);
+    }
+
+    /* Видаляємо зайві відступи */
+    .navbar-text {
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Видаляємо старі стилі, що могли впливати на висоту */
+    .map-container {
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Забезпечуємо, щоб карта займала весь доступний простір */
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+}
+
+/* Оновлені стилі для навбару */
+.navbar .container-fluid {
+    padding: 0 8px;
+}
+
+.navbar .dropdown {
+    position: relative;
+}
+
+/* Медіа-запити для мобільних пристроїв */
+@media (max-width: 768px) {
+    .navbar {
+        height: auto;
+    }
+
+    .navbar .container-fluid {
+        padding: 8px;
+    }
+
+    .navbar .d-flex {
+        flex-direction: row !important; /* Примусово залишаємо рядкове розташування */
+        width: 100%;
+        gap: 8px;
+    }
+
+    .navbar .dropdown {
+        margin-right: auto; /* Притискаємо до лівого краю */
+    }
+
+    .navbar-text {
+        margin: 0;
+        padding: 0;
+    }
+}
+
+/* Оновлені стилі для навбару */
+.navbar .container-fluid {
+    padding: 0 8px;
+}
+
+.navbar-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+/* Медіа-запити для мобільних пристроїв */
+@media (max-width: 768px) {
+    .navbar {
+        height: auto;
+    }
+
+    .navbar .container-fluid {
+        padding: 8px;
+    }
+
+    .navbar .d-flex {
+        flex-direction: row !important; /* Зберігаємо горизонтальне розташування */
+        width: 100%;
+        gap: 8px;
+    }
+
+    .navbar .dropdown {
+        flex-shrink: 0; /* Запобігаємо стисканню дропдауна */
+    }
+
+    .navbar-text {
+        text-align: right;
+        margin: 0;
+        padding: 0;
+        flex-shrink: 1; /* Дозволяємо тексту стискатися при необхідності */
+    }
+}

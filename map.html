@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport"="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Кадастрова система - Карта</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
@@ -12,44 +12,64 @@
     <script src="https://unpkg.com/wicket@1.3.8/wicket.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        /* Додаткові стилі для виправлення проблем з висотою на мобільних */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
         <div class="container-fluid">
-            <div class="dropdown">
-                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Меню
-                </button>
-                <ul class="dropdown-menu dropdown-menu-dark">
-                    <li><button class="dropdown-item" type="button" onclick="window.location.href='index.html'">Головна</button></li>
-                    <li><button class="dropdown-item" type="button" onclick="window.location.href='map.html'">Карта</button></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <div class="px-3 py-2">
-                            <label class="text-light mb-1">Базова карта:</label>
-                            <div class="btn-group w-100" role="group">
-                                <button onclick="switchBaseMap('satellite')" class="btn btn-dark active btn-sm" id="satellite-btn">Супутник</button>
-                                <button onclick="switchBaseMap('osm')" class="btn btn-dark btn-sm" id="osm-btn">OSM</button>
+            <div class="d-flex w-100 align-items-center justify-content-between">
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Навігація
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><button class="dropdown-item" type="button" onclick="window.location.href='index.html'">Головна</button></li>
+                        <li><button class="dropdown-item" type="button" onclick="window.location.href='map.html'">Карта</button></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <div class="px-3 py-2">
+                                <label class="text-light mb-1">Базова карта:</label>
+                                <div class="btn-group w-100">
+                                    <button onclick="switchBaseMap('satellite')" class="btn btn-dark active btn-sm" id="satellite-btn">Супутник</button>
+                                    <button onclick="switchBaseMap('osm')" class="btn btn-dark btn-sm" id="osm-btn">OSM</button>
+                                </div>
                             </div>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="px-3 py-2">
-                            <label class="text-light mb-1">Пошук ділянки:</label>
-                            <input type="text" id="searchCadnum" placeholder="Кадастровий номер" class="form-control form-control-sm mb-2"/>
-                            <select id="coatuuDropdown" class="form-select form-select-sm mb-2">
-                                <option value="">Всі Сільські ради</option>
-                            </select>
-                            <button id="searchButton" onclick="searchParcels()" class="btn btn-primary btn-sm w-100">
-                                <span class="search-icon">🔍</span> Пошук
-                            </button>
-                        </div>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><button class="dropdown-item" type="button" onclick="signOut()">Вийти</button></li>
-                </ul>
+                        </li>
+                        <li>
+                            <div class="px-3 py-2">
+                                <label class="text-light mb-1">Пошук ділянки:</label>
+                                <input type="text" id="searchCadnum" placeholder="Кадастровий номер" class="form-control form-control-sm mb-2"/>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="px-3 py-2">
+                                <label class="text-light mb-1">Фільтр за радою:</label>
+                                <select id="coatuuDropdown" class="form-select form-select-sm mb-2">
+                                    <option value="">Всі Сільські ради</option>
+                                </select>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="px-3 py-2">
+                                <button id="searchButton" onclick="searchParcels()" class="btn btn-primary btn-sm w-100">
+                                    <span class="search-icon">🔍</span> Пошук
+                                </button>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" type="button" onclick="signOut()">Вийти</button></li>
+                    </ul>
+                </div>
+                <span class="navbar-text text-end" id="userEmail"></span>
             </div>
-            <span class="navbar-text" id="userEmail"></span>
         </div>
     </nav>
     <div class="map-container">
