@@ -27,8 +27,10 @@
         <div class="container-fluid">
             <div class="d-flex w-100 align-items-center justify-content-between">
                 <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Навігація
+                    <button class="btn btn-secondary dropdown-toggle d-flex align-items-center justify-content-center p-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <svg style="width: 24px; height: 24px;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M3 12.75a.75.75 0 01.75-.75H12.25a.75.75 0 010 1.5H3.75A.75.75 0 013 12.75zm0-4a.75.75 0 01.75-.75H12.25a.75.75 0 010 1.5H3.75A.75.75 0 013 8.75zm0-4a.75.75 0 01.75-.75H12.25a.75.75 0 010 1.5H3.75A.75.75 0 013 4.75z"/>
+                        </svg>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-dark">
                         <li><button class="dropdown-item" type="button" onclick="window.location.href='index.html'">Головна</button></li>
@@ -38,8 +40,16 @@
                             <div class="px-3 py-2">
                                 <label class="text-light mb-1">Базова карта:</label>
                                 <div class="btn-group w-100">
-                                    <button onclick="switchBaseMap('satellite')" class="btn btn-dark active btn-sm" id="satellite-btn">Супутник</button>
-                                    <button onclick="switchBaseMap('osm')" class="btn btn-dark btn-sm" id="osm-btn">OSM</button>
+                                    <button onclick="switchBaseMap('satellite')" class="map-switch btn btn-dark active btn-sm" id="satellite-btn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-globe2" viewBox="0 0 16 16">
+                                            <path d="M0 8a8 8 0 1 0 16 0A8 8 0 0 0 0 8zm7 6.79c-2.07-.33-3.64-1.55-4.58-3.05.99-.18 2.06-.42 3.13-.72.09.33.19.66.31.99.2.57.45 1.12.74 1.62l.4.16-.36 1zM2.05 5.87A6.96 6.96 0 0 1 8 1a6.96 6.96 0 0 1 5.95 4.87 31.63 31.63 0 0 1-3.67.75 12.91 12.91 0 0 0-.21-.65C9.71 4.06 9.1 3 8 3s-1.71 1.06-2.07 3.01c-.06.22-.14.47-.21.73-1.15.27-2.4.5-3.67.74zM6.26 7.3c.21-.76.47-1.63.96-2.32V7.3H6.26zm3.48 0h-.96V4.98c.49.69.75 1.56.96 2.32zM8 8.63c.28 0 .55-.02.82-.05.09.39.15.8.16 1.23H7.02c.02-.42.08-.84.16-1.23.28.03.55.05.82.05zm-2.03 2.54h2.05c.08.34.12.71.14 1.08-.42.02-.84.03-1.26.03-.45 0-.89-.01-1.32-.04.06-.36.09-.72.12-1.07zM9.76 13.4c-.4.03-.8.05-1.21.05-.42 0-.84-.02-1.25-.05l-.24-.99h2.94l-.24.99zM10.74 11.96h2.03c-.03.35-.06.71-.12 1.07-.44.03-.88.04-1.32.04-.42 0-.84-.01-1.26-.03.02-.37.06-.74.14-1.08zM10.2 9.86h2.54c-.27 1-1 1.93-1.97 2.53-.05-.17-.11-.34-.18-.51-.3-.7-.55-1.44-.73-2.02.12 0 .24 0 .34-.01zM3.26 9.86h2.53c-.18.59-.42 1.33-.73 2.03-.07.16-.13.33-.18.5-1-.6-1.7-1.53-1.97-2.53.1 0 .22.01.35.01z"/>
+                                        </svg>
+                                    </button>
+                                    <button onclick="switchBaseMap('osm')" class="map-switch btn btn-dark btn-sm" id="osm-btn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-map" viewBox="0 0 16 16">
+                                            <path fill-rule="evenodd" d="M15.817.113a.5.5 0 0 1 .183.387v12.999a.5.5 0 0 1-.724.447L10 12.383l-4.276 1.713a.5.5 0 0 1-.448 0L.816 12.887A.5.5 0 0 1 .5 12.5V-.499a.5.5 0 0 1 .183-.387l5-3a.5.5 0 0 1 .448 0l4.276 1.713L15.093.113a.5.5 0 0 1 .724 0zM1 11.673l4 1.6V2.327l-4-1.6v10.946zm5 1.6l3-1.2V2.327l-3 1.2v9.746zm4-1.2 4 1.6V2.327l-4-1.6v10.946z"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                         </li>
