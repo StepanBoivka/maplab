@@ -336,6 +336,68 @@ button:hover {
     border-top: 1px solid rgba(255,255,255,.15);
 }
 
+/* Оновлені стилі для випадаючого меню */
+.dropdown-menu {
+    min-width: 280px;
+}
+
+.dropdown-menu .form-control,
+.dropdown-menu .form-select,
+.dropdown-menu .btn {
+    font-size: 14px;
+}
+
+.dropdown-menu label {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.dropdown-menu .btn-group {
+    margin-bottom: 8px;
+}
+
+/* Стилі для мобільних пристроїв */
+@media (max-width: 768px) {
+    .dropdown-menu {
+        width: 100%;
+        position: fixed;
+        top: 56px;
+        left: 0;
+        right: 0;
+        border-radius: 0;
+        max-height: calc(100vh - 56px);
+        overflow-y: auto;
+    }
+
+    .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1030;
+    }
+
+    .map-container {
+        margin-top: 56px;
+    }
+}
+
+/* Стилі для темної теми меню */
+.dropdown-menu-dark {
+    background-color: #343a40;
+}
+
+.dropdown-menu-dark .form-control,
+.dropdown-menu-dark .form-select {
+    background-color: #212529;
+    border-color: #495057;
+    color: #fff;
+}
+
+.dropdown-menu-dark .form-control::placeholder {
+    color: #6c757d;
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 10px;
@@ -573,5 +635,129 @@ button:hover {
     .nav-select-wrapper {
         width: 100%;
         min-width: 100%;
+    }
+}
+
+/* Оновлені стилі для адаптивності */
+@media (max-width: 768px) {
+    /* Навбар */
+    .navbar {
+        height: auto;
+        position: relative; /* Змінюємо на відносне позиціонування для мобільних */
+    }
+
+    .navbar .container-fluid {
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .nav-search-group {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .nav-input-wrapper,
+    .nav-select-wrapper {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .btn-group {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* Контейнер карти */
+    .map-container {
+        position: fixed;
+        top: auto;
+        padding-top: 0;
+        height: calc(100vh - 180px); /* Враховуємо висоту навбару */
+    }
+
+    /* Контейнер контенту */
+    .container {
+        padding: 10px;
+        padding-top: 10px;
+        margin-top: 0;
+    }
+
+    /* Статистика */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 15px;
+    }
+
+    /* Графіки */
+    .chart-container {
+        min-height: 250px;
+        margin-top: 10px;
+    }
+
+    .chart-card {
+        padding: 10px;
+        height: 300px;
+    }
+
+    /* Поля вводу та кнопки */
+    .form-control,
+    .form-select,
+    .btn {
+        height: 40px !important;
+        font-size: 16px !important; /* Збільшуємо розмір шрифту для кращої читабельності */
+    }
+
+    /* Випадаюче меню */
+    .dropdown-menu {
+        width: 100%;
+        margin-top: 0;
+    }
+
+    .dropdown-item {
+        padding: 12px 15px; /* Збільшуємо область натискання */
+    }
+
+    /* Email користувача */
+    .navbar-text {
+        text-align: center;
+        width: 100%;
+        margin: 5px 0;
+    }
+}
+
+/* Додаткові стилі для дуже малих екранів */
+@media (max-width: 480px) {
+    .navbar {
+        padding: 5px;
+    }
+
+    .stat-number {
+        font-size: 18px;
+    }
+
+    .chart-container {
+        min-height: 200px;
+    }
+
+    .chart-card {
+        height: 250px;
+    }
+}
+
+/* Покращення читабельності на малих екранах */
+@media (hover: none) {
+    .btn:hover {
+        opacity: 1; /* Вимикаємо ефект наведення на тач-пристроях */
+    }
+
+    .dropdown-item:active {
+        background-color: #4CAF50; /* Чіткий фідбек при натисканні */
     }
 }
