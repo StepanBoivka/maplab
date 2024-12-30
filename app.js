@@ -15,6 +15,9 @@ const basemaps = {
 };
 
 function initMap() {
+    if (map) {
+        map.remove();
+    }
     map = L.map('map').setView([48.86, 24.62], 13);
     
     // Устанавливаем спутник по умолчанию
@@ -84,7 +87,6 @@ async function signIn() {
         
         if (error) throw error;
         
-        console.log('Успішний вхід:', data);
         fetchData(); // Обновляем данные после входа
     } catch (error) {
         console.error('Помилка входу:', error);
@@ -139,7 +141,6 @@ async function signInWithMagicLink() {
 async function checkSession() {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-        console.log('Активна сесія:', session);
         document.getElementById('auth-section').style.display = 'none';
         // Показываем информацию о пользователе
         const userEmail = session.user?.email;
@@ -155,19 +156,14 @@ const pageSize = 10;
 async function loadAllParcelsToMap(cadnum = '', namecoatuuFilters = []) {
     document.body.classList.add('loading');
     try {
-        console.log('Запит даних для карти...');
-        
         // Отримуємо загальну кількість записів
         const { count, error: countError } = await supabase
             .from('parcel')
             .select('id', { count: 'exact', head: true });
         
         if (countError) {
-            console.error('Помилка отримання кількості записів:', countError);
             throw countError;
         }
-            
-        console.log('Загальна кількість записів:', count);
 
         // Отримуємо всі дані за допомогою пагінації
         let allData = [];
@@ -190,7 +186,6 @@ async function loadAllParcelsToMap(cadnum = '', namecoatuuFilters = []) {
             const { data, error } = await query;
             
             if (error) {
-                console.error('Помилка отримання даних:', error);
                 throw error;
             }
             if (!data || data.length === 0) break;
@@ -198,19 +193,13 @@ async function loadAllParcelsToMap(cadnum = '', namecoatuuFilters = []) {
             allData = allData.concat(data);
             page++;
         }
-        
-        console.log('Отримано всього записів:', allData.length);
 
         if (!allData.length) {
-            console.log('Дані відсутні');
             return;
         }
 
         // Очищаем слой с участками
         parcelsLayer.clearLayers();
-        
-        // Выводим первую запись для анализа структуры
-        console.log('Приклад запису:', allData[0]);
         
         // Добавляем все участки на карту
         let hasValidBounds = false;
@@ -219,7 +208,6 @@ async function loadAllParcelsToMap(cadnum = '', namecoatuuFilters = []) {
         allData.forEach(parcel => {
             try {
                 if (!parcel.geom) {
-                    console.log('Відсутня геометрія для ділянки:', parcel);
                     return;
                 }
 
@@ -233,8 +221,6 @@ async function loadAllParcelsToMap(cadnum = '', namecoatuuFilters = []) {
                         namecoatuu: parcel.namecoatuu // Исправляем имя столбца
                     }
                 };
-                
-                console.log('Створений GeoJSON:', geojson);
                 
                 parcelsLayer.addData(geojson);
                 const layer = parcelsLayer.getLayers()[parcelsLayer.getLayers().length - 1];
@@ -271,13 +257,6 @@ async function searchParcels() {
     const cadnum = document.getElementById('searchCadnum').value;
     const coatuuValue = document.getElementById('coatuuDropdown').value;
     const namecoatuuFilters = coatuuValue ? [coatuuValue] : [];
-    
-    // Додаємо логування для відладки
-    console.log('Пошук за параметрами:', { 
-        cadnum, 
-        coatuuValue, 
-        namecoatuuFilters 
-    });
 
     try {
         await loadAllParcelsToMap(cadnum, namecoatuuFilters);
@@ -456,7 +435,6 @@ async function showTableStructure() {
     try {
         // Проверка сессии
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        console.log('Сесія:', session);
 
         // Пробуем прямой запрос с явным указанием схемы
         const { data, error, count } = await supabase
@@ -468,11 +446,8 @@ async function showTableStructure() {
             .limit(5)
             .throwOnError();
             
-        console.log('Прямий запит:', { data, error });
-        
         // Проверяем RLS
         const { data: rlsData } = await supabase.rpc('get_raw_parcels');
-        console.log('RLS дані:', rlsData);
         
         const diagnosticInfo = {
             auth_status: {
@@ -500,7 +475,6 @@ async function showTableStructure() {
         dataContainer.innerHTML = `<pre>Розширена діагностика:\n${JSON.stringify(diagnosticInfo, null, 2)}</pre>`;
         
     } catch (error) {
-        console.error('Детальна помилка:', error);
         dataContainer.innerHTML = `<pre>Критична помилка:\n${JSON.stringify({
             message: error.message,
             details: error.details,
@@ -515,7 +489,6 @@ async function populateCoatuuDropdown(data) {
     const dropdown = document.getElementById('coatuuDropdown');
     dropdown.innerHTML = '<option value="">Всі Сільські ради</option>'; // Очищаем и добавляем опцию по умолчанию
     allCoatuuValues = [...new Set(data.map(item => item.namecoatuu))];
-    console.log('Унікальні значення для випадаючого списку:', allCoatuuValues);
     allCoatuuValues.forEach(namecoatuu => {
         const option = document.createElement('option');
         option.value = namecoatuu;

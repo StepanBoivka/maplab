@@ -6,19 +6,14 @@ let allCoatuuValues = []; // Добавляем переменную для хр
 async function loadDashboardData(namecoatuuFilter = '') {
     document.body.classList.add('loading');
     try {
-        console.log('Запит даних для дашборду...');
-        
         // Отримуємо загальну кількість записів
         const { count, error: countError } = await supabase
             .from('parcel')
             .select('id', { count: 'exact', head: true });
         
         if (countError) {
-            console.error('Помилка отримання кількості записів:', countError);
             throw countError;
         }
-            
-        console.log('Загальна кількість записів:', count);
 
         // Отримуємо всі дані за допомогою пагінації
         let allData = [];
@@ -37,7 +32,6 @@ async function loadDashboardData(namecoatuuFilter = '') {
             const { data, error } = await query;
             
             if (error) {
-                console.error('Помилка отримання даних:', error);
                 throw error;
             }
             if (!data || data.length === 0) break;
@@ -45,11 +39,8 @@ async function loadDashboardData(namecoatuuFilter = '') {
             allData = allData.concat(data);
             page++;
         }
-        
-        console.log('Отримано всього записів:', allData.length);
 
         if (!allData.length) {
-            console.log('Дані відсутні');
             document.querySelector('#totalParcels .stat-number').textContent = '0';
             document.querySelector('#totalArea .stat-number').textContent = '0 га';
             document.querySelector('#avgArea .stat-number').textContent = '0 га';
@@ -71,12 +62,6 @@ async function loadDashboardData(namecoatuuFilter = '') {
 
         // Створюємо графік розподілу площ
         createAreaChart(allData);
-
-        // Створюємо графік розподілу по namecoatuu
-        createCoatuuChart(allData);
-
-        // Отображаем уникальные значения namecoatuu
-        displayUniqueCoatuu(allData);
 
         // Заполняем выпадающий список после загрузки данных
         if (!allCoatuuValues.length) {
@@ -138,70 +123,10 @@ function createAreaChart(data) {
     });
 }
 
-function createCoatuuChart(data) {
-    const coatuuCounts = {};
-
-    data.forEach(parcel => {
-        const namecoatuu = parcel.namecoatuu || 'Невідомо';
-        if (!coatuuCounts[namecoatuu]) {
-            coatuuCounts[namecoatuu] = 0;
-        }
-        coatuuCounts[namecoatuu]++;
-    });
-
-    // Уничтожаем предыдущий график если он существует
-    if (currentCoatuuChart) {
-        currentCoatuuChart.destroy();
-    }
-
-    const ctx = document.getElementById('coatuuChart').getContext('2d');
-    currentCoatuuChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: Object.keys(coatuuCounts),
-            datasets: [{
-                label: 'Кількість ділянок',
-                data: Object.values(coatuuCounts),
-                backgroundColor: [
-                    '#FF6384',
-                    '#36A2EB',
-                    '#FFCE56',
-                    '#4BC0C0',
-                    '#9966FF',
-                    '#FF9F40'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Розподіл ділянок за Сільською радою'
-                }
-            }
-        }
-    });
-}
-
-function displayUniqueCoatuu(data) {
-    const uniqueCoatuu = [...new Set(data.map(item => item.namecoatuu))];
-    console.log('Унікальні значення namecoatuu:', uniqueCoatuu); // Добавляем вывод в консоль для отладки
-    const uniqueCoatuuList = document.getElementById('uniqueCoatuuList');
-    uniqueCoatuuList.innerHTML = ''; // Очищаем список перед добавлением новых данных
-
-    uniqueCoatuu.forEach(namecoatuu => {
-        const listItem = document.createElement('li');
-        listItem.textContent = namecoatuu;
-        uniqueCoatuuList.appendChild(listItem);
-    });
-}
-
 function populateCoatuuDropdown(data) {
     const dropdown = document.getElementById('coatuuDropdown');
     dropdown.innerHTML = '<option value="">Всі Сільські ради</option>'; // Очищаем и добавляем опцию по умолчанию
     allCoatuuValues = [...new Set(data.map(item => item.namecoatuu))];
-    console.log('Унікальні значення для випадаючого списку:', allCoatuuValues); // Добавляем вывод в консоль для отладки
     allCoatuuValues.forEach(namecoatuu => {
         const option = document.createElement('option');
         option.value = namecoatuu;
@@ -252,7 +177,6 @@ async function signIn() {
         
         if (error) throw error;
         
-        console.log('Успішний вхід:', data);
         checkAuth(); // Перепроверяем авторизацию и показываем дашборд
     } catch (error) {
         console.error('Помилка входу:', error);

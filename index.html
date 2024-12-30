@@ -48,9 +48,14 @@
         </div>
 
         <div id="main-content" style="display: none;">
+            <!-- Добавляем информацию о пользователе -->
+            <div class="user-info">
+                <span>Користувач: </span>
+                <span id="userEmail"></span>
+            </div>
             <div class="filters">
                 <select id="coatuuDropdown" class="form-select">
-                    <option value="">Всі Сільські ради</option>
+                    <option value="">Всі ради</option>
                 </select>
             </div>
 
@@ -77,19 +82,6 @@
                     </div>
                 </div>
 
-                <div class="chart-container">
-                    <div class="chart-card full-width">
-                        <h3>Розподіл за Сільською радою</h3>
-                        <canvas id="coatuuChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="unique-coatuu-container">
-                    <h3>Унікальні значення Сільських рад</h3>
-                    <ul id="uniqueCoatuuList">
-                        <!-- Унікальні значення будуть додані динамічно -->
-                    </ul>
-                </div>
             </div>
         </div>
     </div>
