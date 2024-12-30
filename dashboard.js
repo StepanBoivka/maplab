@@ -125,7 +125,7 @@ function createAreaChart(data) {
 
 function populateCoatuuDropdown(data) {
     const dropdown = document.getElementById('coatuuDropdown');
-    dropdown.innerHTML = '<option value="">Всі Сільські ради</option>'; // Очищаем и добавляем опцию по умолчанию
+    dropdown.innerHTML = '<option value="">Всі ради</option>'; // Очищаем и добавляем опцию по умолчанию
     allCoatuuValues = [...new Set(data.map(item => item.namecoatuu))];
     allCoatuuValues.forEach(namecoatuu => {
         const option = document.createElement('option');
