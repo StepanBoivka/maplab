@@ -1112,3 +1112,110 @@ button:hover {
         flex-shrink: 1;
     }
 }
+
+/* Оновлені стилі для дашборду */
+.dashboard {
+    max-width: 100%;
+    padding: 10px 0;
+    gap: 20px;
+}
+
+.stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    padding: 15px;
+    font-size: 14px;
+}
+
+.stat-card h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.stat-number {
+    font-size: 20px;
+    margin: 8px 0;
+}
+
+.chart-card {
+    padding: 15px;
+}
+
+.chart-card h3 {
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+/* Адаптивні стилі для мобільних */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+        padding-top: 66px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 12px;
+    }
+
+    .stat-card h3 {
+        font-size: 14px;
+    }
+
+    .stat-number {
+        font-size: 18px;
+    }
+
+    .chart-card {
+        padding: 12px;
+        height: 300px;
+    }
+
+    .chart-card h3 {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .filters {
+        margin: 10px 0;
+    }
+
+    .filters select {
+        font-size: 14px;
+        height: 36px;
+    }
+}
+
+/* Додаткові стилі для дуже малих екранів */
+@media (max-width: 480px) {
+    .container {
+        padding: 8px;
+        padding-top: 62px;
+    }
+
+    .stat-card {
+        padding: 10px;
+    }
+
+    .stat-number {
+        font-size: 16px;
+    }
+
+    .chart-card {
+        padding: 10px;
+        height: 250px;
+    }
+
+    .filters select {
+        font-size: 13px;
+        height: 34px;
+    }
+}
