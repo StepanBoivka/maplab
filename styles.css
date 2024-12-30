@@ -1281,3 +1281,8 @@ button:hover {
 body.loading .loading-indicator {
     display: block;
 }
+
+html, body {
+    overflow: auto;
+    height: auto;
+}
