@@ -4,6 +4,7 @@ let currentCoatuuChart = null;
 let allCoatuuValues = []; // Добавляем переменную для хранения всех уникальных значений
 
 async function loadDashboardData(namecoatuuFilter = '') {
+    document.body.classList.add('loading');
     try {
         console.log('Запит даних для дашборду...');
         
@@ -86,6 +87,8 @@ async function loadDashboardData(namecoatuuFilter = '') {
         console.error('Детальна помилка завантаження:', error);
         console.error('Стек помилки:', error.stack);
         alert(`Помилка завантаження даних: ${error.message}`);
+    } finally {
+        document.body.classList.remove('loading');
     }
 }
 

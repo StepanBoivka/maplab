@@ -72,6 +72,10 @@
             </div>
         </div>
     </nav>
+    <div class="loading-indicator">
+        <div class="spinner"></div>
+        <span>Завантаження...</span>
+    </div>
     <div class="map-container">
         <div id="map"></div>
     </div>
@@ -79,8 +83,10 @@
     <script src="config.js"></script>
     <script src="app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuth();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            initMap();
+            await loadAllParcelsToMap();
         });
     </script>
 </body>

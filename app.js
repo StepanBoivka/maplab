@@ -153,6 +153,7 @@ let currentPage = 0;
 const pageSize = 10;
 
 async function loadAllParcelsToMap(cadnum = '', namecoatuuFilters = []) {
+    document.body.classList.add('loading');
     try {
         console.log('Запит даних для карти...');
         
@@ -259,11 +260,14 @@ async function loadAllParcelsToMap(cadnum = '', namecoatuuFilters = []) {
         console.error('Детальна помилка завантаження:', error);
         console.error('Стек помилки:', error.stack);
         alert('Помилка завантаження даних. Перевірте консоль для деталей.');
+    } finally {
+        document.body.classList.remove('loading');
     }
 }
 
 // Оновлена функція пошуку
 async function searchParcels() {
+    document.body.classList.add('loading');
     const cadnum = document.getElementById('searchCadnum').value;
     const coatuuValue = document.getElementById('coatuuDropdown').value;
     const namecoatuuFilters = coatuuValue ? [coatuuValue] : [];
@@ -280,6 +284,8 @@ async function searchParcels() {
     } catch (error) {
         console.error('Помилка пошуку:', error);
         alert('Помилка пошуку ділянок');
+    } finally {
+        document.body.classList.remove('loading');
     }
 }
 
