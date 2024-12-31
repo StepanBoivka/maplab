@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кадастрова система - Сервісна інформація</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="cache.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    <nav class="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
+        <div class="container-fluid">
+            <div class="d-flex w-100 align-items-center justify-content-between">
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle d-flex align-items-center justify-content-center p-2" 
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <svg style="width: 24px; height: 24px;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M3 12.75a.75.75 0 01.75-.75H12.25a.75.75 0 010 1.5H3.75A.75.75 0 013 12.75zm0-4a.75.75 0 01.75-.75H12.25a.75.75 0 010 1.5H3.75A.75.75 0 013 8.75zm0-4a.75.75 0 01.75-.75H12.25a.75.75 0 010 1.5H3.75A.75.75 0 013 4.75z"/>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><button class="dropdown-item" type="button" onclick="window.location.href='index.html'">Головна</button></li>
+                        <li><button class="dropdown-item" type="button" onclick="window.location.href='map.html'">Карта</button></li>
+                        <li><button class="dropdown-item active" type="button" onclick="window.location.href='service.html'">Сервіс</button></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" type="button" onclick="signOut()">Вийти</button></li>
+                    </ul>
+                </div>
+                <span class="navbar-text text-end" id="userEmail"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mt-4 mb-4">Сервісна інформація</h2>
+        
+        <!-- Секція кешу -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Інформація про кеш</h5>
+                <div>
+                    <button class="btn btn-info btn-sm me-2" onclick="refreshCacheInfo()">Оновити</button>
+                    <button class="btn btn-warning btn-sm" onclick="clearCache()">Очистити</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="cache-stats" id="cacheStats">
+                            Завантаження...
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="cache-keys" id="cacheKeys">
+                            Завантаження...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Секція системної інформації -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Системна інформація</h5>
+            </div>
+            <div class="card-body">
+                <div id="systemInfo">
+                    Завантаження...
+                </div>
+            </div>
+        </div>
+
+        <!-- Секція логів -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Логи системи</h5>
+                <button class="btn btn-secondary btn-sm" onclick="clearLogs()">Очистити логи</button>
+            </div>
+            <div class="card-body">
+                <pre id="systemLogs" class="system-logs">
+                    Завантаження...
+                </pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="service.js"></script>
+</body>
+</html>

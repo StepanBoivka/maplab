@@ -14,13 +14,23 @@ const basemaps = {
     })
 };
 
+// Оновлюємо функцію initMap
 function initMap() {
     if (map) {
         map.remove();
     }
-    map = L.map('map').setView([48.86, 24.62], 13);
     
-    // Устанавливаем спутник по умолчанию
+    map = L.map('map', {
+        zoomControl: true,
+        maxZoom: 20,
+        minZoom: 5
+    }).setView([48.86, 24.62], 13);
+    
+    // Додаємо затримку для коректної ініціалізації розмірів контейнера
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 100);
+    
     currentBaseLayer = basemaps.satellite;
     currentBaseLayer.addTo(map);
     
@@ -198,6 +208,10 @@ async function loadAllParcelsToMap(cadnum = '', namecoatuuFilters = []) {
 
             // Зберігаємо в кеш
             cacheManager.set('parcels', allData, cacheParams);
+            
+            // Тестуємо кеш після збереження
+            console.log('Результати тестування кешу після збереження:');
+            await testCache();
         }
 
         // Оновлюємо карту
@@ -216,7 +230,7 @@ async function loadAllParcelsToMap(cadnum = '', namecoatuuFilters = []) {
     }
 }
 
-// Винесемо оновлення карти в окрему функцію
+// Оновлюємо функцію updateMapWithData
 function updateMapWithData(allData) {
     if (!allData || !allData.length) return;
 
@@ -252,7 +266,13 @@ function updateMapWithData(allData) {
     });
     
     if (hasValidBounds) {
-        map.fitBounds(bounds);
+        // Додаємо затримку перед зміною bounds
+        setTimeout(() => {
+            map.fitBounds(bounds, {
+                padding: [50, 50],
+                maxZoom: 18
+            });
+        }, 100);
     }
 }
 
@@ -263,13 +283,65 @@ function clearCache() {
     alert('Кеш очищено');
 }
 
-// Додаємо нову функцію для оновлення підпису віку кешу
+// Оновлюємо функцію updateCacheAge
 function updateCacheAge() {
     const cacheAgeElement = document.getElementById('cacheAge');
     if (cacheAgeElement) {
-        const age = cacheManager.getCacheAge('parcels');
-        cacheAgeElement.textContent = age ? `Вік кешу: ${age} год` : 'Кеш пустий';
+        const cacheInfo = cacheManager.getCacheInfo('parcels');
+        let statusText = '';
+        
+        if (cacheInfo.items > 0) {
+            statusText = `${cacheInfo.size} (${cacheInfo.items} об'єктів)\n`;
+            if (cacheInfo.age) {
+                statusText += `Вік: ${cacheInfo.age}, ${cacheInfo.expires}`;
+            }
+        } else {
+            statusText = 'Кеш пустий';
+            console.log('Діагностика кешу:', {
+                localStorage: Object.keys(localStorage),
+                cacheKeys: Object.keys(localStorage).filter(k => k.startsWith('ml3_')),
+                cacheInfo
+            });
+        }
+        
+        cacheAgeElement.innerHTML = statusText;
+        cacheAgeElement.style.whiteSpace = 'pre-line';
     }
+}
+
+// Додаємо функцію для тестування кешу
+async function testCache() {
+    console.log('Тестування кешу:');
+    
+    // Перевіряємо наявність даних в кеші
+    const cachedData = cacheManager.get('parcels');
+    console.log('1. Дані в кеші:', {
+        exists: !!cachedData,
+        itemsCount: cachedData ? cachedData.length : 0
+    });
+    
+    // Перевіряємо всі ключі в localStorage
+    const allKeys = Object.keys(localStorage);
+    const cacheKeys = allKeys.filter(k => k.startsWith('ml3_'));
+    console.log('2. Ключі кешу:', {
+        allKeys,
+        cacheKeys
+    });
+    
+    // Перевіряємо розмір кешу
+    const sizeInfo = cacheManager.getCacheSize();
+    console.log('3. Розмір кешу:', sizeInfo);
+    
+    // Перевіряємо інформацію про кеш
+    const cacheInfo = cacheManager.getCacheInfo('parcels');
+    console.log('4. Інформація про кеш:', cacheInfo);
+    
+    return {
+        cached: !!cachedData,
+        keys: cacheKeys,
+        size: sizeInfo,
+        info: cacheInfo
+    };
 }
 
 async function searchParcels() {
@@ -389,8 +461,16 @@ async function checkAuth() {
 // Оновлюємо ініціалізацію (замінюємо стару версію)
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
+    
+    // Ініціалізуємо карту після того, як DOM повністю завантажений
     initMap();
-    loadAllParcelsToMap();
+    
+    // Чекаємо поки карта повністю ініціалізується
+    setTimeout(async () => {
+        await loadAllParcelsToMap();
+        updateCacheAge();
+        setInterval(updateCacheAge, 60000);
+    }, 200);
 
     // Обробник для кнопки пошуку
     const searchButton = document.getElementById('searchButton');

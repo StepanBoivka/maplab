@@ -1295,3 +1295,24 @@ html, body {
     display: block;
     margin-top: 4px;
 }
+
+/* Стилі для сервісної сторінки */
+.system-logs {
+    max-height: 400px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    padding: 15px;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+.cache-stats,
+.cache-keys {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.card-header h5 {
+    margin: 0;
+}
