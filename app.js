@@ -155,103 +155,123 @@ const pageSize = 10;
 
 async function loadAllParcelsToMap(cadnum = '', namecoatuuFilters = []) {
     document.body.classList.add('loading');
+    
+    const cacheParams = { cadnum, namecoatuuFilters };
+    
     try {
-        // Отримуємо загальну кількість записів
-        const { count, error: countError } = await supabase
-            .from('parcel')
-            .select('id', { count: 'exact', head: true });
+        // Спробуємо отримати дані з кешу
+        let allData = cacheManager.get('parcels', cacheParams);
         
-        if (countError) {
-            throw countError;
-        }
+        if (!allData) {
+            // Якщо кешу немає або він застарів - завантажуємо з бази
+            const { count, error: countError } = await supabase
+                .from('parcel')
+                .select('id', { count: 'exact', head: true });
+            
+            if (countError) throw countError;
 
-        // Отримуємо всі дані за допомогою пагінації
-        let allData = [];
-        const pageSize = 1000;
-        let page = 0;
-        
-        while (page * pageSize < count) {
-            let query = supabase
-                .rpc('get_parcels_with_coatuu')
-                .range(page * pageSize, (page + 1) * pageSize - 1);
-                
-            if (cadnum) {
-                query = query.ilike('cadnum', `%${cadnum}%`);
-            }
+            allData = [];
+            const pageSize = 1000;
+            let page = 0;
             
-            if (Array.isArray(namecoatuuFilters) && namecoatuuFilters.length > 0) {
-                query = query.in('namecoatuu', namecoatuuFilters);
-            }
-            
-            const { data, error } = await query;
-            
-            if (error) {
-                throw error;
-            }
-            if (!data || data.length === 0) break;
-            
-            allData = allData.concat(data);
-            page++;
-        }
-
-        if (!allData.length) {
-            return;
-        }
-
-        // Очищаем слой с участками
-        parcelsLayer.clearLayers();
-        
-        // Добавляем все участки на карту
-        let hasValidBounds = false;
-        const bounds = L.latLngBounds([]);
-        
-        allData.forEach(parcel => {
-            try {
-                if (!parcel.geom) {
-                    return;
+            while (page * pageSize < count) {
+                let query = supabase
+                    .rpc('get_parcels_with_coatuu')
+                    .range(page * pageSize, (page + 1) * pageSize - 1);
+                    
+                if (cadnum) {
+                    query = query.ilike('cadnum', `%${cadnum}%`);
                 }
-
-                const geojson = {
-                    type: "Feature",
-                    geometry: typeof parcel.geom === 'string' ? JSON.parse(parcel.geom) : parcel.geom,
-                    properties: {
-                        cadnum: parcel.cadnum,
-                        area: parcel.area,
-                        area_service: parcel.area_service,
-                        namecoatuu: parcel.namecoatuu // Исправляем имя столбца
-                    }
-                };
                 
-                parcelsLayer.addData(geojson);
-                const layer = parcelsLayer.getLayers()[parcelsLayer.getLayers().length - 1];
-                if (layer && layer.getBounds) {
-                    bounds.extend(layer.getBounds());
-                    hasValidBounds = true;
+                if (Array.isArray(namecoatuuFilters) && namecoatuuFilters.length > 0) {
+                    query = query.in('namecoatuu', namecoatuuFilters);
                 }
-            } catch (e) {
-                console.error('Помилка обробки геометрії:', e, parcel);
+                
+                const { data, error } = await query;
+                
+                if (error) throw error;
+                if (!data || data.length === 0) break;
+                
+                allData = allData.concat(data);
+                page++;
             }
-        });
-        
-        if (hasValidBounds) {
-            map.fitBounds(bounds);
+
+            // Зберігаємо в кеш
+            cacheManager.set('parcels', allData, cacheParams);
         }
 
-        // Заполняем выпадающий список после загрузки данных
+        // Оновлюємо карту
+        updateMapWithData(allData);
+        
+        // Оновлюємо випадаючий список
         if (!allCoatuuValues.length) {
             populateCoatuuDropdown(allData);
         }
         
     } catch (error) {
         console.error('Детальна помилка завантаження:', error);
-        console.error('Стек помилки:', error.stack);
-        alert('Помилка завантаження даних. Перевірте консоль для деталей.');
+        alert('Помилка завантаження даних');
     } finally {
         document.body.classList.remove('loading');
     }
 }
 
-// Оновлена функція пошуку
+// Винесемо оновлення карти в окрему функцію
+function updateMapWithData(allData) {
+    if (!allData || !allData.length) return;
+
+    parcelsLayer.clearLayers();
+    let hasValidBounds = false;
+    const bounds = L.latLngBounds([]);
+    
+    allData.forEach(parcel => {
+        try {
+            if (!parcel.geom) return;
+
+            const geojson = {
+                type: "Feature",
+                geometry: typeof parcel.geom === 'string' ? 
+                    JSON.parse(parcel.geom) : parcel.geom,
+                properties: {
+                    cadnum: parcel.cadnum,
+                    area: parcel.area,
+                    area_service: parcel.area_service,
+                    namecoatuu: parcel.namecoatuu
+                }
+            };
+            
+            parcelsLayer.addData(geojson);
+            const layer = parcelsLayer.getLayers()[parcelsLayer.getLayers().length - 1];
+            if (layer && layer.getBounds) {
+                bounds.extend(layer.getBounds());
+                hasValidBounds = true;
+            }
+        } catch (e) {
+            console.error('Помилка обробки геометрії:', e);
+        }
+    });
+    
+    if (hasValidBounds) {
+        map.fitBounds(bounds);
+    }
+}
+
+// Додамо функцію для очищення кешу
+function clearCache() {
+    const cacheAge = cacheManager.getCacheAge('parcels') || 0;
+    cacheManager.clear();
+    alert('Кеш очищено');
+}
+
+// Додаємо нову функцію для оновлення підпису віку кешу
+function updateCacheAge() {
+    const cacheAgeElement = document.getElementById('cacheAge');
+    if (cacheAgeElement) {
+        const age = cacheManager.getCacheAge('parcels');
+        cacheAgeElement.textContent = age ? `Вік кешу: ${age} год` : 'Кеш пустий';
+    }
+}
+
 async function searchParcels() {
     document.body.classList.add('loading');
     const cadnum = document.getElementById('searchCadnum').value;
@@ -393,6 +413,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (coatuuDropdown) {
         coatuuDropdown.addEventListener('change', searchParcels);
     }
+
+    // Додаємо періодичне оновлення віку кешу
+    updateCacheAge();
+    setInterval(updateCacheAge, 60000); // Оновлюємо кожну хвилину
 });
 
 async function insertTestData() {

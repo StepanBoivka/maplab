@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.2.0/dist/js/select2.min.js"></script>
     <!-- Додаємо скрипт Bootstrap для роботи меню -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="cache.js"></script>
 </head>
 <body>
     <nav class="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
@@ -28,6 +29,14 @@
                         <li><button class="dropdown-item" type="button" onclick="window.location.href='index.html'">Головна</button></li>
                         <li><button class="dropdown-item" type="button" onclick="window.location.href='map.html'">Карта</button></li>
                         <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <div class="px-3 py-2">
+                                <button onclick="clearCache()" class="btn btn-warning btn-sm w-100 position-relative">
+                                    Очистити кеш
+                                    <small id="cacheAge" class="d-block" style="font-size: 10px; opacity: 0.8;"></small>
+                                </button>
+                            </div>
+                        </li>
                         <li><button class="dropdown-item" type="button" onclick="signOut()">Вийти</button></li>
                     </ul>
                 </div>

@@ -170,9 +170,30 @@ supabase.auth.onAuthStateChange((event, session) => {
 });
 
 // Оновлюємо ініціалізацію
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     checkAuth();
+    
+    // Додаємо періодичне оновлення віку кешу
+    updateCacheAge();
+    setInterval(updateCacheAge, 60000); // Оновлюємо кожну хвилину
+    
+    // Додаємо обробник для випадаючого списку
+    const coatuuDropdown = document.getElementById('coatuuDropdown');
+    if (coatuuDropdown) {
+        coatuuDropdown.addEventListener('change', (event) => {
+            loadDashboardData(event.target.value);
+        });
+    }
 });
+
+// Додаємо функцію для оновлення віку кешу (якщо її ще немає)
+function updateCacheAge() {
+    const cacheAgeElement = document.getElementById('cacheAge');
+    if (cacheAgeElement) {
+        const age = cacheManager.getCacheAge('parcels');
+        cacheAgeElement.textContent = age ? `Вік кешу: ${age} год` : 'Кеш пустий';
+    }
+}
 
 async function signIn() {
     const email = document.getElementById('email').value;

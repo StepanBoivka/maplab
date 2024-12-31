@@ -1287,3 +1287,11 @@ html, body {
     overflow: auto;
     height: auto;
 }
+
+.btn-warning small {
+    color: rgba(0, 0, 0, 0.6);
+    white-space: pre-line;
+    line-height: 1.2;
+    display: block;
+    margin-top: 4px;
+}
