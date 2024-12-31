@@ -1,93 +1,137 @@
-// Зберігаємо історію логів в localStorage
-class SystemLogger {
-    constructor(maxLogs = 100) {
-        this.maxLogs = maxLogs;
-        this.storageKey = 'ml3_system_logs';
-    }
-
-    log(message, type = 'info') {
-        const logs = this.getLogs();
-        const timestamp = new Date().toISOString();
-        logs.unshift({ timestamp, message, type });
-        
-        // Обмежуємо кількість логів
-        if (logs.length > this.maxLogs) {
-            logs.pop();
-        }
-        
-        localStorage.setItem(this.storageKey, JSON.stringify(logs));
-    }
-
-    getLogs() {
-        const logs = localStorage.getItem(this.storageKey);
-        return logs ? JSON.parse(logs) : [];
-    }
-
-    clear() {
-        localStorage.removeItem(this.storageKey);
+// Функції для роботи з кешем
+function clearCache() {
+    try {
+        cacheManager.clear();
+        refreshCacheInfo();
+        logger.log('Кеш очищено');
+        alert('Кеш успішно очищено');
+    } catch (error) {
+        logger.log(`Помилка очищення кешу: ${error.message}`, 'error');
+        alert(`Помилка очищення кешу: ${error.message}`);
     }
 }
 
-const logger = new SystemLogger();
-
-// Функції для роботи з інтерфейсом
 function refreshCacheInfo() {
     const cacheInfo = cacheManager.getCacheInfo('parcels');
     const cacheStats = document.getElementById('cacheStats');
     const cacheKeys = document.getElementById('cacheKeys');
     
     // Оновлюємо статистику кешу
-    cacheStats.innerHTML = `
-        <h6>Статистика:</h6>
-        <ul class="list-unstyled">
-            <li>Розмір: ${cacheInfo.size}</li>
-            <li>Кількість об'єктів: ${cacheInfo.items}</li>
-            <li>Вік: ${cacheInfo.age || 'новий'}</li>
-            <li>Закінчується: ${cacheInfo.expires || '-'}</li>
-            <li>Валідний: ${cacheInfo.valid ? 'так' : 'ні'}</li>
-        </ul>
-    `;
+    if (cacheStats) {
+        cacheStats.innerHTML = `
+            <h6>Статистика:</h6>
+            <ul class="list-unstyled">
+                <li>Розмір: ${cacheInfo.size}</li>
+                <li>Кількість об'єктів: ${cacheInfo.items}</li>
+                <li>Вік: ${cacheInfo.age || 'новий'}</li>
+                <li>Закінчується: ${cacheInfo.expires || '-'}</li>
+                <li>Валідний: ${cacheInfo.valid ? 'так' : 'ні'}</li>
+            </ul>
+        `;
+    }
 
     // Оновлюємо список ключів
-    const keys = Object.keys(localStorage)
-        .filter(k => k.startsWith('ml3_'))
-        .map(k => {
-            const size = (localStorage.getItem(k).length * 2) / 1024; // в КБ
-            return `${k} (${size.toFixed(2)} KB)`;
-        });
+    if (cacheKeys) {
+        const keys = Object.keys(localStorage)
+            .filter(k => k.startsWith('ml3_'))
+            .map(k => {
+                const size = (localStorage.getItem(k).length * 2) / 1024; // в КБ
+                return `${k} (${size.toFixed(2)} KB)`;
+            });
 
-    cacheKeys.innerHTML = `
-        <h6>Ключі кешу:</h6>
-        <ul class="list-unstyled">
-            ${keys.map(k => `<li>${k}</li>`).join('')}
-        </ul>
-    `;
+        cacheKeys.innerHTML = `
+            <h6>Ключі кешу:</h6>
+            <ul class="list-unstyled">
+                ${keys.length ? keys.map(k => `<li>${k}</li>`).join('') : '<li>Кеш пустий</li>'}
+            </ul>
+        `;
+    }
+}
 
-    logger.log('Оновлено інформацію про кеш');
+// Создаем глобальный класс для логгера
+if (typeof SystemLogger === 'undefined') {
+    var SystemLogger = class {
+        constructor(maxLogs = 100) {
+            this.maxLogs = maxLogs;
+            this.storageKey = 'ml3_system_logs';
+        }
+
+        log(message, type = 'info') {
+            const logs = this.getLogs();
+            const timestamp = new Date().toISOString();
+            logs.unshift({ timestamp, message, type });
+            
+            if (logs.length > this.maxLogs) {
+                logs.pop();
+            }
+            
+            localStorage.setItem(this.storageKey, JSON.stringify(logs));
+            this.updateLogsDisplay();
+        }
+
+        getLogs() {
+            const logs = localStorage.getItem(this.storageKey);
+            return logs ? JSON.parse(logs) : [];
+        }
+
+        clear() {
+            localStorage.removeItem(this.storageKey);
+            this.updateLogsDisplay();
+        }
+
+        updateLogsDisplay() {
+            const logsElement = document.getElementById('systemLogs');
+            if (logsElement) {
+                const logs = this.getLogs();
+                logsElement.innerHTML = logs.length ? 
+                    logs.map(log => 
+                        `<div class="log-entry ${log.type}">
+                            [${new Date(log.timestamp).toLocaleString()}] ${log.type.toUpperCase()}: ${log.message}
+                        </div>`
+                    ).join('\n')
+                    : 'Логи відсутні';
+            }
+        }
+    };
+}
+
+// Создаем глобальный экземпляр логгера
+if (typeof logger === 'undefined') {
+    var logger = new SystemLogger();
+}
+
+// Функції інтерфейсу
+function clearLogs() {
+    try {
+        logger.clear();
+        alert('Логи очищено');
+    } catch (error) {
+        console.error('Помилка очищення логів:', error);
+        alert('Помилка очищення логів');
+    }
 }
 
 function updateSystemInfo() {
     const systemInfo = document.getElementById('systemInfo');
-    
-    // Збираємо системну інформацію
+    if (!systemInfo) return;
+
     const info = {
-        userAgent: navigator.userAgent,
-        language: navigator.language,
-        platform: navigator.platform,
-        cookiesEnabled: navigator.cookieEnabled,
-        localStorage: {
-            available: !!window.localStorage,
-            totalSpace: cacheManager.getCacheSize().readable
+        browser: {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            cookies: navigator.cookieEnabled,
+            localStorage: !!window.localStorage
         },
         screen: {
             width: window.screen.width,
             height: window.screen.height,
             pixelRatio: window.devicePixelRatio
         },
-        connection: navigator.connection ? {
-            type: navigator.connection.effectiveType,
-            downlink: navigator.connection.downlink
-        } : 'N/A'
+        system: {
+            platform: navigator.platform,
+            cores: navigator.hardwareConcurrency,
+            memory: navigator.deviceMemory
+        }
     };
 
     systemInfo.innerHTML = `
@@ -95,50 +139,50 @@ function updateSystemInfo() {
             <div class="col-md-6">
                 <h6>Браузер:</h6>
                 <ul class="list-unstyled">
-                    <li>User Agent: ${info.userAgent}</li>
-                    <li>Мова: ${info.language}</li>
-                    <li>Платформа: ${info.platform}</li>
-                    <li>Cookies: ${info.cookiesEnabled ? 'включені' : 'виключені'}</li>
+                    <li>User Agent: ${info.browser.userAgent}</li>
+                    <li>Мова: ${info.browser.language}</li>
+                    <li>Cookies: ${info.browser.cookies ? 'включені' : 'виключені'}</li>
+                    <li>LocalStorage: ${info.browser.localStorage ? 'доступний' : 'недоступний'}</li>
                 </ul>
             </div>
             <div class="col-md-6">
                 <h6>Система:</h6>
                 <ul class="list-unstyled">
-                    <li>Екран: ${info.screen.width}x${info.screen.height}</li>
-                    <li>Pixel Ratio: ${info.screen.pixelRatio}</li>
-                    <li>localStorage: ${info.localStorage.totalSpace}</li>
-                    <li>Підключення: ${JSON.stringify(info.connection)}</li>
+                    <li>Платформа: ${info.system.platform}</li>
+                    <li>Ядра CPU: ${info.system.cores || 'невідомо'}</li>
+                    <li>Екран: ${info.screen.width}x${info.screen.height} (${info.screen.pixelRatio}x)</li>
                 </ul>
             </div>
         </div>
     `;
 }
 
-function updateLogs() {
-    const logsElement = document.getElementById('systemLogs');
-    const logs = logger.getLogs();
-    
-    logsElement.innerHTML = logs.map(log => 
-        `[${log.timestamp}] ${log.type.toUpperCase()}: ${log.message}`
-    ).join('\n');
-}
-
-function clearLogs() {
-    logger.clear();
-    updateLogs();
-}
-
-// Ініціалізація при завантаженні сторінки
-document.addEventListener('DOMContentLoaded', () => {
+// Ініціалізація при завантаженні
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkAuth();
     refreshCacheInfo();
     updateSystemInfo();
-    updateLogs();
+    logger.updateLogsDisplay();
     
     // Оновлюємо інформацію кожну хвилину
     setInterval(refreshCacheInfo, 60000);
 });
 
-// Функція для виходу
+// Перевірка авторизації
+async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    const userEmailElement = document.getElementById('userEmail');
+    if (userEmailElement && session.user) {
+        userEmailElement.textContent = session.user.email;
+    }
+}
+
+// Функція виходу
 async function signOut() {
     try {
         const { error } = await supabase.auth.signOut();

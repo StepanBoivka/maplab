@@ -299,7 +299,7 @@ function updateCacheAge() {
             statusText = 'Кеш пустий';
             console.log('Діагностика кешу:', {
                 localStorage: Object.keys(localStorage),
-                cacheKeys: Object.keys(localStorage).filter(k => k.startsWith('ml3_')),
+                cacheKeys: Object.keys(localStorage).filter(k => к.startsWith('ml3_')),
                 cacheInfo
             });
         }
@@ -600,3 +600,6 @@ async function populateCoatuuDropdown(data) {
         dropdown.appendChild(option);
     });
 }
+
+// Убедитесь, что dashboard.js не подключается здесь, если app.js используется на всех страницах
+// Если необходимо, переместите функциональность dashboard.js в index.js или аналогичный файл

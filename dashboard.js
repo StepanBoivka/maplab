@@ -3,14 +3,35 @@ let currentChart = null;
 let currentCoatuuChart = null;
 let allCoatuuValues = []; // Добавляем переменную для хранения всех уникальных значений
 
+// Добавляем функцию для повторных попыток запроса
+async function fetchWithRetry(fetchFunction, maxRetries = 3, delayMs = 1000) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            return await fetchFunction();
+        } catch (error) {
+            if (i === maxRetries - 1) throw error;
+            console.log(`Спроба ${i + 1} не вдалася, очікування ${delayMs}мс...`);
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+    }
+}
+
+// Обновляем функцию загрузки данных
 async function loadDashboardData(namecoatuuFilter = '') {
     document.body.classList.add('loading');
     try {
-        // Отримуємо загальну кількість записів
-        const { count, error: countError } = await supabase
-            .from('parcel')
-            .select('id', { count: 'exact', head: true });
-        
+        // Проверяем подключение к Supabase
+        if (!supabase || !supabase.auth) {
+            throw new Error('Відсутнє підключення до бази даних. Оновіть сторінку.');
+        }
+
+        // Используем fetchWithRetry для запроса
+        const { count, error: countError } = await fetchWithRetry(async () => 
+            await supabase
+                .from('parcel')
+                .select('id', { count: 'exact', head: true })
+        );
+
         if (countError) {
             if (countError.code === 'P0001') {
                 alert('У вас немає прав доступу до даних. Будь ласка, зверніться до адміністратора системи.');
@@ -24,16 +45,19 @@ async function loadDashboardData(namecoatuuFilter = '') {
         let page = 0;
         
         while (page * pageSize < count) {
-            let query = supabase
-                .rpc('get_parcels_with_coatuu')
-                .range(page * pageSize, (page + 1) * pageSize - 1);
+            // Используем fetchWithRetry для каждой страницы
+            const { data, error } = await fetchWithRetry(async () => {
+                let query = supabase
+                    .rpc('get_parcels_with_coatuu')
+                    .range(page * pageSize, (page + 1) * pageSize - 1);
                 
-            if (namecoatuuFilter && namecoatuuFilter !== '') {
-                query = query.eq('namecoatuu', namecoatuuFilter);
-            }
-            
-            const { data, error } = await query;
-            
+                if (namecoatuuFilter && namecoatuuFilter !== '') {
+                    query = query.eq('namecoatuu', namecoatuuFilter);
+                }
+                
+                return await query;
+            });
+
             if (error) {
                 if (error.code === 'P0001') {
                     alert('У вас немає прав доступу до даних. Будь ласка, зверніться до адміністратора системи.');
@@ -47,9 +71,15 @@ async function loadDashboardData(namecoatuuFilter = '') {
         }
 
         if (!allData.length) {
-            document.querySelector('#totalParcels .stat-number').textContent = '0';
-            document.querySelector('#totalArea .stat-number').textContent = '0 га';
-            document.querySelector('#avgArea .stat-number').textContent = '0 га';
+            const totalParcelsEl = document.querySelector('#totalParcels .stat-number');
+            const totalAreaEl = document.querySelector('#totalArea .stat-number');
+            const avgAreaEl = document.querySelector('#avgArea .stat-number');
+
+            if (totalParcelsEl && totalAreaEl && avgAreaEl) {
+                totalParcelsEl.textContent = '0';
+                totalAreaEl.textContent = '0 га';
+                avgAreaEl.textContent = '0 га';
+            }
             return;
         }
 
@@ -61,10 +91,16 @@ async function loadDashboardData(namecoatuuFilter = '') {
         
         const avgArea = totalArea / allData.length;
 
-        // Оновлюємо відображення
-        document.querySelector('#totalParcels .stat-number').textContent = allData.length;
-        document.querySelector('#totalArea .stat-number').textContent = `${totalArea.toFixed(2)} га`;
-        document.querySelector('#avgArea .stat-number').textContent = `${avgArea.toFixed(2)} га`;
+        // Перед обновлением значений проверяем, что селекторы не возвращают null
+        const totalParcelsEl = document.querySelector('#totalParcels .stat-number');
+        const totalAreaEl = document.querySelector('#totalArea .stat-number');
+        const avgAreaEl = document.querySelector('#avgArea .stat-number');
+
+        if (totalParcelsEl && totalAreaEl && avgAreaEl) {
+            totalParcelsEl.textContent = allData.length;
+            totalAreaEl.textContent = `${totalArea.toFixed(2)} га`;
+            avgAreaEl.textContent = `${avgArea.toFixed(2)} га`;
+        }
 
         // Створюємо графік розподілу площ
         createAreaChart(allData);
@@ -75,12 +111,20 @@ async function loadDashboardData(namecoatuuFilter = '') {
         }
 
     } catch (error) {
-        if (error.message === 'No permissions assigned') {
-            alert('У вас немає прав доступу до даних. Будь ласка, зверніться до адміністратора.');
-        }
         console.error('Детальна помилка завантаження:', error.message);
-        console.error('Стек помилки:', error.stack || error);
-        alert(`Помилка завантаження даних: ${error.message}`);
+        console.error('Стек помилки:', {
+            message: error.message,
+            details: error.stack,
+            hint: error.hint || '',
+            code: error.code || ''
+        });
+        
+        // Показываем более информативное сообщение пользователю
+        if (error.message.includes('Failed to fetch')) {
+            alert('Помилка підключення до сервера. Перевірте інтернет-з\'єднання та оновіть сторінку.');
+        } else {
+            alert(`Помилка завантаження даних: ${error.message}`);
+        }
     } finally {
         document.body.classList.remove('loading');
     }
@@ -109,7 +153,13 @@ function createAreaChart(data) {
         currentChart.destroy();
     }
 
-    const ctx = document.getElementById('areaChart').getContext('2d');
+    const canvas = document.getElementById('areaChart');
+    if (!canvas) {
+        console.warn('Элемент canvas для графика не найден.');
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
     currentChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -145,11 +195,24 @@ function populateCoatuuDropdown(data) {
 }
 
 async function checkAuth() {
+    if (typeof supabase === 'undefined') {
+        console.error('Supabase не инициализирован. Проверьте порядок подключения config.js');
+        return;
+    }
+    if (!supabase || !supabase.auth || !supabase.auth.getSession) {
+        console.error('Supabase auth is не настроен или отсутствует.');
+        return;
+    }
     const { data: { session } } = await supabase.auth.getSession();
     const authSection = document.getElementById('auth-section');
     const mainContent = document.getElementById('main-content');
-    const userEmailElement = document.getElementById('userEmail');
-    
+    const userEmailElement = document.getElementById('userEmail'); // Добавляем получение элемента
+
+    if (!authSection || !mainContent) {
+        console.warn('Элементы auth-section или main-content отсутствуют на этой странице.');
+        return;
+    }
+
     if (session) {
         authSection.style.display = 'none';
         mainContent.style.display = 'block';
@@ -165,24 +228,50 @@ async function checkAuth() {
 }
 
 // Додаємо слухач для змін аутентифікації
-supabase.auth.onAuthStateChange((event, session) => {
-    checkAuth();
-});
+if (supabase && supabase.auth && supabase.auth.onAuthStateChange) {
+    supabase.auth.onAuthStateChange((event, session) => {
+        checkAuth();
+    });
+}
 
-// Оновлюємо ініціалізацію
+// Функция для проверки готовности supabase
+function waitForSupabase() {
+    return new Promise((resolve, reject) => {
+        let attempts = 0;
+        const checkSupabase = () => {
+            if (window.supabase && supabase.auth) {
+                resolve();
+            } else if (attempts > 10) {
+                reject(new Error('Supabase не инициализирован'));
+            } else {
+                attempts++;
+                setTimeout(checkSupabase, 100);
+            }
+        };
+        checkSupabase();
+    });
+}
+
+// Исправляем блок try в инициализации
 document.addEventListener('DOMContentLoaded', async () => {
-    checkAuth();
-    
-    // Додаємо періодичне оновлення віку кешу
-    updateCacheAge();
-    setInterval(updateCacheAge, 60000); // Оновлюємо кожну хвилину
-    
-    // Додаємо обробник для випадаючого списку
-    const coatuuDropdown = document.getElementById('coatuuDropdown');
-    if (coatuuDropdown) {
-        coatuuDropdown.addEventListener('change', (event) => {
-            loadDashboardData(event.target.value);
-        });
+    try {
+        await waitForSupabase();
+        await checkAuth();
+        
+        // Додаємо періодичне оновлення віку кешу
+        updateCacheAge();
+        setInterval(updateCacheAge, 60000);
+        
+        // Додаємо обробник для випадаючого списку
+        const coatuuDropdown = document.getElementById('coatuuDropdown');
+        if (coatuuDropdown) {
+            coatuuDropdown.addEventListener('change', (event) => {
+                loadDashboardData(event.target.value);
+            });
+        }
+    } catch (error) {
+        console.error('Ошибка инициализации:', error);
+        alert('Ошибка инициализации приложения. Попробуйте перезагрузить страницу.');
     }
 });
 
@@ -195,10 +284,16 @@ function updateCacheAge() {
     }
 }
 
-async function signIn() {
+// Делаем функцию входа глобальной
+window.signIn = async function() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     
+    if (!supabase || !supabase.auth || !supabase.auth.signInWithPassword) {
+        alert('Сервіс аутентифікації недоступний.');
+        return;
+    }
+
     try {
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
@@ -207,25 +302,21 @@ async function signIn() {
         
         if (error) throw error;
         
-        checkAuth(); // Перепроверяем авторизацию и показываем дашборд
+        checkAuth();
     } catch (error) {
         console.error('Помилка входу:', error);
         alert(`Помилка входу: ${error.message}`);
     }
-}
+};
 
-async function signOut() {
+// Также делаем глобальной функцию выхода
+window.signOut = async function() {
     try {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
-        window.location.reload(); // Перезавантажуємо сторінку після виходу
+        window.location.reload();
     } catch (error) {
         console.error('Помилка виходу:', error);
         alert(`Помилка виходу: ${error.message}`);
     }
-}
-
-document.getElementById('coatuuDropdown').addEventListener('change', (event) => {
-    const selectedValue = event.target.value;
-    loadDashboardData(selectedValue);
-});
+};
