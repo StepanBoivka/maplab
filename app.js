@@ -166,7 +166,10 @@ const pageSize = 10;
 async function loadAllParcelsToMap(cadnum = '', namecoatuuFilters = []) {
     document.body.classList.add('loading');
     
-    const cacheParams = { cadnum, namecoatuuFilters };
+    const cacheParams = {
+        cadnum: cadnum || null,
+        filters: namecoatuuFilters.length ? namecoatuuFilters : null
+    };
     
     try {
         // Спробуємо отримати дані з кешу

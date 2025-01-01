@@ -12,7 +12,11 @@ function clearCache() {
 }
 
 function refreshCacheInfo() {
-    const cacheInfo = cacheManager.getCacheInfo('parcels');
+    const cacheInfo = cacheManager.getCacheInfo('parcels', {
+        cadnum: null,
+        filters: null
+    });
+    console.log('Cache info:', cacheInfo); // Логирование
     const cacheStats = document.getElementById('cacheStats');
     const cacheKeys = document.getElementById('cacheKeys');
     
