@@ -238,24 +238,86 @@ if (supabase && supabase.auth && supabase.auth.onAuthStateChange) {
 function waitForSupabase() {
     return new Promise((resolve, reject) => {
         let attempts = 0;
-        const checkSupabase = () => {
+        const maxAttempts = 20; // Увеличиваем количество попыток
+        
+        const checkSupabaseAvailable = () => {
             if (window.supabase && supabase.auth) {
-                resolve();
-            } else if (attempts > 10) {
-                reject(new Error('Supabase не инициализирован'));
+                console.log('Supabase уже инициализирован и доступен');
+                resolve(window.supabase);
             } else {
-                attempts++;
-                setTimeout(checkSupabase, 100);
+                try {
+                    // Пробуем инициализировать
+                    if (typeof initializeSupabase === 'function') {
+                        window.supabase = initializeSupabase();
+                        console.log('Supabase успешно инициализирован');
+                        resolve(window.supabase);
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('Попытка инициализации не удалась:', e);
+                }
+                
+                if (attempts > maxAttempts) {
+                    reject(new Error('Превышено максимальное количество попыток инициализации Supabase'));
+                } else {
+                    attempts++;
+                    setTimeout(checkSupabaseAvailable, 200); // Увеличиваем интервал между попытками
+                }
             }
         };
-        checkSupabase();
+        
+        checkSupabaseAvailable();
     });
+}
+
+// Проверка инициализации Supabase
+function checkSupabase() {
+    try {
+        // Проверяем что библиотека загружена
+        if (!window.supabaseLoaded) {
+            console.error('Библиотека Supabase не загружена. Проверьте подключение скрипта.');
+            throw new Error('Библиотека Supabase не загружена');
+        }
+        
+        // Проверяем, инициализирован ли supabase уже
+        if (window.supabase && supabase.auth) {
+            return supabase;
+        }
+        
+        // Инициализируем Supabase, используя функцию из config.js
+        if (typeof initializeSupabase === 'function') {
+            window.supabase = initializeSupabase();
+            console.log('Supabase успешно инициализирован в checkSupabase');
+            return window.supabase;
+        } else {
+            console.error('Функция initializeSupabase не найдена в глобальном контексте');
+            throw new Error('Функция initializeSupabase не найдена');
+        }
+    } catch (err) {
+        console.error('Ошибка инициализации Supabase:', err);
+        throw new Error('Supabase не инициализирован: ' + err.message);
+    }
 }
 
 // Исправляем блок try в инициализации
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        await waitForSupabase();
+        console.log('DOM загружен, начинаем инициализацию...');
+        
+        // Сначала проверяем наличие и инициализируем клиент Supabase
+        let supabaseClient;
+        
+        try {
+            // Используем новую логику инициализации
+            supabaseClient = await waitForSupabase();
+            console.log('Клиент Supabase успешно инициализирован', supabaseClient);
+        } catch (initError) {
+            console.error('Ошибка при инициализации Supabase:', initError);
+            alert('Не удалось подключиться к базе данных. Пожалуйста, обновите страницу и попробуйте снова.');
+            return;
+        }
+        
+        // После успешной инициализации продолжаем
         await checkAuth();
         
         // Додаємо періодичне оновлення віку кешу
@@ -270,8 +332,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
     } catch (error) {
-        console.error('Ошибка инициализации:', error);
-        alert('Ошибка инициализации приложения. Попробуйте перезагрузить страницу.');
+        console.error('Ошибка инициализации приложения:', error);
+        alert('Ошибка инициализации приложения. Детали смотрите в консоли разработчика (F12).');
     }
 });
 

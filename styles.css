@@ -216,10 +216,31 @@ button:hover {
 
 .chart-card {
     background: white;
-    padding: 20px;
+    padding: 24px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    height: 400px;
+    margin: 20px 0;
+    min-height: 500px;
+}
+
+.chart-card h3 {
+    margin-bottom: 20px;
+    color: #323338;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+/* Медиа-запрос для мобильных устройств */
+@media (max-width: 768px) {
+    .chart-card {
+        padding: 16px;
+        min-height: 400px;
+    }
+    
+    .chart-card h3 {
+        font-size: 16px;
+        margin-bottom: 16px;
+    }
 }
 
 .map-container {
@@ -1336,4 +1357,770 @@ html, body {
 .log-entry.warning {
     border-left-color: #ffc107;
     background: rgba(255, 193, 7, 0.1);
+}
+
+/* Общие стили для всех страниц */
+.page-header {
+    background-color: #f8f9fa;
+    padding: 20px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-title i {
+    color: #3ECF8E;
+    font-size: 1.8rem;
+}
+
+.btn-action {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.table-container {
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.table-striped tbody tr:hover {
+    background-color: rgba(62, 207, 142, 0.1);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+/* Стили карточек статистики */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-icon {
+    font-size: 2rem;
+    color: #3ECF8E;
+    margin-bottom: 10px;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.stat-label {
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+/* Улучшение внешнего вида модального окна */
+.modal-content {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    background-color: #3ECF8E;
+    color: white;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.modal-header .btn-close {
+    color: white;
+    box-shadow: none;
+}
+
+/* Показываем курсор на строках таблицы */
+tbody tr {
+    cursor: pointer;
+}
+
+/* Улучшенный индикатор загрузки */
+.loading-indicator {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3ECF8E;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Фиксим проблему с модальным окном */
+.modal {
+    background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.modal.show {
+    display: block !important;
+}
+
+.modal-backdrop {
+    display: none !important;
+}
+
+.modal-dialog {
+    margin: 1.75rem auto !important;
+}
+
+/* Фиксим проблему с модальным окном */
+.modal {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-backdrop {
+    display: none;
+}
+
+.modal-dialog {
+    max-width: 500px;
+    margin: 1.75rem auto;
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 0.3rem;
+    outline: 0;
+}
+
+/* Обновленные стили для контейнера таблицы */
+.table-container {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+/* Обновленные стили для контейнера */
+.container-fluid {
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
+
+/* Стили для кнопок действий */
+.btn-group .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Стили для значка сельхоз предприятия */
+.fa-wheat-alt {
+    margin-left: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Стили для деталей клиента */
+.client-details {
+    font-size: 0.9rem;
+}
+
+.client-details h6 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.client-details p {
+    margin-bottom: 0.5rem;
+}
+
+.client-details strong {
+    color: #666;
+}
+
+/* Стили для индикатора статуса */
+.badge {
+    font-size: 0.875rem;
+    font-weight: normal;
+}
+
+/* Обновленные стили для шапки страницы */
+.page-header {
+    margin-top: 56px; /* Добавляем отступ под навбаром */
+    padding: 20px 0;
+}
+
+/* Стили для кнопок в режиме фильтрации */
+.filtered-mode .btn-group .btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+/* Стили для иконок типа */
+.type-column {
+    width: 40px;
+    text-align: center;
+}
+
+.type-column i {
+    font-size: 1rem;
+}
+
+/* Стили для кнопок в модальном окне просмотра */
+.modal-footer .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Стили в стиле Monday CRM */
+.table-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    margin: 24px 0;
+}
+
+.table {
+    margin: 0;
+}
+
+.table th {
+    background: #f5f6f8;
+    color: #676879;
+    font-weight: 500;
+    border: none;
+    padding: 12px 16px;
+}
+
+.table td {
+    border-color: #f5f6f8;
+    padding: 12px 16px;
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f0f3ff;
+    cursor: pointer;
+}
+
+/* Кнопки действий */
+.btn-group {
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.table tr:hover .btn-group {
+    opacity: 1;
+}
+
+.btn-group .btn {
+    padding: 4px 8px;
+    margin: 0 2px;
+    border: none;
+    background: transparent;
+    color: #676879;
+    transition: all 0.2s ease;
+}
+
+.btn-group .btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-group .btn-outline-info:hover {
+    color: #0073ea;
+    background: rgba(0, 115, 234, 0.1);
+}
+
+.btn-group .btn-outline-primary:hover {
+    color: #00a35c;
+    background: rgba(0, 163, 92, 0.1);
+}
+
+.btn-group .btn-outline-danger:hover {
+    color: #e44258;
+    background: rgba(228, 66, 88, 0.1);
+}
+
+/* Шапка страницы */
+.page-header {
+    background: #fff;
+    margin-top: 56px;
+    padding: 24px 0;
+    border-bottom: 1px solid #f5f6f8;
+}
+
+.header-title h2 {
+    color: #323338;
+    font-size: 24px;
+    font-weight: 500;
+}
+
+/* Статус badge */
+.badge {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 400;
+    background: #f5f6f8;
+    color: #676879;
+}
+
+/* Поля поиска и фильтры */
+.form-control, .form-select {
+    border-color: #e6e9ef;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #0073ea;
+    box-shadow: 0 0 0 2px rgba(0, 115, 234, 0.2);
+}
+
+.input-group-text {
+    background: #fff;
+    border-color: #e6e9ef;
+    color: #676879;
+}
+
+/* Модальное окно */
+.modal-content {
+    border: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    background: #fff;
+    border-bottom: 1px solid #f5f6f8;
+    padding: 16px 24px;
+}
+
+.modal-title {
+    color: #323338;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.form-label {
+    color: #676879;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+/* Monday CRM стили для страницы */
+.page-content {
+    background: #f7f8fc;
+    min-height: calc(100vh - 56px);
+}
+
+.container-fluid {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Monday CRM стили для модальных окон */
+.modal-content {
+    border: none;
+    border-radius: 8px;
+    box-shadow: rgb(0 0 0 / 10%) 0px 4px 6px -1px;
+}
+
+.modal-header {
+    background: #fff;
+    padding: 20px 24px;
+    border-bottom: 1px solid #ecedf5;
+}
+
+.modal-header .modal-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #323338;
+}
+
+.modal-header .btn-close {
+    background: none;
+    padding: 0;
+    margin: 0;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #ecedf5;
+}
+
+/* Стили для формы в модальном окне */
+.modal .form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #676879;
+    margin-bottom: 6px;
+}
+
+.modal .form-control,
+.modal .form-select {
+    border: 1px solid #c3c6d4;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.modal .form-control:focus,
+.modal .form-select:focus {
+    border-color: #0073ea;
+    box-shadow: 0 0 0 2px rgba(0, 115, 234, 0.2);
+}
+
+/* Стили для просмотра деталей */
+.client-details {
+    background: #f7f8fc;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.client-details h6 {
+    font-size: 16px;
+    font-weight: 500;
+    color: #323338;
+    margin-bottom: 20px;
+}
+
+.client-details .detail-row {
+    display: flex;
+    margin-bottom: 12px;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.client-details .detail-row:hover {
+    background: #f0f3ff;
+}
+
+.client-details .detail-label {
+    width: 140px;
+    color: #676879;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.client-details .detail-value {
+    flex: 1;
+    color: #323338;
+    font-size: 14px;
+}
+
+/* Кнопки в стиле Monday */
+.btn-monday {
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-monday-primary {
+    background: #0073ea;
+    color: white;
+    border: none;
+}
+
+.btn-monday-primary:hover {
+    background: #0060c2;
+    transform: translateY(-1px);
+}
+
+.btn-monday-secondary {
+    background: #fff;
+    color: #323338;
+    border: 1px solid #c3c6d4;
+}
+
+.btn-monday-secondary:hover {
+    background: #f5f6f8;
+    transform: translateY(-1px);
+}
+
+/* Анимации */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal.show .modal-content {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Стили для вкладок в стиле Monday */
+.nav-monday {
+    background: #f7f8fc;
+    border-bottom: none;
+    padding: 0 16px;
+}
+
+.nav-monday .nav-link {
+    border: none;
+    color: #676879;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.nav-monday .nav-link i {
+    font-size: 16px;
+}
+
+.nav-monday .nav-link:hover {
+    color: #0073ea;
+    background: transparent;
+}
+
+.nav-monday .nav-link.active {
+    color: #0073ea;
+    background: transparent;
+    border: none;
+}
+
+.nav-monday .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #0073ea;
+}
+
+/* Стили для контента вкладок */
+.tab-content {
+    background: #fff;
+}
+
+.tab-pane {
+    animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Группировка полей формы */
+.form-section {
+    margin-bottom: 24px;
+}
+
+.form-section-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #676879;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ecedf5;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+/* Оптимизация для мобильных устройств */
+@media (max-width: 768px) {
+    .nav-monday {
+        padding: 0 8px;
+    }
+    
+    .nav-monday .nav-link {
+        padding: 8px;
+        font-size: 13px;
+    }
+    
+    .nav-monday .nav-link i {
+        font-size: 14px;
+    }
+    
+    .modal-lg {
+        margin: 8px;
+    }
+}
+
+/* Стили для навбара в стиле Monday */
+.navbar {
+    background: #fff !important;
+    border-bottom: 1px solid #dcdfec;
+    padding: 0;
+    height: 56px;
+}
+
+.navbar .container-fluid {
+    padding: 0 16px;
+}
+
+.navbar-brand {
+    padding: 0;
+    margin: 0;
+    gap: 16px;
+}
+
+.btn-monday-menu {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #323338;
+    border-radius: 4px;
+}
+
+.btn-monday-menu:hover {
+    background: #dcdfec;
+}
+
+.dropdown-menu-monday {
+    margin-top: 8px;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    padding: 8px;
+    min-width: 200px;
+}
+
+.dropdown-menu-monday .dropdown-item {
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #323338;
+    font-size: 14px;
+}
+
+.dropdown-menu-monday .dropdown-item i {
+    width: 16px;
+    text-align: center;
+    color: #676879;
+}
+
+.dropdown-menu-monday .dropdown-item:hover {
+    background: #dcdfec;
+}
+
+.dropdown-menu-monday .dropdown-item.active {
+    background: #cce5ff;
+    color: #0073ea;
+}
+
+.dropdown-menu-monday .dropdown-item.active i {
+    color: #0073ea;
+}
+
+.navbar-user {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.user-email {
+    font-size: 14px;
+    color: #676879;
+}
+
+/* Медиа-запросы для адаптивности */
+@media (max-width: 768px) {
+    .navbar .container-fluid {
+        padding: 0 12px;
+    }
+    
+    .navbar-brand {
+        gap: 12px;
+    }
+    
+    .dropdown-menu-monday {
+        position: fixed;
+        top: 56px;
+        left: 0;
+        right: 0;
+        margin: 0;
+        border-radius: 0;
+        max-height: calc(100vh - 56px);
+        overflow-y: auto;
+    }
 }

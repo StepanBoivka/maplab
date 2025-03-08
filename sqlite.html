@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кадастрова система - SQLite</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="agrodb-client.js"></script>
+    <script src="sqlite.js"></script>
+    <style>
+        .navbar {
+            height: 56px;
+        }
+        .main-content {
+            padding-top: 76px; /* 56px (navbar) + 20px (extra padding) */
+        }
+        .logs-container pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        .log-entry td {
+            vertical-align: middle;
+        }
+        .log-entry pre {
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        /* Добавляем стили для бейджей */
+        .status-badge {
+            display: inline-block;
+            min-width: 85px;
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+            white-space: nowrap;
+            color: #000;
+            border-radius: 4px;
+        }
+        .status-badge.bg-success { background-color: rgba(201, 242, 219) !important; }
+        .status-badge.bg-warning { background-color: rgba(255, 238, 186) !important; }
+        .status-badge.bg-danger { background-color: rgba(248, 215, 218) !important; }
+        .status-badge.bg-secondary { background-color: rgba(222, 226, 230) !important; }
+    </style>
+</head>
+<body>
+    <nav class="navbar bg-dark border-bottom border-body fixed-top" data-bs-theme="dark">
+        <div class="container-fluid">
+            <div class="d-flex w-100 align-items-center justify-content-between">
+                <!-- Меню слева -->
+                <div class="d-flex align-items-center">
+                    <div class="dropdown me-3">
+                        <button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown">
+                            <svg style="width: 24px; height: 24px;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M3 12.75a.75.75 0 01.75-.75H12.25a.75.75 0 010 1.5H3.75A.75.75 0 013 12.75zm0-4a.75.75 0 01.75-.75H12.25a.75.75 0 010 1.5H3.75A.75.75 0 013 8.75zm0-4a.75.75 0 01.75-.75H12.25a.75.75 0 010 1.5H3.75A.75.75 0 013 4.75z"/>
+                            </svg>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><button class="dropdown-item" onclick="window.location.href='index.html'">Головна</button></li>
+                            <li><button class="dropdown-item" onclick="window.location.href='map.html'">Карта</button></li>
+                            <li><button class="dropdown-item" onclick="window.location.href='service.html'">Сервіс</button></li>
+                            <li><button class="dropdown-item" onclick="window.location.href='clients.html'">Клієнти</button></li>
+                            <li><button class="dropdown-item" onclick="window.location.href='dashboard.html'">Статистика</button></li>
+                            <li><button class="dropdown-item active" onclick="window.location.href='sqlite.html'">SQLite</button></li>
+                        </ul>
+                    </div>
+
+                    <!-- Группа кнопок управления -->
+                    <div class="btn-group">
+                        <button id="checkConnection" class="btn btn-outline-light btn-sm d-flex align-items-center gap-1">
+                            <div class="d-flex align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-database-check" viewBox="0 0 16 16">
+                                    <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m1.679-4.493-1.335 2.226a.75.75 0 0 1-1.174.144l-.774-.773a.5.5 0 0 1 .708-.708l.547.548 1.17-1.951a.5.5 0 1 1 .858.514Z"/>
+                                    <path d="M12.096 6.223A4.92 4.92 0 0 0 13 5.698V7c0 .289-.213.654-.753 1.007a4.493 4.493 0 0 1 1.753.25V4c0-1.007-.875-1.755-1.904-2.223C11.022 1.289 9.573 1 8 1s-3.022.289-4.096.777C2.875 2.245 2 2.993 2 4v9c0 1.007.875 1.755 1.904 2.223C4.978 15.71 6.427 16 8 16c.536 0 1.058-.034 1.555-.097a4.525 4.525 0 0 1-.813-.927C8.5 14.992 8.252 15 8 15c-1.464 0-2.766-.27-3.682-.687C3.356 13.875 3 13.373 3 13v-1.302c.271.202.58.378.904.525C4.978 12.71 6.427 13 8 13h.027a4.552 4.552 0 0 1 0-1H8c-1.464 0-2.766-.27-3.682-.687C3.356 10.875 3 10.373 3 10V8.698c.271.202.58.378.904.525C4.978 9.71 6.427 10 8 10c.262 0 .52-.008.774-.024a4.525 4.525 0 0 1 1.102-1.132C9.298 8.944 8.666 9 8 9c-1.464 0-2.766-.27-3.682-.687C3.356 7.875 3 7.373 3 7V5.698c.271.202.58.378.904.525C4.978 6.711 6.427 7 8 7s3.022-.289 4.096-.777ZM3 4c0-.374.356-.875 1.318-1.313C5.234 2.271 6.536 2 8 2s2.766.27 3.682.687C12.644 3.125 13 3.627 13 4c0 .374-.356.875-1.318 1.313C10.766 5.729 9.464 6 8 6s-2.766-.27-3.682-.687C3.356 4.875 3 4.373 3 4Z"/>
+                                </svg>
+                                <span class="ms-1">Перевірити з'єднання</span>
+                            </div>
+                        </button>
+                        <button id="loadTables" class="btn btn-outline-light btn-sm d-flex align-items-center gap-1" disabled>
+                            <div class="d-flex align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-table" viewBox="0 0 16 16">
+                                    <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v3h3a1 1 0 0 0 1-1v-2zm-5 3v-3H6v3h4zm-5 0v-3H1v2a1 1 0 0 0 1 1h3zm-4-4h4V8H1v3zm0-4h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/>
+                                </svg>
+                                <span class="ms-1">Завантажити дані</span>
+                                <span class="badge bg-success ms-2 data-loaded-badge" style="display: none;">✓</span>
+                            </div>
+                        </button>
+                        <button id="importButton" class="btn btn-outline-success btn-sm d-flex align-items-center gap-1" disabled>
+                            <div class="d-flex align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-upload" viewBox="0 0 16 16">
+                                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
+                                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708z"/>
+                                </svg>
+                                <span class="ms-1">Імпортувати</span>
+                                <span class="badge bg-success ms-2 import-count-badge" style="display: none;">0</span>
+                            </div>
+                        </button>
+                        <button id="toggleStats" class="btn btn-outline-info btn-sm d-flex align-items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-graph-up" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07Z"/>
+                            </svg>
+                            <span class="toggle-text">Статистика</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Индикатор соединения справа -->
+                <div id="connection-status" class="text-light d-flex align-items-center gap-2">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Статус: відключено</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Скрытое поле для загрузки файла -->
+    <input type="file" id="importFile" class="d-none" accept=".json,.csv">
+
+    <!-- Добавляем стили для индикатора соединения -->
+    <style>
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #dc3545;
+        }
+        .status-dot.connected {
+            background-color: #198754;
+        }
+        .btn-group .btn {
+            padding: 0.375rem 0.75rem;
+        }
+        .btn-group .btn svg {
+            margin-right: 0.25rem;
+        }
+    </style>
+
+    <div class="container-fluid px-4 main-content">
+        <div class="row">
+            <!-- Статистика -->
+            <div class="col-12">
+                <div class="row g-3">
+                    <!-- Изменяем размер колонок на 2.4 (12/5) -->
+                    <div class="col" style="flex: 0 0 20%; max-width: 20%;">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-database text-primary" viewBox="0 0 16 16">
+                                            <path d="M4.318 2.687C5.234 2.271 6.536 2 8 2s2.766.27 3.682.687C12.644 3.125 13 3.627 13 4c0 .374-.356.875-1.318 1.313C10.766 5.729 9.464 6 8 6s-2.766-.27-3.682-.687C3.356 4.875 3 4.373 3 4c0-.374.356-.875 1.318-1.313ZM13 5.698V7c0 .374-.356.875-1.318 1.313C10.766 8.729 9.464 9 8 9s-2.766-.27-3.682-.687C3.356 7.875 3 7.373 3 7V5.698c.271.202.58.378.904.525C4.978 6.711 6.427 7 8 7s3.022-.289 4.096-.777A4.92 4.92 0 0 0 13 5.698Z"/>
+                                            <path d="M14 4c0-1.007-.875-1.755-1.904-2.223C11.022 1.289 9.573 1 8 1s-3.022.289-4.096.777C2.875 2.245 2 2.993 2 4v9c0 1.007.875 1.755 1.904 2.223C4.978 15.71 6.427 16 8 16s3.022-.289 4.096-.777C13.125 14.755 14 14.007 14 13V4ZM3 13V9.698c.271.202.58.378.904.525C4.978 10.71 6.427 11 8 11s3.022-.289 4.096-.777c.324-.147.633-.323.904-.525V13c0 .374-.356.875-1.318 1.313C10.766 14.729 9.464 15 8 15s-2.766-.27-3.682-.687C3.356 13.875 3 13.373 3 13Z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-2">Всього записів</h6>
+                                        <h3 class="mb-0" id="totalRecords">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col" style="flex: 0 0 20%; max-width: 20%;">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-building text-success" viewBox="0 0 16 16">
+                                            <path d="M4 2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1Zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1Zm3.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1ZM4 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1ZM7.5 5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1Zm2.5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1ZM4.5 8a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1Zm2.5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1Zm3.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1Z"/>
+                                            <path d="M2 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V1Zm11 0H3v14h3v-2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V15h3V1Z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-2">Унікальних ЄДРПОУ</h6>
+                                        <h3 class="mb-0" id="uniqueEdrpou">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col" style="flex: 0 0 20%; max-width: 20%;">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-rulers text-warning" viewBox="0 0 16 16">
+                                            <path d="M1 0a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5v-1H2v-1h4v-1H4v-1h2v-1H2v-1h4V9H4V8h2V7H2V6h4V2h1v4h1V4h1v2h1V2h1v4h1V4h1v2h1V2h1v4h1V1a1 1 0 0 0-1-1H1z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-2">Загальна площа</h6>
+                                        <h3 class="mb-0" id="totalArea">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col" style="flex: 0 0 20%; max-width: 20%;">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-info bg-opacity-10 p-3 me-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-calendar-check text-info" viewBox="0 0 16 16">
+                                            <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+                                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-2">Оновлено</h6>
+                                        <h3 class="mb-0" id="lastUpdate">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col" style="flex: 0 0 20%; max-width: 20%;">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-calendar-x text-danger" viewBox="0 0 16 16">
+                                            <path d="M6.146 7.146a.5.5 0 0 1 .708 0L8 8.293l1.146-1.147a.5.5 0 1 1 .708.708L8.707 9l1.147 1.146a.5.5 0 0 1-.708.708L8 9.707l-1.146 1.147a.5.5 0 0 1-.708-.708L7.293 9 6.146 7.854a.5.5 0 0 1 0-.708z"/>
+                                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-2">Без дати оновлення</h6>
+                                        <h3 class="mb-0" id="noUpdateDate">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="datesStats" style="display: none;"></div>
+
+        <div class="row">
+            <!-- Таблица данных на всю ширину -->
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header">Дані кадастру</div>
+                    <div class="card-body">
+                        <!-- Фильтры -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label small">Область</label>
+                                <select id="oblastFilter" class="form-select form-select-sm">
+                                    <option value="">Всі області</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small">Район</label>
+                                <select id="rayonFilter" class="form-select form-select-sm">
+                                    <option value="">Всі райони</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">Рада</label>
+                                <div class="input-group input-group-sm">
+                                    <select id="radaFilter" class="form-select">
+                                        <option value="">Всі ради</option>
+                                    </select>
+                                    <input type="text" id="radaSearch" class="form-control" placeholder="Пошук ради...">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small">&nbsp;</label>
+                                <button id="resetFilters" class="btn btn-outline-secondary btn-sm w-100">
+                                    <i class="bi bi-x-circle me-1"></i>Скинути
+                                </button>
+                            </div>
+                        </div>
+                        <div id="tableData" class="table-responsive"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для импорта -->
+    <div class="modal fade" id="importModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-cloud-upload me-2" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-2.941 1.1c-.757.652-1.153 1.438-1.153 2.055v.448l-.445.049C2.064 4.805 1 5.952 1 7.318 1 8.785 2.23 10 3.781 10H6a.5.5 0 0 1 0 1H3.781C1.708 11 0 9.366 0 7.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z"/>
+                            <path fill-rule="evenodd" d="M7.646 4.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V14.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                        </svg>
+                        Імпорт даних
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Виберіть файл у форматі JSON або CSV для імпорту даних.</p>
+                    <input type="file" id="importFile" class="form-control" accept=".json,.csv">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для сопоставления полей -->
+    <div class="modal fade" id="mappingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Співставлення полів</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mapping-container">
+                        <!-- Здесь будет таблица сопоставления -->
+                    </div>
+                    <div class="progress mt-3" style="display: none;">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Відміна</button>
+                    <button type="button" class="btn btn-primary" id="startImport">Імпортувати</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для статистики импорта -->
+    <div class="modal fade" id="statsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Статистика імпорту</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="stats-content">
+                        <!-- Здесь будет статистика -->
+                    </div>
+                    <div class="import-details mt-3" style="max-height: 200px; overflow-y: auto;">
+                        <!-- Здесь будут детали импорта -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Закрити</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Добавляем контейнер для консоли -->
+    <div class="console-container" style="position: fixed; bottom: 0; right: 0; width: 400px; z-index: 1050; display: none;">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center bg-dark text-light">
+                <span>Консоль</span>
+                <div>
+                    <button class="btn btn-sm btn-outline-light" onclick="clearConsoleLogs()">Очистити</button>
+                    <button class="btn btn-sm btn-outline-light ms-2" onclick="toggleConsole()">_</button>
+                </div>
+            </div>
+            <div class="card-body bg-dark" style="max-height: 300px; overflow-y: auto;">
+                <div id="consoleOutput" class="console-output" style="font-family: monospace; font-size: 12px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Добавляем функции для работы с консолью
+        let isConsoleVisible = false;
+        const consoleContainer = document.querySelector('.console-container');
+        const consoleOutput = document.getElementById('consoleOutput');
+
+        function toggleConsole() {
+            isConsoleVisible = !isConsoleVisible;
+            consoleContainer.style.display = isConsoleVisible ? 'block' : 'none';
+            updateConsoleLogs();
+        }
+
+        function updateConsoleLogs() {
+            if (!isConsoleVisible) return;
+            
+            const logs = JSON.parse(sessionStorage.getItem('importLogs') || '[]');
+            consoleOutput.innerHTML = logs.map(log => `
+                <div class="log-entry ${log.type === 'error' ? 'text-danger' : log.type === 'warning' ? 'text-warning' : 'text-light'}">
+                    <small>[${new Date(log.timestamp).toLocaleTimeString()}]</small> ${log.message}
+                    ${log.details ? `<pre class="mt-1 text-muted">${log.details}</pre>` : ''}
+                </div>
+            `).join('');
+            
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        function clearConsoleLogs() {
+            sessionStorage.removeItem('importLogs');
+            consoleOutput.innerHTML = '';
+        }
+
+        // Обновляем логи каждую секунду если консоль открыта
+        setInterval(updateConsoleLogs, 1000);
+
+        // Показываем консоль при ошибке
+        window.onerror = function(msg, url, line, col, error) {
+            isConsoleVisible = true;
+            consoleContainer.style.display = 'block';
+            console.error(`${msg} at ${url}:${line}:${col}`, error);
+            return false;
+        };
+    </script>
+</body>
+</html>

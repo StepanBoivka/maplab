@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кадастрова система - Клієнти</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.2.0/dist/css/select2.min.css">
+    <!-- Добавляем Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Правильный порядок подключения скриптов для Supabase -->
+    <script>
+        // Временное определение глобальной переменной для проверки загрузки библиотеки
+        window.supabaseLoaded = false;
+    </script>
+    
+    <!-- Сначала загружаем библиотеку Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // Отмечаем загрузку библиотеки
+        window.supabaseLoaded = true;
+        // Сохраняем ссылку на суперобъект if он не определен глобально
+        if (typeof window.supabase === 'undefined' && typeof supabase !== 'undefined') {
+            window.supabaseClient = supabase;
+        }
+    </script>
+    
+    <!-- Затем подключаем конфигурацию -->
+    <script src="config.js"></script>
+    
+    <!-- Затем другие библиотеки и скрипты -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.2.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="cache.js"></script>
+    <script src="clients.js"></script>
+    
+    <style>
+        /* Дополнительные стили для улучшения дизайна */
+        .page-header {
+            background-color: #f8f9fa;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header-title i {
+            color: #3ECF8E;
+            font-size: 1.8rem;
+        }
+        
+        .btn-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .table-container {
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .table-striped tbody tr:hover {
+            background-color: rgba(62, 207, 142, 0.1);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .stat-icon {
+            font-size: 2rem;
+            color: #3ECF8E;
+            margin-bottom: 10px;
+        }
+        
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        /* Улучшение внешнего вида модального окна */
+        .modal-content {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            background-color: #3ECF8E;
+            color: white;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        
+        .modal-header .btn-close {
+            color: white;
+            box-shadow: none;
+        }
+        
+        /* Показываем курсор на строках таблицы */
+        tbody tr {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container-fluid">
+            <div class="d-flex w-100 align-items-center">
+                <div class="navbar-brand d-flex align-items-center">
+                    <button class="btn btn-monday-menu" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-monday">
+                        <li><button class="dropdown-item" type="button" onclick="window.location.href='index.html'">
+                            <i class="fas fa-home"></i> Головна
+                        </button></li>
+                        <li><button class="dropdown-item" type="button" onclick="window.location.href='map.html'">
+                            <i class="fas fa-map"></i> Карта
+                        </button></li>
+                        <li><button class="dropdown-item" type="button" onclick="window.location.href='service.html'">
+                            <i class="fas fa-cog"></i> Сервіс
+                        </button></li>
+                        <li><button class="dropdown-item active" type="button" onclick="window.location.href='clients.html'">
+                            <i class="fas fa-users"></i> Клієнти
+                        </button></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" type="button" onclick="signOut()">
+                            <i class="fas fa-sign-out-alt"></i> Вийти
+                        </button></li>
+                    </ul>
+                </div>
+                <div class="navbar-user">
+                    <span class="user-email" id="userEmail"></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="loading-indicator">
+        <div class="spinner"></div>
+        <span>Завантаження...</span>
+    </div>
+    
+    <div class="container-fluid mt-4">
+        <div id="auth-message" class="alert alert-warning" style="display: none;">
+            Необхідна авторизація. Переадресація на головну сторінку...
+        </div>
+
+        <div id="clients-content" style="display: none;">
+            <!-- Добавляем шапку страницы -->
+            <div class="page-header">
+                <div class="container-fluid">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="header-title">
+                            <i class="fas fa-users"></i>
+                            <h2 class="mb-0">Управління клієнтами</h2>
+                            <span class="badge bg-info ms-2">Статус: <span id="currentStatus">Не вибрано</span></span>
+                        </div>
+                        
+                        <button id="addClientBtn" class="btn btn-primary btn-action" data-bs-toggle="modal" data-bs-target="#clientModal">
+                            <i class="fas fa-plus"></i> Додати клієнта
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="container-fluid">
+                <div class="row mb-4">
+                    <!-- Удаляем контейнер с графиком -->
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" id="searchClient" placeholder="Пошук за назвою...">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-building"></i></span>
+                            <input type="text" class="form-control" id="searchEdrpou" placeholder="Пошук за ЄДРПОУ...">
+                        </div>
+                    </div>
+                    <!-- Добавляем фильтр по областям -->
+                    <div class="col-md-2">
+                        <select class="form-select" id="regionFilter">
+                            <option value="">Всі області</option>
+                            <!-- Области будут добавлены динамически -->
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="statusFilter" required>
+                            <option value="" disabled selected>Оберіть статус</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Таблиця клієнтів в контейнере -->
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ЄДРПОУ</th>
+                                    <th>Назва</th>
+                                    <th width="40">Тип</th>
+                                    <th>Телефон</th>
+                                    <th>Email</th>
+                                    <th>Примітка</th>
+                                    <th class="text-end">Дії</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientsTableBody">
+                                <!-- Дані будуть додані через JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Модальне вікно для додавання/редагування клієнтів -->
+            <div class="modal fade" id="clientModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="clientModalLabel">Редагування клієнта</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            <nav>
+                                <div class="nav nav-tabs nav-monday" id="edit-nav-tab" role="tablist">
+                                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#edit-general" type="button">
+                                        <i class="fas fa-info-circle"></i> Основна інформація
+                                    </button>
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#edit-contacts" type="button">
+                                        <i class="fas fa-address-card"></i> Контакти
+                                    </button>
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#edit-additional" type="button">
+                                        <i class="fas fa-clipboard-list"></i> Додатково
+                                    </button>
+                                </div>
+                            </nav>
+                            <form id="clientEditForm" class="tab-content p-3">
+                                <input type="hidden" id="clientId">
+                                
+                                <div class="tab-pane fade show active" id="edit-general">
+                                    <div class="form-group">
+                                        <label for="clientEdrpou" class="form-label">ЄДРПОУ</label>
+                                        <input type="text" class="form-control" id="clientEdrpou">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientName" class="form-label">Назва</label>
+                                        <input type="text" class="form-control" id="clientName" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientStatus" class="form-label">Статус</label>
+                                        <select class="form-control" id="clientStatus"></select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientKved" class="form-label">КВЕД</label>
+                                        <input type="text" class="form-control" id="clientKved">
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="edit-contacts">
+                                    <div class="form-group">
+                                        <label for="clientPhone" class="form-label">Телефон</label>
+                                        <input type="tel" class="form-control" id="clientPhone">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientEmail" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="clientEmail">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientAddress" class="form-label">Адреса</label>
+                                        <input type="text" class="form-control" id="clientAddress">
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="edit-additional">
+                                    <div class="form-group">
+                                        <label for="clientNote" class="form-label">Примітка</label>
+                                        <textarea class="form-control" id="clientNote" rows="2"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientDetails" class="form-label">Деталі</label>
+                                        <textarea class="form-control" id="clientDetails" rows="2"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientRepPosition" class="form-label">Посада представника</label>
+                                        <input type="text" class="form-control" id="clientRepPosition">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientDirectorShort" class="form-label">Директор</label>
+                                        <input type="text" class="form-control" id="clientDirectorShort">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientDirectorGenitive" class="form-label">В родовому відмінку</label>
+                                        <input type="text" class="form-control" id="clientDirectorGenitive">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-monday btn-monday-secondary" data-bs-dismiss="modal">Скасувати</button>
+                            <button type="button" class="btn btn-monday btn-monday-primary" onclick="handleSaveClient()">
+                                <i class="fas fa-save"></i> Зберегти
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Модальне вікно для перегляду -->
+            <div class="modal fade" id="viewModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Деталі клієнта</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            <nav>
+                                <div class="nav nav-tabs nav-monday" id="nav-tab" role="tablist">
+                                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#general-info" type="button">
+                                        <i class="fas fa-info-circle"></i> Основна інформація
+                                    </button>
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#contacts" type="button">
+                                        <i class="fas fa-address-card"></i> Контакти
+                                    </button>
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#additional" type="button">
+                                        <i class="fas fa-clipboard-list"></i> Додатково
+                                    </button>
+                                </div>
+                            </nav>
+                            <div class="tab-content p-3" id="nav-tabContent">
+                                <!-- Контент будет добавлен динамически -->
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-monday btn-monday-secondary" data-bs-dismiss="modal">Закрити</button>
+                            <button type="button" class="btn btn-monday btn-monday-primary" onclick="editClient(currentClientId)">
+                                <i class="fas fa-edit"></i> Редагувати
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

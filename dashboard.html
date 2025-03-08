@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кадастрова система - Статистика</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Подключаем скрипты -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="stats.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container-fluid">
+            <div class="d-flex w-100 align-items-center">
+                <div class="navbar-brand d-flex align-items-center">
+                    <button class="btn btn-monday-menu" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-monday">
+                        <li><button class="dropdown-item" type="button" onclick="window.location.href='index.html'">
+                            <i class="fas fa-home"></i> Головна
+                        </button></li>
+                        <li><button class="dropdown-item" type="button" onclick="window.location.href='map.html'">
+                            <i class="fas fa-map"></i> Карта
+                        </button></li>
+                        <li><button class="dropdown-item" type="button" onclick="window.location.href='service.html'">
+                            <i class="fas fa-cog"></i> Сервіс
+                        </button></li>
+                        <li><button class="dropdown-item" type="button" onclick="window.location.href='clients.html'">
+                            <i class="fas fa-users"></i> Клієнти
+                        </button></li>
+                        <li><button class="dropdown-item active" type="button" onclick="window.location.href='dashboard.html'">
+                            <i class="fas fa-chart-pie"></i> Статистика
+                        </button></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" type="button" onclick="signOut()">
+                            <i class="fas fa-sign-out-alt"></i> Вийти
+                        </button></li>
+                    </ul>
+                </div>
+                <div class="navbar-user">
+                    <span class="user-email" id="userEmail"></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="chart-card">
+                    <h3>Розподіл клієнтів за статусом</h3>
+                    <div style="position: relative; height: 500px;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body></html>
